@@ -1,0 +1,16 @@
+{
+  "name": "GoodRunss MCP",
+  "version": "0.1.0",
+  "description": "MCP server exposing GoodRunss tools",
+  "servers": [
+    {
+      "type": "stdio",
+      "command": "node",
+      "args": ["mcp/server.js"],
+      "env": {
+        "GOODRUNSS_BASE_URL": "http://localhost:3000"
+      }
+    }
+  ]
+}
+

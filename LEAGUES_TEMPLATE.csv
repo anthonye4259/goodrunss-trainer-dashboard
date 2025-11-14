@@ -1,0 +1,13 @@
+id,name,sport,city,state,venue_name,organizer_name,organizer_email,website,registration_fee,skill_levels,description,season_type
+league_sf_tennis_1,Golden Gate Tennis League,tennis,San Francisco,CA,Golden Gate Park Tennis Complex,SF Tennis Coalition,info@sftenniscoalition.com,https://www.sftenniscoalition.com,85.00,"intermediate,advanced",Competitive adult tennis league in Golden Gate Park,year-round
+league_sf_bball_1,Mission Bay Basketball League,basketball,San Francisco,CA,Mission Bay Recreation Center,,,https://sfrecpark.org,60.00,open,Recreational 5v5 basketball league,fall
+league_sf_pickle_1,SF Pickleball League,pickleball,San Francisco,CA,Various SF Parks,,,,,50.00,"beginner,intermediate",Beginner-friendly pickleball league,spring
+league_nyc_tennis_1,NYC Tennis League,tennis,New York,NY,Various NYC Courts,,,https://www.nyctennisleague.com,95.00,all,Largest adult tennis league in NYC,year-round
+league_nyc_bball_1,West 4th Street Basketball League,basketball,New York,NY,West 4th Street Courts (The Cage),,,,,40.00,advanced,Legendary street basketball league,summer
+league_nyc_pickle_1,Brooklyn Pickleball League,pickleball,Brooklyn,NY,Prospect Park,,,,,55.00,"beginner,intermediate,advanced",Competitive pickleball in Brooklyn,year-round
+league_pitt_tennis_1,Pittsburgh Tennis League,tennis,Pittsburgh,PA,Mellon Park Tennis Center,,,,,70.00,"intermediate,advanced",Competitive adult tennis in Pittsburgh,spring
+league_pitt_bball_1,Steel City Basketball League,basketball,Pittsburgh,PA,Various Pittsburgh Parks,,,,,55.00,open,Pittsburgh recreational basketball,fall
+league_atl_tennis_1,Atlanta Lawn Tennis Association,tennis,Atlanta,GA,Various Atlanta Clubs,,,https://www.alta.org,100.00,all,One of largest tennis leagues in the US,year-round
+league_atl_bball_1,Atlanta Parks Basketball League,basketball,Atlanta,GA,Various Atlanta Recreation Centers,,,https://www.atlantarecreation.com,50.00,open,City-run recreational basketball,fall
+league_atl_pickle_1,Atlanta Pickleball League,pickleball,Atlanta,GA,Various Atlanta Parks,,,,,60.00,"beginner,intermediate,advanced",Atlanta area pickleball league,spring
+

@@ -1,0 +1,51 @@
+========================================
+🚀 SUBSCRIPTION MIGRATION - INSTRUCTIONS
+========================================
+
+✅ STEP 1: Open Supabase SQL Editor
+   
+   👉 GO HERE: https://supabase.com/dashboard/project/akxwxsjoahopnplynzzb/sql
+
+========================================
+
+✅ STEP 2: Copy the SQL below
+
+========================================
+
+✅ STEP 3: Paste into Supabase SQL Editor
+
+========================================
+
+✅ STEP 4: Click the green "RUN" button
+
+========================================
+
+✅ STEP 5: You should see:
+   
+   ✅ "Subscription system tables created successfully!"
+   ✅ Total Plans: 4
+
+========================================
+
+📋 WHAT GETS CREATED:
+
+   ✅ subscription_plans table
+   ✅ user_subscriptions table
+   ✅ subscription_usage table
+   ✅ subscription_history table
+   ✅ 4 plans seeded (Free, Basic, Pro, Elite)
+
+========================================
+
+🎉 After this, your subscription system will be LIVE!
+
+========================================
+
+💡 NEED HELP?
+
+   The full SQL is in: MIGRATION_SUBSCRIPTIONS.sql
+   
+   Just open it, copy all, paste to Supabase, and RUN!
+
+========================================
+

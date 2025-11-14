@@ -1,0 +1,43 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  
+  /* Colors */
+  --color-background: 220 25% 12%;
+  --color-foreground: 120 10% 95%;
+  --color-card: 220 20% 15%;
+  --color-card-foreground: 120 10% 95%;
+  --color-popover: 220 20% 15%;
+  --color-popover-foreground: 120 10% 95%;
+  --color-primary: 88 60% 65%;
+  --color-primary-foreground: 220 25% 12%;
+  --color-secondary: 220 15% 20%;
+  --color-secondary-foreground: 120 10% 95%;
+  --color-muted: 220 15% 20%;
+  --color-muted-foreground: 120 5% 65%;
+  --color-accent: 88 60% 65%;
+  --color-accent-foreground: 220 25% 12%;
+  --color-destructive: 0 70% 60%;
+  --color-destructive-foreground: 0 0% 100%;
+  --color-border: 220 15% 25%;
+  --color-input: 220 15% 25%;
+  --color-ring: 88 60% 65%;
+  --radius: 0.75rem;
+}
+
+* {
+  border-color: hsl(var(--color-border));
+}
+
+body {
+  background: hsl(var(--color-background));
+  color: hsl(var(--color-foreground));
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}

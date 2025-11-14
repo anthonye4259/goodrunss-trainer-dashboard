@@ -1,0 +1,63 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": [
+    "node_modules",
+    "COMPLETE_BUILD_SESSION_NOV_7_2024",
+    "COMPLETE_GOODRUNSS_BACKEND",
+    "COMPLETE_SESSION_NOV_8_2024",
+    "SUBSCRIPTION_SYSTEM_COMPLETE",
+    "scripts",
+    "src/app/api/ai-persona",
+    "src/app/api/facility-reports",
+    "src/app/api/public/ai-personas",
+    "src/app/api/reports",
+    "src/app/api/safety",
+    "src/app/api/social",
+    "src/app/api/ab-test",
+    "src/app/api/experiments",
+    "src/app/api/reviews",
+    "src/app/api/v1",
+    "src/app/api/matches",
+    "src/app/api/ratings",
+    "src/app/api/favorites",
+    "src/app/api/wearables",
+    "src/app/api/sessions",
+    "src/app/api/search",
+    "src/app/api/messages",
+    "src/app/api/referral",
+    "src/app/api/workouts",
+    "src/app/api/scheduling",
+    "src/app/api/cron",
+    "src/app/api/trainer"
+  ]
+}

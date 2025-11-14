@@ -1,0 +1,33 @@
+# ================================
+# AI AUTOMATION - COPY THESE TO YOUR .env FILE
+# ================================
+
+# Anthropic Claude API (for workout plans & auto-rescheduling)
+ANTHROPIC_API_KEY=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
+
+# Cron Job Security (for background automation)
+CRON_SECRET=4e336490c06a357f4efb23d3f9cb186ba3705f6a3e1eb433a8d58185d0fe30e4
+
+# Internal API Security (for cron job to call your APIs)
+INTERNAL_API_KEY=7840c50cde1bdb7dc131257110a74eb64eb8cb7eaa30f92c2363d784b55f3e44
+
+# App URL (update when you deploy to production)
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# ================================
+# INSTRUCTIONS:
+# ================================
+# 1. Open your .env file
+# 2. Copy the 4 lines above (ANTHROPIC_API_KEY, CRON_SECRET, INTERNAL_API_KEY, NEXT_PUBLIC_APP_URL)
+# 3. Paste at the bottom of your .env file
+# 4. Save the file
+# 5. Delete this COPY_TO_ENV.txt file (for security)
+# 6. Run: npx prisma db push
+# 7. Run: npm run dev
+# 8. Test it!
+
+# ⚠️ SECURITY REMINDER:
+# - Never commit .env to git
+# - Delete this file after copying to .env
+# - When deploying to Vercel, add these as Environment Variables
+
