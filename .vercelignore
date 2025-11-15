@@ -1,0 +1,20 @@
+# Cache and build artifacts
+.next/cache
+.next/trace
+
+# Development files
+*.log
+.DS_Store
+
+# Testing
+/coverage
+playwright-report
+test-results
+
+# Playwright browsers
+/.cache/ms-playwright
+
+# IDE
+.vscode
+.idea
+

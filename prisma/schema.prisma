@@ -1,0 +1,2723 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// NextAuth.js models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(CLIENT) // NEW: Support both trainers and clients
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // NextAuth relations
+  accounts Account[]
+  sessions Session[]
+
+  // Trainer-specific fields (null for clients)
+  bio            String?
+  specialties    String[]
+  certifications String[]
+  hourlyRate     Float?
+  phone          String?
+  location       String? // Text address (e.g., "New York, NY")
+  isAvailable    Boolean  @default(true) // NEW: Trainer availability status
+  rating         Float? // NEW: Average rating
+  totalSessions  Int      @default(0) // NEW: Session count
+  
+  // Stripe integration
+  stripeCustomerId String? // Stripe customer ID for payments
+  
+  // Firebase Cloud Messaging
+  fcmTokens String[] // FCM tokens for push notifications
+
+  // Geolocation fields (for both trainers and clients)
+  latitude          Float? // GPS latitude
+  longitude         Float? // GPS longitude
+  locationEnabled   Boolean   @default(false) // Privacy: Allow location sharing
+  locationUpdatedAt DateTime? // Last location update
+  address           String? // Formatted address from geocoding
+  city              String? // City name
+  state             String? // State/Province
+  country           String?   @default("US") // Country code
+  postalCode        String? // ZIP/Postal code
+
+  // Relationships
+  clients           Client[] // Clients created by trainer
+  trainerSessions   TrainerSession[] @relation("TrainerSessions") // Sessions as trainer
+  clientBookings    TrainerSession[] @relation("ClientBookings") // NEW: Sessions as client
+  paymentsAsTrainer Payment[]        @relation("TrainerPayments") // Payments received
+  paymentsAsClient  Payment[]        @relation("ClientPayments") // NEW: Payments made
+  analytics         Analytics[]
+  reviews           Review[]         @relation("TrainerReviews") // NEW: Reviews received
+  givenReviews      Review[]         @relation("ClientReviews") // NEW: Reviews given
+  viralContent      ViralContent[]   @relation("ViralContent") // NEW: Viral content
+  sentMessages      Message[]        @relation("SentMessages") // NEW: Messages sent
+  receivedMessages          Message[]                @relation("ReceivedMessages") // NEW: Messages received
+  scheduledNotifications    ScheduledNotification[]  @relation("ScheduledNotificationsByTrainer") // Notifications scheduled by trainer
+  receivedScheduledNotifications ScheduledNotification[]  @relation("ScheduledNotificationsForClient") // Notifications scheduled for client
+  
+  // Public booking system (pre-app launch)
+  bookingSettings    BookingSettings?   @relation("TrainerBookingSettings")
+  publicBookings     PublicBooking[]    @relation("TrainerPublicBookings")
+
+  @@map("users")
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  age       Int?
+  goals     String[]
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  trainerId String
+  trainer   User             @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  sessions  TrainerSession[]
+  payments  Payment[]
+
+  @@map("clients")
+}
+
+model TrainerSession {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  type        SessionType
+  duration    Int // in minutes
+  scheduledAt DateTime
+  status      SessionStatus @default(SCHEDULED)
+  notes       String?
+  bookedFrom  BookingSource @default(DASHBOARD) // NEW: Track booking source
+  location    String? // NEW: Session location
+  meetingLink String? // NEW: Virtual meeting link
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relationships
+  trainerId String
+  trainer   User   @relation("TrainerSessions", fields: [trainerId], references: [id], onDelete: Cascade)
+
+  // Support both legacy Client model AND new User-based clients
+  clientId String? // Legacy Client model
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  appClientId String? // NEW: User ID from consumer app
+  appClient   User?   @relation("ClientBookings", fields: [appClientId], references: [id], onDelete: SetNull)
+
+  payment Payment?
+
+  @@map("trainer_sessions")
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  amount          Float
+  currency        String        @default("USD")
+  status          PaymentStatus @default(PENDING)
+  method          PaymentMethod
+  description     String?
+  paidAt          DateTime?
+  stripePaymentId String? // Stripe payment intent ID
+  stripeChargeId  String? // Stripe charge ID
+  stripeFee       Float? // Stripe fee amount
+  platformFee     Float? // GoodRunss platform fee
+  trainerPayout   Float? // Amount trainer receives
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relationships - Trainer receives payment
+  trainerId String
+  trainer   User   @relation("TrainerPayments", fields: [trainerId], references: [id], onDelete: Cascade)
+
+  // Legacy Client model
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  // App user who made payment
+  appClientId String?
+  appClient   User?   @relation("ClientPayments", fields: [appClientId], references: [id], onDelete: SetNull)
+
+  sessionId String?         @unique
+  session   TrainerSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  // Refund relationship
+  refund Refund?
+
+  @@map("payments")
+}
+
+// Stripe Connect accounts for trainers
+model StripeAccount {
+  id              String   @id @default(uuid())
+  userId          String   @unique // Trainer user ID
+
+  // Stripe account info
+  stripeAccountId String   @unique
+  accountType     String   @default("express") // express, standard, custom
+
+  // Onboarding status
+  detailsSubmitted Boolean  @default(false)
+  chargesEnabled   Boolean  @default(false)
+  payoutsEnabled   Boolean  @default(false)
+
+  // Requirements
+  currentlyDue     String[] // Fields currently due
+  eventuallyDue    String[] // Fields eventually due
+  pastDue          String[] // Fields past due
+  pendingVerification String[] // Fields pending verification
+
+  // Account details
+  email           String?
+  country         String?
+  defaultCurrency String?
+
+  // Payout schedule
+  payoutSchedule  Json? // { interval: 'daily', delay_days: 2 }
+
+  // Business profile
+  businessName    String?
+  businessUrl     String?
+  supportPhone    String?
+  supportEmail    String?
+
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([stripeAccountId])
+  @@map("stripe_accounts")
+}
+
+// Payment refunds
+model Refund {
+  id              String   @id @default(uuid())
+  paymentId       String   @unique
+  payment         Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  // Refund details
+  amount          Float
+  currency        String
+  reason          String? // duplicate, fraudulent, requested_by_customer
+  status          String   @default("pending") // pending, succeeded, failed, canceled
+
+  // Stripe info
+  stripeRefundId  String?
+
+  // Who initiated
+  initiatedBy     String // userId
+  initiatedAt     DateTime @default(now())
+
+  // Processing
+  processedAt     DateTime?
+  failureReason   String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([paymentId])
+  @@index([status])
+  @@map("refunds")
+}
+
+// Payment intents (for tracking payment flow)
+model PaymentIntent {
+  id              String   @id @default(uuid())
+
+  // Stripe payment intent
+  stripeIntentId  String   @unique
+
+  // Payment details
+  amount          Float
+  currency        String
+  status          String // requires_payment_method, requires_confirmation, processing, succeeded, canceled
+
+  // Parties
+  userId          String // Player/client
+  trainerId       String // Trainer
+  sessionId       String? // Training session
+
+  // Metadata
+  metadata        Json?
+
+  // Client secret (for frontend)
+  clientSecret    String
+
+  // Payment method
+  paymentMethodId String?
+
+  // Created
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  expiresAt       DateTime // Payment intents expire after 24h
+
+  @@index([stripeIntentId])
+  @@index([userId])
+  @@index([trainerId])
+  @@index([status])
+  @@map("payment_intents")
+}
+
+model Analytics {
+  id        String   @id @default(cuid())
+  date      DateTime
+  metric    String // e.g., "revenue", "sessions", "clients"
+  value     Float
+  metadata  Json? // Additional data
+  createdAt DateTime @default(now())
+
+  // Relationships
+  trainerId String
+  trainer   User   @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@map("analytics")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int // 1-5 stars
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  trainerId String
+  trainer   User   @relation("TrainerReviews", fields: [trainerId], references: [id], onDelete: Cascade)
+
+  clientId String
+  client   User   @relation("ClientReviews", fields: [clientId], references: [id], onDelete: Cascade)
+
+  sessionId String?
+
+  @@map("reviews")
+}
+
+enum SessionType {
+  PERSONAL_TRAINING
+  GROUP_FITNESS
+  NUTRITION_COACHING
+  ONLINE_COACHING
+  WORKOUT_PLAN
+  ASSESSMENT
+}
+
+enum SessionStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  DIGITAL_WALLET
+  CHECK
+}
+
+enum UserRole {
+  CLIENT // Consumer app user who books trainers
+  TRAINER // Trainer who provides services
+  ADMIN // Admin with full access
+}
+
+enum BookingSource {
+  APP // Booked via consumer mobile app
+  DASHBOARD // Booked via trainer dashboard
+  WEB // Booked via public website
+  API // Booked via external API
+}
+
+// Messaging Model for trainer-client communication
+model Message {
+  id          String      @id @default(uuid())
+  senderId    String
+  receiverId  String
+  content     String      @db.Text
+  messageType MessageType @default(TEXT)
+  read        Boolean     @default(false)
+  readAt      DateTime?
+  sessionId   String? // Optional: Link to training session
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([sessionId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+enum MessageType {
+  TEXT // Plain text message
+  IMAGE // Image attachment
+  FILE // File attachment
+  SYSTEM // System notification
+}
+
+// Viral Growth Models
+model ViralContent {
+  id          String   @id @default(uuid())
+  userId      String
+  contentType String // 'marketing_generation', 'qr_code', 'widget', 'workout_recap', 'gia_workout_share', 'workout_share'
+  contentData Json
+  shareCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation("ViralContent", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([contentType])
+  @@map("viral_content")
+}
+
+model ReferralTracking {
+  id            String   @id @default(uuid())
+  referrerId    String?
+  referredEmail String
+  source        String // 'instagram', 'tiktok', 'twitter', 'facebook', 'qr_code', 'widget'
+  referralCode  String
+  converted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([referrerId])
+  @@index([referralCode])
+  @@index([converted])
+  @@map("referral_tracking")
+}
+
+model ViralMetrics {
+  id           String   @id @default(uuid())
+  userId       String
+  metricType   String // 'share', 'click', 'conversion', 'engagement'
+  platform     String // 'instagram', 'tiktok', 'twitter', 'facebook', 'qr_code', 'widget'
+  contentId    String?
+  referralCode String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([metricType])
+  @@index([platform])
+  @@map("viral_metrics")
+}
+
+model GiaContent {
+  id               String   @id @default(uuid())
+  userId           String
+  contentType      String // 'marketing', 'workout_plan', 'social_post', 'email_template'
+  prompt           String   @db.Text
+  generatedContent Json
+  tone             String?
+  length           String?
+  metadata         Json?
+  usageCount       Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([contentType])
+  @@map("gia_content")
+}
+
+// AI Chat Conversations
+model AiConversation {
+  id        String      @id @default(uuid())
+  userId    String
+  title     String?
+  context   Json?
+  messages  Json        @default("[]")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  aiMessages AiMessage[]
+
+  @@index([userId])
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id              String         @id @default(uuid())
+  conversationId  String
+  conversation    AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            String         // user, assistant, system
+  content         String         @db.Text
+  metadata        Json?
+  createdAt       DateTime       @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("ai_messages")
+}
+
+// A/B Testing Models
+model AbTest {
+  id           String             @id @default(uuid())
+  name         String             @unique
+  description  String?            @db.Text
+  versions     Json // Array of { id, content, weight }
+  targetMetric String
+  trafficSplit Int                @default(50)
+  status       String             @default("ACTIVE")
+  winner       String?
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  assignments  AbTestAssignment[]
+  conversions  AbTestConversion[]
+  results      AbTestResult[]
+
+  @@index([name])
+  @@index([status])
+  @@map("ab_tests")
+}
+
+model AbTestAssignment {
+  id         String   @id @default(uuid())
+  testName   String
+  userId     String
+  variant    String // 'A', 'B', 'C', etc.
+  assignedAt DateTime @default(now())
+  test       AbTest   @relation(fields: [testName], references: [name], onDelete: Cascade)
+
+  @@unique([testName, userId])
+  @@index([testName])
+  @@index([userId])
+  @@index([variant])
+  @@map("ab_test_assignments")
+}
+
+model AbTestConversion {
+  id             String   @id @default(uuid())
+  testName       String
+  userId         String
+  variant        String // 'A', 'B', 'C', etc.
+  action         String
+  isTargetMetric Boolean  @default(false)
+  metadata       Json?
+  convertedAt    DateTime @default(now())
+  test           AbTest   @relation(fields: [testName], references: [name], onDelete: Cascade)
+
+  @@index([testName])
+  @@index([userId])
+  @@index([variant])
+  @@index([action])
+  @@index([isTargetMetric])
+  @@map("ab_test_conversions")
+}
+
+model AbTestResult {
+  id               String   @id @default(uuid())
+  testName         String
+  variant          String
+  totalAssignments Int      @default(0)
+  totalConversions Int      @default(0)
+  conversionRate   Decimal  @default(0)
+  lift             Decimal  @default(0)
+  isWinner         Boolean  @default(false)
+  calculatedAt     DateTime @default(now())
+  test             AbTest   @relation(fields: [testName], references: [name], onDelete: Cascade)
+
+  @@unique([testName, variant])
+  @@index([testName])
+  @@index([variant])
+  @@map("ab_test_results")
+}
+
+// Premium Subscription & Trial
+model PremiumSubscription {
+  id                   String    @id @default(uuid())
+  userId               String    @unique
+  plan                 String    @default("PREMIUM") // PREMIUM, BASIC, FREE
+  tier                 String?   // Subscription tier
+  status               String    @default("ACTIVE") // ACTIVE, CANCELED, EXPIRED
+  startDate            DateTime  @default(now())
+  endDate              DateTime?
+  canceledAt           DateTime? // When subscription was canceled
+  stripeCustomerId     String?   @unique // Stripe customer ID
+  stripeSubscriptionId String?   @unique // Stripe subscription ID
+  stripePriceId        String?   // Stripe price ID
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  trialStart           DateTime?
+  trialEnd             DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("premium_subscriptions")
+}
+
+model PremiumTrial {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  tier        String?   // Trial tier
+  startDate   DateTime  @default(now())
+  startedAt   DateTime? // When trial was started
+  endDate     DateTime
+  endsAt      DateTime? // When trial ends
+  status      String    @default("ACTIVE") // ACTIVE, USED, EXPIRED
+  converted   Boolean   @default(false) // Whether trial was converted to paid
+  convertedAt DateTime? // When trial was converted
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("premium_trials")
+}
+
+// Generic Booking Model (for AI actions and general booking management)
+model Booking {
+  id           String   @id @default(uuid())
+  trainerId    String
+  clientId     String
+  startTime    DateTime
+  endTime      DateTime
+  sessionType  String?
+  location     String?
+  status       String   @default("scheduled")
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([trainerId])
+  @@index([clientId])
+  @@index([startTime])
+  @@index([status])
+  @@map("bookings")
+}
+
+// Notification Preferences
+model NotificationPreference {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
+  pushEnabled            Boolean  @default(true)
+  emailEnabled           Boolean  @default(true)
+  smsEnabled             Boolean  @default(false)
+  sessionReminders       Boolean  @default(true)
+  paymentNotifications   Boolean  @default(true)
+  marketingNotifications Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([userId])
+  @@map("notification_preferences")
+}
+
+// Notifications History
+model Notification {
+  id             String   @id @default(uuid())
+  userId         String
+  type           String
+  title          String
+  body           String
+  data           Json?
+  read           Boolean  @default(false)
+  readAt         DateTime?
+  sentAt         DateTime  @default(now())
+  deliveryStatus String?  // delivered, failed, pending
+  createdAt      DateTime  @default(now())
+
+  @@index([userId])
+  @@index([read])
+  @@index([sentAt])
+  @@map("notifications")
+}
+
+// Email Logging for Resend Integration
+model EmailLog {
+  id             String    @id @default(uuid())
+  emailType      String // 'booking_confirmation', 'payment_receipt'
+  recipientEmail String
+  subject        String?   @db.Text
+  status         String    @default("pending") // 'pending', 'sent', 'failed'
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+  sentAt         DateTime?
+
+  @@index([emailType])
+  @@index([recipientEmail])
+  @@index([status])
+  @@index([createdAt])
+  @@map("email_logs")
+}
+
+// AI Persona Models - Trainers create AI clones of themselves
+model AiPersona {
+  id        String @id @default(uuid())
+  trainerId String @unique // One persona per trainer
+
+  // Basic Info
+  name      String
+  tagline   String? @db.Text
+  bio       String? @db.Text
+  avatarUrl String?
+
+  // Voice & Video
+  voiceFileUrl    String?
+  voiceSampleText String? @db.Text
+  videoUrl        String?
+
+  // Teaching Style & Traits
+  teachingStyle  String   @default("motivational") // motivational, technical, gentle, tough_love
+  personality    Json // { motivational: 8, empathetic: 7, technical: 9, humorous: 5 }
+  specialties    String[] // ["strength_training", "cardio", "nutrition"]
+  certifications String[]
+
+  // Pricing & Availability
+  pricePerSession Decimal @default(0.30) // $0.30 per session
+  isActive        Boolean @default(false) // Published/unpublished
+  isDiscoverable  Boolean @default(true) // Show in marketplace
+
+  // Stats
+  totalSessions Int      @default(0)
+  totalEarnings Decimal  @default(0)
+  averageRating Decimal? @default(0)
+  totalRatings  Int      @default(0)
+
+  // ElevenLabs Integration
+  elevenLabsVoiceId  String? // ElevenLabs voice model ID
+  elevenLabsModelUrl String?
+
+  // Metadata
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+
+  // Relations
+  sessions AiPersonaSession[]
+  feedback AiPersonaFeedback[]
+  earnings AiPersonaEarning[]
+
+  @@index([trainerId])
+  @@index([isActive])
+  @@index([isDiscoverable])
+  @@map("ai_personas")
+}
+
+// Track each time a player uses an AI persona
+model AiPersonaSession {
+  id        String @id @default(uuid())
+  personaId String
+  playerId  String // Consumer app user ID
+
+  // Session Details
+  duration         Int // Duration in minutes
+  messageCount     Int   @default(0)
+  conversationData Json? // Store conversation for analysis
+
+  // Pricing
+  cost            Decimal @default(0.30) // Cost per session
+  trainerEarnings Decimal @default(0.30) // Amount trainer earns
+
+  // Payment
+  paymentStatus   String    @default("pending") // pending, completed, failed
+  stripePaymentId String?
+  paidAt          DateTime?
+
+  // Metadata
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  createdAt DateTime  @default(now())
+
+  // Relations
+  persona AiPersona @relation(fields: [personaId], references: [id], onDelete: Cascade)
+
+  @@index([personaId])
+  @@index([playerId])
+  @@index([paymentStatus])
+  @@index([startedAt])
+  @@map("ai_persona_sessions")
+}
+
+// Player feedback on AI personas
+model AiPersonaFeedback {
+  id        String  @id @default(uuid())
+  personaId String
+  playerId  String // Consumer app user ID
+  sessionId String? // Optional link to session
+
+  // Feedback
+  rating         Int // 1-5 stars
+  comment        String?  @db.Text
+  isHelpful      Boolean? // Was the AI helpful?
+  accuracyRating Int? // How accurate to real trainer (1-5)
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  persona AiPersona @relation(fields: [personaId], references: [id], onDelete: Cascade)
+
+  @@index([personaId])
+  @@index([playerId])
+  @@index([rating])
+  @@map("ai_persona_feedback")
+}
+
+// Track earnings over time for analytics
+model AiPersonaEarning {
+  id        String @id @default(uuid())
+  personaId String
+  trainerId String
+
+  // Earnings Details
+  amount       Decimal  @default(0.30)
+  sessionCount Int      @default(1)
+  date         DateTime @default(now())
+
+  // Payout Status
+  payoutStatus String    @default("pending") // pending, processing, paid
+  payoutId     String? // Stripe payout ID
+  paidAt       DateTime?
+
+  // Metadata
+  createdAt DateTime @default(now())
+
+  // Relations
+  persona AiPersona @relation(fields: [personaId], references: [id], onDelete: Cascade)
+
+  @@index([personaId])
+  @@index([trainerId])
+  @@index([date])
+  @@index([payoutStatus])
+  @@map("ai_persona_earnings")
+}
+
+// ========================================
+// BOOKING WAITLIST SYSTEM
+// ========================================
+
+// Players can join a waitlist when a trainer is fully booked
+model BookingWaitlist {
+  id        String @id @default(uuid())
+  trainerId String
+  playerId  String
+
+  // Desired booking details
+  desiredDate     DateTime? // Preferred date (optional)
+  desiredTimeSlot String? // morning, afternoon, evening, flexible
+  sessionType     String? // Type of session they want
+  duration        Int       @default(60) // Minutes
+
+  // Status
+  status   String @default("active") // active, notified, booked, cancelled, expired
+  priority Int    @default(0) // Higher priority gets notified first
+
+  // Notifications
+  notifiedAt DateTime?
+  bookedAt   DateTime?
+  expiresAt  DateTime? // Auto-expire after X days
+
+  // Contact
+  playerEmail    String
+  playerPhone    String?
+  notifyViaSMS   Boolean @default(false)
+  notifyViaEmail Boolean @default(true)
+  notifyViaPush  Boolean @default(true)
+
+  // Notes
+  notes String? @db.Text
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([trainerId])
+  @@index([playerId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+  @@map("booking_waitlist")
+}
+
+// Track waitlist notifications sent
+model WaitlistNotification {
+  id         String @id @default(uuid())
+  waitlistId String
+  trainerId  String
+  playerId   String
+
+  // Notification details
+  notificationType String // email, sms, push
+  sentAt           DateTime  @default(now())
+  opened           Boolean   @default(false)
+  openedAt         DateTime?
+
+  // Available slot details
+  availableDate DateTime?
+  availableSlot String?
+
+  // Response
+  responded   Boolean   @default(false)
+  respondedAt DateTime?
+  booked      Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([waitlistId])
+  @@index([trainerId])
+  @@index([playerId])
+  @@index([sentAt])
+  @@map("waitlist_notifications")
+}
+
+// ========================================
+// SCHEDULED NOTIFICATIONS
+// ========================================
+
+// Schedule notifications to be sent at a future time
+model ScheduledNotification {
+  id        String   @id @default(uuid())
+  trainerId String
+  clientId  String
+  
+  // Notification details
+  type   String // booking_reminder, payment_due, custom, etc.
+  params Json // Parameters for the notification template
+  
+  // Schedule
+  scheduledFor DateTime
+  sentAt       DateTime?
+  cancelledAt  DateTime?
+  
+  // Status
+  status String @default("pending") // pending, sent, failed, cancelled
+  error  String?
+  
+  // Recurring
+  isRecurring         Boolean   @default(false)
+  recurringFrequency  String? // daily, weekly, monthly
+  recurringEndDate    DateTime?
+  
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  trainer User @relation("ScheduledNotificationsByTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
+  client  User @relation("ScheduledNotificationsForClient", fields: [clientId], references: [id], onDelete: Cascade)
+  
+  @@index([trainerId])
+  @@index([clientId])
+  @@index([scheduledFor])
+  @@index([status])
+  @@map("scheduled_notifications")
+}
+
+// ========================================
+// ADAPTIVE FEED ALGORITHM (TikTok-style)
+// ========================================
+
+// Track every user interaction for personalization
+model UserInteraction {
+  id     String @id @default(uuid())
+  userId String
+
+  // Content Info
+  contentType String // trainer, facility, workout, ai_persona, video, post
+  contentId   String
+
+  // Interaction Type
+  action      String // view, like, skip, share, bookmark, book, watch, complete
+  actionValue Float? // Duration watched (seconds), completion %, etc.
+
+  // Context
+  sessionId  String? // Group actions in same session
+  deviceType String? // mobile, tablet, web
+  location   Json? // { lat, lng, city }
+  timeOfDay  String? // morning, afternoon, evening, night
+  dayOfWeek  Int? // 0-6
+
+  // Metadata
+  metadata  Json? // Additional context
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([contentType, contentId])
+  @@index([action])
+  @@index([sessionId])
+  @@index([createdAt])
+  @@map("user_interactions")
+}
+
+// Store computed user preferences (updated by ML algorithm)
+model UserPreference {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  // Workout Preferences
+  workoutTypes   Json // { strength: 0.8, cardio: 0.6, yoga: 0.3 }
+  intensityLevel String @default("medium") // beginner, medium, advanced, mixed
+
+  // Trainer Preferences
+  trainerStyles Json // { motivational: 0.9, technical: 0.7, gentle: 0.2 }
+  trainerIds    String[] // Favorite trainers
+
+  // Content Preferences
+  videoLength    String @default("medium") // short, medium, long, mixed
+  contentFormats Json // { video: 0.9, audio: 0.5, text: 0.3 }
+
+  // Specialty Preferences
+  specialties Json // { weight_loss: 0.8, muscle_gain: 0.6, flexibility: 0.4 }
+
+  // Time Preferences
+  preferredTimes String[] // morning, afternoon, evening
+  preferredDays  Int[] // 0-6 (0=Sunday)
+
+  // Location Preferences
+  maxDistance    Float? // Max distance willing to travel (miles)
+  preferredAreas String[] // City names or zip codes
+
+  // Engagement Scores
+  engagementScore Float @default(0) // Overall engagement (0-1)
+  skipRate        Float @default(0) // How often they skip content (0-1)
+  bookingRate     Float @default(0) // Conversion to bookings (0-1)
+
+  // Algorithm Version
+  modelVersion String   @default("v1")
+  lastComputed DateTime @default(now())
+
+  // Metadata
+  totalInteractions Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([engagementScore])
+  @@index([lastComputed])
+  @@map("user_preferences")
+}
+
+// Tag all content with features for recommendation
+model ContentFeature {
+  id String @id @default(uuid())
+
+  // Content Info
+  contentType String // trainer, facility, workout, ai_persona, video
+  contentId   String
+
+  // Features
+  workoutType String? // strength, cardio, yoga, hiit, etc.
+  intensity   String? // beginner, intermediate, advanced
+  duration    Int? // Duration in minutes
+  specialty   String[] // weight_loss, muscle_gain, flexibility
+  equipment   String[] // dumbbells, resistance_bands, none
+
+  // Trainer/Creator Features
+  trainerId    String?
+  trainerStyle String? // motivational, technical, gentle, tough_love
+
+  // Location
+  location Json? // { lat, lng, city, state }
+
+  // Popularity Metrics
+  viewCount    Int @default(0)
+  likeCount    Int @default(0)
+  bookingCount Int @default(0)
+  shareCount   Int @default(0)
+
+  // Quality Scores
+  completionRate  Float @default(0) // How often people finish it
+  engagementScore Float @default(0) // Overall engagement
+  rating          Float @default(0) // Average rating
+
+  // Recency
+  publishedAt DateTime?
+  lastUpdated DateTime  @default(now())
+
+  // Metadata
+  tags      String[]
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([contentType, contentId])
+  @@index([contentType])
+  @@index([workoutType])
+  @@index([intensity])
+  @@index([trainerId])
+  @@index([engagementScore])
+  @@index([publishedAt])
+  @@map("content_features")
+}
+
+// Cache recommendation scores for performance
+model RecommendationScore {
+  id     String @id @default(uuid())
+  userId String
+
+  // Content Info
+  contentType String
+  contentId   String
+
+  // Scores
+  personalScore   Float // Personalization score (0-1)
+  popularityScore Float // Global popularity (0-1)
+  recencyScore    Float // How recent (0-1)
+  diversityScore  Float // Diversity bonus (0-1)
+  finalScore      Float // Combined score (0-1)
+
+  // Ranking
+  rank Int? // Position in user's feed
+
+  // Algorithm Info
+  algorithmVersion String   @default("v1")
+  computedAt       DateTime @default(now())
+  expiresAt        DateTime // Recompute after expiration
+
+  // Metadata
+  reasoning Json? // Why this was recommended
+
+  @@unique([userId, contentType, contentId])
+  @@index([userId])
+  @@index([finalScore])
+  @@index([expiresAt])
+  @@index([computedAt])
+  @@map("recommendation_scores")
+}
+
+// Track feed sessions for analytics
+model FeedSession {
+  id     String @id @default(uuid())
+  userId String
+
+  // Session Info
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  duration  Int? // Seconds
+
+  // Content Served
+  contentServed  Int @default(0) // How many items shown
+  contentViewed  Int @default(0) // How many viewed
+  contentLiked   Int @default(0)
+  contentSkipped Int @default(0)
+  contentBooked  Int @default(0)
+
+  // Algorithm Performance
+  algorithmVersion String @default("v1")
+  avgTimePerItem   Float? // Average seconds per item
+  skipRate         Float? // Items skipped / items shown
+  engagementRate   Float? // Items interacted / items shown
+
+  // Device Info
+  deviceType String?
+  appVersion String?
+
+  // Metadata
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([startedAt])
+  @@index([algorithmVersion])
+  @@map("feed_sessions")
+}
+
+// ========================================
+// ANONYMOUS/GUEST USER SYSTEM
+// ========================================
+
+// Anonymous sessions for users who haven't signed up yet
+model AnonymousSession {
+  id String @id @default(uuid())
+
+  // Session Identity
+  sessionToken String  @unique // Used to identify anonymous user
+  deviceId     String? // Device fingerprint
+  deviceType   String? // mobile, tablet, web
+
+  // User Info (if provided)
+  tempEmail String? // If they provide email before signup
+  tempPhone String? // If they provide phone before signup
+
+  // Onboarding State
+  hasCompletedOnboarding Boolean @default(false)
+  onboardingStep         Int     @default(0)
+  onboardingData         Json? // Store preferences collected during onboarding
+
+  // Activity Tracking
+  totalInteractions Int      @default(0)
+  contentViewed     Int      @default(0)
+  timeSpent         Int      @default(0) // Seconds
+  lastActiveAt      DateTime @default(now())
+
+  // Conversion Tracking
+  convertedToUserId String? // Set when user signs up
+  convertedAt       DateTime?
+  conversionTrigger String? // what, booking, message, save_workout, etc.
+
+  // Location (for local content)
+  location Json? // { lat, lng, city, state }
+
+  // Metadata
+  appVersion     String?
+  referralSource String? // Where they came from
+  utmParams      Json? // Marketing params
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime // Auto-cleanup after 30 days of inactivity
+
+  @@index([sessionToken])
+  @@index([deviceId])
+  @@index([convertedToUserId])
+  @@index([lastActiveAt])
+  @@index([expiresAt])
+  @@map("anonymous_sessions")
+}
+
+// Track when/where anonymous users hit authentication gates
+model AuthenticationGate {
+  id String @id @default(uuid())
+
+  // Session Info
+  sessionToken String? // Anonymous session
+  userId       String? // If signed in
+
+  // Gate Info
+  gateType     String // booking, message, save, profile_view, ai_chat
+  gateTrigger  String // What they tried to do
+  gateLocation String // Screen/component where gate appeared
+
+  // Outcome
+  didAuthenticate Boolean   @default(false)
+  authenticatedAt DateTime?
+  didConvert      Boolean   @default(false) // Did they complete the action after auth?
+
+  // Context
+  contentType String? // What they were trying to access
+  contentId   String?
+  metadata    Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([sessionToken])
+  @@index([userId])
+  @@index([gateType])
+  @@index([didAuthenticate])
+  @@map("authentication_gates")
+}
+
+// Quick preferences for onboarding (before signup)
+model OnboardingPreference {
+  id           String @id @default(uuid())
+  sessionToken String @unique
+
+  // Collected During Onboarding
+  fitnessGoals String[] // weight_loss, muscle_gain, endurance, flexibility
+  experience   String? // beginner, intermediate, advanced
+  workoutTypes String[] // strength, cardio, yoga, hiit, sports
+  availability String[] // morning, afternoon, evening, weekend
+  location     Json? // { lat, lng, city }
+  maxDistance  Float? // Miles willing to travel
+
+  // Budget (optional)
+  budgetRange String? // budget, moderate, premium
+
+  // Completed
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sessionToken])
+  @@map("onboarding_preferences")
+}
+
+// ========================================
+// INTERNATIONALIZATION (i18n) SYSTEM
+// ========================================
+
+// User locale and regional preferences
+model UserLocale {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  // Language & Region
+  language String @default("en") // ISO 639-1 (en, es, fr, de, pt, etc.)
+  country  String @default("US") // ISO 3166-1 alpha-2 (US, MX, BR, GB, etc.)
+  locale   String @default("en-US") // Combined (en-US, es-MX, pt-BR, etc.)
+
+  // Regional Preferences
+  currency        String @default("USD") // ISO 4217 (USD, EUR, GBP, MXN, BRL, etc.)
+  timezone        String @default("America/New_York") // IANA timezone
+  distanceUnit    String @default("miles") // miles, kilometers
+  weightUnit      String @default("lbs") // lbs, kg
+  temperatureUnit String @default("fahrenheit") // fahrenheit, celsius
+
+  // Date/Time Formats
+  dateFormat     String @default("MM/DD/YYYY") // US: MM/DD/YYYY, EU: DD/MM/YYYY
+  timeFormat     String @default("12h") // 12h, 24h
+  firstDayOfWeek Int    @default(0) // 0=Sunday, 1=Monday
+
+  // Content Preferences
+  showLocalFirst Boolean @default(true) // Prioritize local trainers
+  autoTranslate  Boolean @default(false) // Auto-translate content
+
+  // Detected Info (from IP/device)
+  detectedCountry  String?
+  detectedTimezone String?
+  detectedLanguage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([country])
+  @@index([language])
+  @@map("user_locales")
+}
+
+// Multi-language translations for content
+model Translation {
+  id String @id @default(uuid())
+
+  // Content Reference
+  contentType String // trainer_bio, facility_description, workout_name, etc.
+  contentId   String // ID of the content
+  fieldName   String // Which field is translated (name, description, bio, etc.)
+
+  // Translation
+  language       String // ISO 639-1 (en, es, fr, de, etc.)
+  originalText   String @db.Text
+  translatedText String @db.Text
+
+  // Translation Source
+  translatedBy       String  @default("auto") // auto, human, trainer
+  translationService String? // google, deepl, azure, manual
+  confidence         Float?  @default(1.0) // 0-1 confidence score
+
+  // Status
+  verified    Boolean @default(false) // Has a human verified this?
+  needsReview Boolean @default(false)
+
+  // Metadata
+  translatedAt DateTime  @default(now())
+  verifiedAt   DateTime?
+  verifiedBy   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([contentType, contentId, fieldName, language])
+  @@index([contentType, contentId])
+  @@index([language])
+  @@map("translations")
+}
+
+// Currency exchange rates (updated daily)
+model CurrencyRate {
+  id String @id @default(uuid())
+
+  // Currency pair
+  fromCurrency String // USD, EUR, etc.
+  toCurrency   String // MXN, BRL, etc.
+
+  // Rate
+  rate Decimal @db.Decimal(18, 6) // e.g., 1 USD = 20.5 MXN
+
+  // Source
+  source String @default("api") // api, manual, fixer.io, exchangerate-api
+
+  // Validity
+  validFrom  DateTime @default(now())
+  validUntil DateTime
+  isActive   Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([fromCurrency, toCurrency, validFrom])
+  @@index([fromCurrency, toCurrency])
+  @@index([isActive])
+  @@map("currency_rates")
+}
+
+// Multi-currency pricing for trainers
+model TrainerPricing {
+  id        String @id @default(uuid())
+  trainerId String
+
+  // Base pricing (in trainer's local currency)
+  baseCurrency String  @default("USD")
+  basePrice    Decimal @db.Decimal(10, 2)
+
+  // Alternative pricing (optional, trainer-set)
+  altCurrency1 String?
+  altPrice1    Decimal? @db.Decimal(10, 2)
+  altCurrency2 String?
+  altPrice2    Decimal? @db.Decimal(10, 2)
+
+  // Pricing rules
+  autoConvert Boolean @default(true) // Auto-convert to user's currency
+  roundPrices Boolean @default(true) // Round to nearest 5 or 10
+
+  // Session type
+  sessionType String @default("standard") // standard, group, online, etc.
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([trainerId])
+  @@index([baseCurrency])
+  @@map("trainer_pricing")
+}
+
+// Regional availability and compliance
+model RegionalAvailability {
+  id String @id @default(uuid())
+
+  // Content Reference
+  contentType String // trainer, facility, workout, feature
+  contentId   String
+
+  // Regions
+  availableIn String[] // Country codes: ["US", "MX", "CA"]
+  blockedIn   String[] // Country codes: ["CN", "RU"]
+
+  // Compliance flags
+  requiresGDPR   Boolean @default(false) // EU compliance
+  requiresCCPA   Boolean @default(false) // California privacy
+  requiresLGPD   Boolean @default(false) // Brazil privacy
+  ageRestriction Int? // Minimum age (18+ for some features)
+
+  // Reason
+  blockReason String? // "legal", "licensing", "compliance"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([contentType, contentId])
+  @@index([contentType])
+  @@map("regional_availability")
+}
+
+// Supported countries/regions
+model SupportedRegion {
+  id String @id @default(uuid())
+
+  // Region Info
+  countryCode String @unique // ISO 3166-1 alpha-2
+  countryName String
+  region      String // North America, Europe, Asia, etc.
+
+  // Support Status
+  isSupported Boolean   @default(true)
+  isActive    Boolean   @default(true)
+  launchDate  DateTime?
+
+  // Localization
+  languages       String[] // Supported languages in this country
+  defaultLanguage String
+  defaultCurrency String
+  defaultTimezone String
+
+  // Features
+  bookingEnabled   Boolean @default(true)
+  paymentsEnabled  Boolean @default(false)
+  aiPersonaEnabled Boolean @default(true)
+
+  // Payment Methods
+  paymentMethods String[] // ["card", "bank_transfer", "pix", "mercadopago"]
+
+  // Metadata
+  flagEmoji   String // 🇺🇸 🇲🇽 🇧🇷
+  phonePrefix String // +1, +52, +55
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([countryCode])
+  @@index([isSupported])
+  @@map("supported_regions")
+}
+
+// Phone number internationalization
+model PhoneNumber {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  // Phone number parts
+  countryCode    String // +1, +52, +55, etc.
+  nationalNumber String // 5551234567
+  fullNumber     String // +15551234567 (E.164 format)
+
+  // Formatting
+  formattedLocal String? // (555) 123-4567
+  formattedIntl  String? // +1 555-123-4567
+
+  // Validation
+  isValid    Boolean @default(false)
+  isPossible Boolean @default(false)
+  numberType String? // mobile, fixed_line, toll_free
+  carrier    String? // AT&T, Verizon, etc.
+
+  // Verification
+  isVerified         Boolean   @default(false)
+  verifiedAt         DateTime?
+  verificationMethod String? // sms, call, whatsapp
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([countryCode])
+  @@map("phone_numbers")
+}
+
+// ========================================
+// AUTO-GENERATED WORKOUT PLANS
+// ========================================
+
+// AI-generated workout plans for clients
+model WorkoutPlan {
+  id       String @id @default(uuid())
+  trainerId String
+  clientId String
+
+  // Plan Info
+  name        String
+  description String? @db.Text
+  goal        String // weight_loss, muscle_gain, endurance, flexibility, sport_specific
+  duration    Int // Total weeks
+  difficulty  String // beginner, intermediate, advanced
+
+  // Client Context (used for generation)
+  clientGoals      Json // Detailed goals from onboarding
+  fitnessLevel     String // Current fitness level
+  availableTime    Int // Minutes per session
+  sessionsPerWeek  Int // How often they can train
+  equipment        String[] // Available equipment
+  injuries         String[] // Any limitations
+  preferences      Json? // Workout preferences
+
+  // Generation Info
+  generatedBy      String @default("ai") // ai, trainer, hybrid
+  aiModel          String? // gpt-4, claude-3, etc.
+  generationPrompt String? @db.Text
+  generatedAt      DateTime @default(now())
+
+  // Status
+  status     String @default("draft") // draft, active, completed, archived
+  startDate  DateTime?
+  endDate    DateTime?
+  isTemplate Boolean @default(false) // Can be reused for similar clients
+
+  // Progress Tracking
+  currentWeek       Int @default(1)
+  completedSessions Int @default(0)
+  totalSessions     Int
+  completionRate    Float @default(0) // 0-1
+
+  // Performance Metrics
+  adherenceScore Float? // How well client follows plan (0-1)
+  progressScore  Float? // Measured progress toward goal (0-1)
+  lastAdjusted   DateTime?
+
+  // Auto-adjustment
+  autoAdjust       Boolean @default(true) // AI adjusts difficulty automatically
+  adjustmentReason String? // Why plan was adjusted
+
+  // Relationships
+  workouts         WorkoutSession[]
+  progressUpdates  WorkoutProgress[]
+  adjustmentLogs   PlanAdjustment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([trainerId])
+  @@index([clientId])
+  @@index([status])
+  @@index([goal])
+  @@map("workout_plans")
+}
+
+// Individual workout sessions within a plan
+model WorkoutSession {
+  id           String @id @default(uuid())
+  workoutPlanId String
+  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+
+  // Session Info
+  week         Int // Week number in plan
+  dayOfWeek    Int // 0-6
+  sessionNumber Int // Session # within the week
+  name         String
+  description  String? @db.Text
+  type         String // strength, cardio, flexibility, rest, sport
+
+  // Timing
+  estimatedDuration Int // Minutes
+  scheduledFor      DateTime?
+  completedAt       DateTime?
+
+  // Status
+  status String @default("scheduled") // scheduled, completed, skipped, rescheduled
+
+  // Exercises
+  exercises       Json // Array of exercises with sets, reps, weights
+  warmup          Json? // Warmup routine
+  cooldown        Json? // Cooldown/stretching
+
+  // Client Feedback
+  clientRating    Int? // 1-5 stars
+  difficultyRating Int? // 1-5 (too easy to too hard)
+  clientNotes     String? @db.Text
+  trainerNotes    String? @db.Text
+
+  // Performance
+  actualDuration Int? // Actual minutes spent
+  caloriesBurned Int?
+  heartRateAvg   Int?
+
+  // Auto-adjustment triggers
+  needsAdjustment Boolean @default(false)
+  adjustmentFlag  String? // too_easy, too_hard, equipment_missing, injury
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workoutPlanId])
+  @@index([status])
+  @@index([scheduledFor])
+  @@map("workout_sessions")
+}
+
+// Track client progress within a plan
+model WorkoutProgress {
+  id           String @id @default(uuid())
+  workoutPlanId String
+  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+  clientId     String
+
+  // Measurements
+  date        DateTime @default(now())
+  week        Int
+  weight      Float?
+  bodyFat     Float?
+  muscleMass  Float?
+  measurements Json? // chest, waist, arms, etc.
+
+  // Performance Metrics
+  strength     Json? // Exercise PRs
+  endurance    Json? // Running distance, time, etc.
+  flexibility  Json? // Flexibility scores
+
+  // Subjective Feedback
+  energyLevel Int? // 1-10
+  motivation  Int? // 1-10
+  soreness    Int? // 1-10
+  notes       String? @db.Text
+
+  // Photos
+  progressPhotos String[] // URLs to progress photos
+
+  // AI Analysis
+  aiInsights     String? @db.Text
+  recommendations String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([workoutPlanId])
+  @@index([clientId])
+  @@index([date])
+  @@map("workout_progress")
+}
+
+// Log all AI adjustments to plans
+model PlanAdjustment {
+  id           String @id @default(uuid())
+  workoutPlanId String
+  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+
+  // Adjustment Info
+  adjustmentType String // difficulty, volume, frequency, exercise_swap
+  reason         String @db.Text
+  trigger        String // client_feedback, missed_sessions, progress_data, injury
+
+  // Changes Made
+  before Json // State before adjustment
+  after  Json // State after adjustment
+
+  // AI Info
+  madeBy  String @default("ai") // ai, trainer, client
+  aiModel String?
+
+  // Outcome tracking
+  wasSuccessful Boolean?
+  clientFeedback String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([workoutPlanId])
+  @@index([adjustmentType])
+  @@map("plan_adjustments")
+}
+
+// Exercise library for generating plans
+model Exercise {
+  id String @id @default(uuid())
+
+  // Exercise Info
+  name         String @unique
+  description  String @db.Text
+  category     String // strength, cardio, flexibility, balance, sport
+  muscleGroups String[] // chest, back, legs, shoulders, etc.
+  equipment    String[] // dumbbells, barbell, bodyweight, machine, etc.
+  difficulty   String // beginner, intermediate, advanced
+
+  // Instructions
+  instructions String @db.Text
+  tips         String? @db.Text
+  videoUrl     String?
+  imageUrl     String?
+
+  // Metadata
+  caloriesPerMinute Float?
+  popularityScore   Float @default(0)
+  variations        Json? // Easier/harder variations
+
+  // Safety
+  contraindications String[] // injuries, conditions that prevent this
+  substitutes       String[] // Alternative exercises
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([difficulty])
+  @@map("exercises")
+}
+
+// ========================================
+// AUTO-RESCHEDULING SYSTEM
+// ========================================
+
+// Detect and auto-resolve scheduling conflicts
+model SchedulingConflict {
+  id String @id @default(uuid())
+
+  // Session Info
+  sessionId   String
+  trainerId   String
+  clientId    String
+  originalTime DateTime
+
+  // Conflict Details
+  conflictType   String // double_booking, trainer_unavailable, client_request, calendar_sync
+  conflictSource String? // google_calendar, manual, system
+  severity       String @default("medium") // low, medium, high, critical
+
+  // Detection
+  detectedAt     DateTime @default(now())
+  detectedBy     String @default("system") // system, trainer, client
+  conflictReason String @db.Text
+
+  // Resolution
+  status           String @default("pending") // pending, resolving, resolved, failed
+  resolutionType   String? // auto_reschedule, cancelled, manual, waitlist
+  resolvedAt       DateTime?
+  resolutionNotes  String? @db.Text
+
+  // Proposed Solutions (AI-generated)
+  suggestedSlots Json? // Array of alternative time slots
+  aiRecommendation String? @db.Text
+
+  // Outcome
+  newSessionId String? // If rescheduled successfully
+  newTime      DateTime?
+  acceptedBy   String? // trainer, client, both
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([trainerId])
+  @@index([sessionId])
+  @@index([status])
+  @@index([detectedAt])
+  @@map("scheduling_conflicts")
+}
+
+// Auto-rescheduling rules per trainer
+model ReschedulingRule {
+  id        String @id @default(uuid())
+  trainerId String
+
+  // Rule Configuration
+  ruleName    String
+  isActive    Boolean @default(true)
+  priority    Int @default(0) // Higher = applied first
+
+  // Trigger Conditions
+  conflictTypes String[] // Which conflicts trigger this rule
+  minNoticePeriod Int? // Minimum hours notice required
+
+  // Auto-actions
+  autoReschedule    Boolean @default(true)
+  autoNotifyClient  Boolean @default(true)
+  requireApproval   Boolean @default(false)
+  maxAttempts       Int @default(3)
+
+  // Time Preferences
+  preferredDays     Int[] // 0-6 (days to suggest)
+  preferredTimes    Json // Time ranges: [{start: "09:00", end: "12:00"}]
+  bufferMinutes     Int @default(30) // Buffer between sessions
+  maxDaysOut        Int @default(14) // How far ahead to search
+
+  // Client Preferences
+  respectClientPrefs Boolean @default(true)
+  allowWeekends     Boolean @default(false)
+  allowEvenings     Boolean @default(true)
+
+  // Fallback Actions
+  addToWaitlist      Boolean @default(true)
+  offerVirtualOption Boolean @default(false)
+  suggestOtherTrainer Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([trainerId])
+  @@index([isActive])
+  @@map("rescheduling_rules")
+}
+
+// Track all automatic rescheduling attempts
+model ReschedulingAttempt {
+  id         String @id @default(uuid())
+  conflictId String
+  sessionId  String
+  trainerId  String
+  clientId   String
+
+  // Attempt Info
+  attemptNumber Int
+  strategy      String // ai_suggestion, trainer_availability, client_preference
+  proposedTime  DateTime
+
+  // AI Reasoning
+  aiConfidence Float? // 0-1 confidence score
+  reasoning    String? @db.Text
+  alternativeSlots Json? // Other options considered
+
+  // Client Response
+  sentToClient Boolean @default(false)
+  sentAt       DateTime?
+  viewedByClient Boolean @default(false)
+  viewedAt     DateTime?
+
+  // Outcome
+  status         String @default("pending") // pending, accepted, declined, expired
+  respondedAt    DateTime?
+  declineReason  String?
+
+  // Success Metrics
+  responseTime   Int? // Minutes to respond
+  wasSuccessful  Boolean?
+
+  createdAt DateTime @default(now())
+
+  @@index([conflictId])
+  @@index([sessionId])
+  @@index([status])
+  @@map("rescheduling_attempts")
+}
+
+// Track availability windows for smart rescheduling
+model AvailabilityWindow {
+  id        String @id @default(uuid())
+  trainerId String
+
+  // Time Window
+  dayOfWeek Int // 0-6
+  startTime String // HH:MM format
+  endTime   String // HH:MM format
+
+  // Recurrence
+  isRecurring Boolean @default(true)
+  startDate   DateTime?
+  endDate     DateTime?
+
+  // Capacity
+  maxSessions Int @default(8) // Max sessions in this window
+  bufferMins  Int @default(15) // Buffer between sessions
+
+  // Override
+  isOverride Boolean @default(false) // One-time override
+  overrideDate DateTime?
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Metadata
+  label String? // "Morning Sessions", "Evening Block"
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([trainerId])
+  @@index([dayOfWeek])
+  @@index([isActive])
+  @@map("availability_windows")
+}
+
+// Rescheduling analytics and success metrics
+model ReschedulingMetrics {
+  id        String @id @default(uuid())
+  trainerId String
+
+  // Time Period
+  periodStart DateTime
+  periodEnd   DateTime
+
+  // Conflict Stats
+  totalConflicts     Int @default(0)
+  autoResolved       Int @default(0)
+  manualResolved     Int @default(0)
+  unresolved         Int @default(0)
+
+  // Success Rates
+  autoResolveRate    Float @default(0) // 0-1
+  clientAcceptRate   Float @default(0) // 0-1
+  avgResponseTime    Int? // Minutes
+  avgAttempts        Float? // Avg attempts per conflict
+
+  // Time Saved
+  hoursAutoSaved     Float @default(0)
+  manualHoursSpent   Float @default(0)
+
+  // Client Satisfaction
+  avgClientRating    Float?
+  complaintsReceived Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([trainerId])
+  @@index([periodStart])
+  @@map("rescheduling_metrics")
+}
+
+// ========================================
+// SAFETY & MODERATION SYSTEM
+// ========================================
+
+// User reports (content, users, reviews)
+model Report {
+  id              String   @id @default(uuid())
+
+  // Reporter
+  reporterId      String
+  reporterEmail   String?
+
+  // What's being reported
+  contentType     String // user, review, message, booking
+  contentId       String
+  reportedUserId  String? // If reporting a user
+
+  // Report details
+  reason          String // inappropriate, spam, fake, harassment, fraud, other
+  category        String? // harassment, hate_speech, violence, nudity, spam, fraud, other
+  description     String?
+  evidence        String[] // URLs to screenshots, messages, etc.
+
+  // Status
+  status          String   @default("pending") // pending, reviewing, resolved, dismissed
+  priority        String   @default("normal") // low, normal, high, urgent
+
+  // Resolution
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  resolution      String? // warning_sent, content_removed, user_banned, dismissed
+  resolutionNotes String?
+  actionTaken     String? // Details of action taken
+
+  // Metadata
+  ipAddress       String?
+  userAgent       String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("reports")
+}
+
+// Blocked users (already exists in Firebase, but adding to Prisma for admin view)
+model BlockedUser {
+  id              String   @id @default(uuid())
+
+  // Who blocked who
+  userId          String // User who blocked
+  blockedUserId   String // User who was blocked
+
+  // Reason
+  reason          String?
+
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, blockedUserId])
+  @@index([userId])
+  @@index([blockedUserId])
+  @@map("blocked_users")
+}
+
+// User bans (admin action)
+model UserBan {
+  id              String   @id @default(uuid())
+
+  // Banned user
+  userId          String   @unique
+  userEmail       String
+
+  // Ban details
+  reason          String
+  banType         String // temporary, permanent
+  duration        Int? // Days (for temporary bans)
+  expiresAt       DateTime?
+
+  // Who banned
+  bannedBy        String // Admin user ID
+  bannedAt        DateTime @default(now())
+
+  // Status
+  isActive        Boolean  @default(true)
+  liftedAt        DateTime?
+  liftedBy        String?
+  liftReason      String?
+
+  // Context
+  relatedReportId String?
+  notes           String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isActive])
+  @@index([expiresAt])
+  @@map("user_bans")
+}
+
+// Trainer verifications
+model TrainerVerification {
+  id              String   @id @default(uuid())
+
+  // Trainer
+  trainerId       String   @unique
+  trainerEmail    String
+
+  // Verification details
+  verificationType String // identity, certification, background_check
+  status          String   @default("pending") // pending, approved, rejected, expired
+
+  // Documents
+  documentType    String? // drivers_license, passport, certification, insurance
+  documentUrl     String?
+  documentNumber  String?
+  expiresAt       DateTime?
+
+  // Verification
+  verifiedBy      String?
+  verifiedAt      DateTime?
+  rejectionReason String?
+
+  // Metadata
+  submittedAt     DateTime @default(now())
+  notes           String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([trainerId])
+  @@index([status])
+  @@map("trainer_verifications")
+}
+
+// Moderation actions log
+model ModerationAction {
+  id              String   @id @default(uuid())
+
+  // Moderator
+  moderatorId     String
+  moderatorName   String
+
+  // Action
+  actionType      String // ban_user, remove_content, approve_content, warn_user, verify_trainer
+  targetType      String // user, content, report
+  targetId        String
+
+  // Details
+  reason          String
+  notes           String?
+  metadata        Json?
+
+  // Auto vs manual
+  isAutomated     Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+
+  @@index([moderatorId])
+  @@index([actionType])
+  @@index([createdAt])
+  @@map("moderation_actions")
+}
+
+// ========================================
+// SUBSCRIPTION SYSTEM (AI Features)
+// ========================================
+
+// Subscription plans
+model SubscriptionPlan {
+  id              String   @id @default(uuid())
+
+  // Plan details
+  name            String   @unique // free, basic, pro, elite
+  displayName     String // "Pro", "Elite"
+  description     String?
+  
+  // Pricing
+  priceMonthly    Float // Monthly price in dollars
+  priceYearly     Float // Annual price (with discount)
+  currency        String   @default("USD")
+  
+  // Stripe
+  stripePriceIdMonthly String? // Stripe price ID for monthly
+  stripePriceIdYearly  String? // Stripe price ID for yearly
+  
+  // Features (JSON for flexibility)
+  features        Json // { giaLimit: -1, aiPersonasPerDay: -1, bookingDiscount: 10, ... }
+  
+  // Limits
+  giaQueriesPerDay     Int @default(-1) // -1 = unlimited
+  aiPersonasPerDay     Int @default(-1) // -1 = unlimited
+  aiWorkoutPlansPerMonth Int @default(0)
+  bookingDiscountPercent Float @default(0)
+  
+  // Status
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  
+  // Trial
+  trialDays       Int      @default(0) // 0 = no trial, 14 = 14 day trial
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  subscriptions   UserSubscription[]
+
+  @@index([name])
+  @@index([isActive])
+  @@map("subscription_plans")
+}
+
+// User subscriptions
+model UserSubscription {
+  id              String   @id @default(uuid())
+
+  // User
+  userId          String
+  userEmail       String
+  
+  // Plan
+  planId          String
+  plan            SubscriptionPlan @relation(fields: [planId], references: [id])
+  planName        String // Cached for quick access
+  
+  // Stripe
+  stripeCustomerId      String?
+  stripeSubscriptionId  String? @unique
+  stripePriceId         String?
+  
+  // Status
+  status          String // active, trialing, past_due, canceled, incomplete
+  
+  // Billing
+  billingCycle    String // monthly, yearly
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  
+  // Trial
+  trialStart      DateTime?
+  trialEnd        DateTime?
+  
+  // Cancellation
+  cancelAtPeriodEnd Boolean @default(false)
+  canceledAt        DateTime?
+  cancelReason      String?
+  
+  // Metadata
+  metadata        Json?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  usageRecords    SubscriptionUsage[]
+
+  @@unique([userId, planId])
+  @@index([userId])
+  @@index([stripeSubscriptionId])
+  @@index([status])
+  @@index([currentPeriodEnd])
+  @@map("user_subscriptions")
+}
+
+// Subscription usage tracking
+model SubscriptionUsage {
+  id              String   @id @default(uuid())
+
+  // User subscription
+  subscriptionId  String
+  subscription    UserSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  userId          String
+  
+  // Usage details
+  featureType     String // gia_query, ai_persona_session, ai_workout_plan, form_check
+  featureId       String? // Reference to specific feature used
+  
+  // Metadata
+  metadata        Json? // Sport, duration, etc.
+  
+  // Date tracking
+  usedAt          DateTime @default(now())
+  date            DateTime @default(now()) @db.Date // For daily limits
+  
+  createdAt       DateTime @default(now())
+
+  @@index([subscriptionId])
+  @@index([userId])
+  @@index([featureType])
+  @@index([date])
+  @@index([userId, date]) // For daily usage queries
+  @@map("subscription_usage")
+}
+
+// Subscription history (for analytics)
+model SubscriptionHistory {
+  id              String   @id @default(uuid())
+
+  // User
+  userId          String
+  userEmail       String
+  
+  // Event
+  eventType       String // subscribed, upgraded, downgraded, canceled, renewed, trial_started, trial_ended
+  
+  // Plans
+  fromPlanId      String?
+  fromPlanName    String?
+  toPlanId        String?
+  toPlanName      String?
+  
+  // Stripe
+  stripeEventId   String?
+  stripeSubscriptionId String?
+  
+  // Details
+  amount          Float?
+  currency        String?
+  billingCycle    String? // monthly, yearly
+  
+  // Reason (for cancellations)
+  reason          String?
+  notes           String?
+  
+  // Metadata
+  metadata        Json?
+  
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("subscription_history")
+}
+
+// ========================================
+// FACILITY REPORTING & GAMIFICATION
+// ========================================
+
+// Facility condition reports (traffic, crowd, skill level, etc.)
+model FacilityReport {
+  id                  String   @id @default(uuid())
+  userId              String
+  facilityId          String
+  
+  // Location details
+  sport               String
+  specificLocation    String?
+  
+  // Conditions
+  crowdLevel          String? // empty, light, moderate, busy, packed
+  skillLevel          String? // beginner, intermediate, advanced, mixed
+  ageGroup            String? // kids, teens, adults, seniors, mixed
+  weatherCondition    String? // sunny, cloudy, windy, hot, cold
+  surfaceCondition    String? // excellent, good, fair, poor
+  waitTime            Int? // minutes
+  parkingAvailability String? // plenty, limited, full
+  
+  // Optional details
+  notes               String?
+  photos              String[]
+  videos              String[]
+  
+  // Engagement
+  helpfulVotes        Int     @default(0)
+  notHelpfulVotes     Int     @default(0)
+  confirmations       Int     @default(0)
+  
+  // Rewards
+  rewardAmount        Float   @default(0)
+  bonusAmount         Float   @default(0)
+  streakMultiplier    Float   @default(1.0)
+  
+  // Metadata
+  reportQuality       Int? // 1-5 stars
+  isVerified          Boolean @default(false)
+  gpsLat              Float?
+  gpsLng              Float?
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId])
+  @@index([facilityId])
+  @@index([sport])
+  @@index([createdAt])
+  @@map("facility_reports")
+}
+
+// Maintenance reports (broken equipment, repairs needed)
+model MaintenanceReport {
+  id                String   @id @default(uuid())
+  userId            String
+  facilityId        String
+  
+  // Issue details
+  sport             String
+  specificLocation  String?
+  category          String // net, surface, lighting, bathroom, etc
+  issue             String // specific issue
+  severity          String // low, medium, high, urgent
+  description       String?
+  
+  // Media
+  photos            String[]
+  videos            String[]
+  
+  // Status tracking
+  status            String   @default("reported") // reported, acknowledged, in_progress, fixed, verified
+  acknowledgedAt    DateTime?
+  inProgressAt      DateTime?
+  fixedAt           DateTime?
+  verifiedAt        DateTime?
+  
+  // Engagement
+  confirmations     Int      @default(0)
+  helpfulVotes      Int      @default(0)
+  
+  // Rewards
+  rewardAmount      Float    @default(0)
+  bonusAmount       Float    @default(0)
+  
+  // Facility response
+  facilityNotes     String?
+  estimatedFixDate  DateTime?
+  actualCost        Float?
+  fixDuration       Int? // hours to fix
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([facilityId])
+  @@index([status])
+  @@index([severity])
+  @@index([createdAt])
+  @@map("maintenance_reports")
+}
+
+// Report confirmations (other users confirming reports)
+model ReportConfirmation {
+  id                String   @id @default(uuid())
+  reportId          String
+  reportType        String // facility or maintenance
+  userId            String
+  confirmationType  String // confirm_issue, confirm_fixed, helpful, not_helpful
+  notes             String?
+  photo             String?
+  
+  createdAt         DateTime @default(now())
+
+  @@index([reportId])
+  @@index([userId])
+  @@map("report_confirmations")
+}
+
+// User reporter stats (levels, streaks, earnings)
+model UserReporterStats {
+  userId                   String   @id
+  
+  // Counts
+  totalReports             Int      @default(0)
+  facilityReports          Int      @default(0)
+  maintenanceReports       Int      @default(0)
+  
+  // Streaks
+  currentStreak            Int      @default(0)
+  longestStreak            Int      @default(0)
+  lastReportDate           DateTime? @db.Date
+  
+  // Earnings
+  totalEarned              Float    @default(0)
+  totalBonuses             Float    @default(0)
+  pendingCredits           Float    @default(0)
+  
+  // Quality metrics
+  averageQuality           Float    @default(0)
+  helpfulVotesReceived     Int      @default(0)
+  confirmationsReceived    Int      @default(0)
+  
+  // Level & XP
+  level                    Int      @default(1)
+  xp                       Int      @default(0)
+  
+  // Rankings
+  weeklyRank               Int?
+  monthlyRank              Int?
+  allTimeRank              Int?
+  
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@index([level])
+  @@index([totalReports])
+  @@index([weeklyRank])
+  @@map("user_reporter_stats")
+}
+
+// Badges
+model ReporterBadge {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  displayName String
+  description String
+  icon        String
+  category    String // milestone, special, sport, maintenance
+  requirement Json // conditions to earn
+  rarity      String // common, uncommon, rare, epic, legendary
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+
+  // Relations
+  userBadges  UserBadge[]
+
+  @@map("reporter_badges")
+}
+
+// User badges (earned)
+model UserBadge {
+  id       String   @id @default(uuid())
+  userId   String
+  badgeId  String
+  badge    ReporterBadge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  earnedAt DateTime @default(now())
+  progress Json? // for tracking partial progress
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@index([earnedAt])
+  @@map("user_badges")
+}
+
+// Challenges/Quests
+model ReporterChallenge {
+  id            String   @id @default(uuid())
+  name          String
+  displayName   String
+  description   String
+  type          String // weekly, monthly, special
+  category      String // facility, maintenance, mixed
+  
+  // Requirements
+  requirement   Json
+  
+  // Rewards
+  cashReward    Float    @default(0)
+  creditReward  Float    @default(0)
+  badgeReward   String? // badge ID
+  
+  // Schedule
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean  @default(true)
+  
+  createdAt     DateTime @default(now())
+
+  // Relations
+  userProgress  UserChallenge[]
+
+  @@map("reporter_challenges")
+}
+
+// User challenge progress
+model UserChallenge {
+  id           String   @id @default(uuid())
+  userId       String
+  challengeId  String
+  challenge    ReporterChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  progress     Json
+  completed    Boolean  @default(false)
+  completedAt  DateTime?
+  claimed      Boolean  @default(false)
+  claimedAt    DateTime?
+
+  @@unique([userId, challengeId])
+  @@index([userId])
+  @@index([completed])
+  @@map("user_challenges")
+}
+
+// Leaderboard snapshots (for historical tracking)
+model LeaderboardSnapshot {
+  id          String   @id @default(uuid())
+  period      String // weekly, monthly, all_time
+  periodStart DateTime @db.Date
+  periodEnd   DateTime? @db.Date
+  rankings    Json // array of {userId, rank, reports, earned}
+  
+  createdAt   DateTime @default(now())
+
+  @@index([period])
+  @@index([periodStart])
+  @@map("leaderboard_snapshots")
+}
+
+// Maintenance categories (predefined per sport)
+model MaintenanceCategory {
+  id           String   @id @default(uuid())
+  sport        String
+  category     String
+  displayName  String
+  icon         String
+  commonIssues String[] // predefined issue options
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+
+  @@index([sport])
+  @@map("maintenance_categories")
+}
+
+// ========================================
+// PUBLIC BOOKING SYSTEM (Pre-App Launch)
+// ========================================
+
+// Trainer's booking settings and session types
+model BookingSettings {
+  id                String   @id @default(uuid())
+  trainerId         String   @unique
+  
+  // Public booking link
+  bookingSlug       String   @unique // e.g., "coach-mike" for goodrunss.com/book/coach-mike
+  
+  // Display settings
+  displayName       String
+  bio               String?
+  profilePhotoUrl   String?
+  
+  // Booking rules
+  advanceBookingDays Int     @default(30) // How many days ahead clients can book
+  minNoticeHours    Int      @default(24) // Minimum hours notice required
+  bufferMinutes     Int      @default(15) // Buffer between sessions
+  
+  // Session types (JSON array)
+  sessionTypes      Json     // [{ id, name, duration, price, description, stripe_price_id }]
+  
+  // Settings
+  requirePayment    Boolean  @default(true)
+  autoApprove       Boolean  @default(true)
+  isActive          Boolean  @default(true)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  trainer           User     @relation("TrainerBookingSettings", fields: [trainerId], references: [id], onDelete: Cascade)
+  availability      TrainerAvailability[]
+  bookings          PublicBooking[]
+  blockedSlots      BlockedTimeSlot[]
+  
+  @@index([bookingSlug])
+  @@map("booking_settings")
+}
+
+// Trainer's weekly recurring availability
+model TrainerAvailability {
+  id              String   @id @default(uuid())
+  bookingSettings BookingSettings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
+  settingsId      String
+  
+  // Day of week (0 = Sunday, 6 = Saturday)
+  dayOfWeek       Int
+  
+  // Time slots
+  startTime       String // "09:00"
+  endTime         String // "17:00"
+  
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([settingsId])
+  @@index([dayOfWeek])
+  @@map("trainer_availability")
+}
+
+// Blocked time slots (vacations, appointments, etc.)
+model BlockedTimeSlot {
+  id              String   @id @default(uuid())
+  bookingSettings BookingSettings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
+  settingsId      String
+  
+  startTime       DateTime
+  endTime         DateTime
+  reason          String?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([settingsId])
+  @@index([startTime])
+  @@map("blocked_time_slots")
+}
+
+// Public bookings from clients (pre-app)
+model PublicBooking {
+  id              String   @id @default(uuid())
+  bookingSettings BookingSettings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
+  settingsId      String
+  trainerId       String
+  
+  // Client info (no login required)
+  clientName      String
+  clientEmail     String
+  clientPhone     String?
+  
+  // Booking details
+  sessionTypeId   String // References sessionTypes JSON in BookingSettings
+  sessionTypeName String
+  startTime       DateTime
+  endTime         DateTime
+  duration        Int // minutes
+  
+  // Payment
+  price           Float
+  stripePriceId   String?
+  stripePaymentIntentId String?
+  stripeSessionId String?
+  paymentStatus   String @default("pending") // pending, paid, failed, refunded
+  
+  // Status
+  status          String @default("pending") // pending, confirmed, cancelled, completed
+  notes           String?
+  
+  // Timestamps
+  bookedAt        DateTime @default(now())
+  confirmedAt     DateTime?
+  cancelledAt     DateTime?
+  completedAt     DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  trainer         User     @relation("TrainerPublicBookings", fields: [trainerId], references: [id], onDelete: Cascade)
+  
+  @@index([trainerId])
+  @@index([startTime])
+  @@index([status])
+  @@index([clientEmail])
+  @@map("public_bookings")
+}
+
