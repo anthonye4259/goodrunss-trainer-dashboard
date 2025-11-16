@@ -171,7 +171,7 @@ export default function OnboardingPage() {
                     <SelectTrigger className="h-12">
                       <SelectValue placeholder="Select your timezone..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-50">
                       {timezones.map((tz) => (
                         <SelectItem key={tz.value} value={tz.value}>
                           {tz.label}
@@ -187,7 +187,7 @@ export default function OnboardingPage() {
                     <SelectTrigger className="h-12">
                       <SelectValue placeholder="Select your language..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-50">
                       {languages.map((lang) => (
                         <SelectItem key={lang.value} value={lang.value}>
                           {lang.label}
