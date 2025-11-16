@@ -83,8 +83,8 @@ export async function POST(request: NextRequest) {
         preferredTime: body.availability?.timeOfDay?.[0] || 'Flexible',
         notes: body.additionalNotes || null,
         status: 'pending',
-        source: body.source || 'web',
-        utmParams: body.utmParams || null,
+        source: 'web',
+        utmParams: null,
       },
     })
 
