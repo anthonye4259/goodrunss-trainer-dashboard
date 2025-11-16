@@ -15,6 +15,20 @@ import type { ProcessDocumentsResponse } from '@/lib/types/auto-crm'
 
 const prisma = new PrismaClient()
 
+// Helper function to convert null to undefined for TypeScript compatibility
+function nullsToUndefined<T>(obj: T): T {
+  if (obj === null) return undefined as any
+  if (typeof obj !== 'object') return obj
+  if (obj instanceof Date) return obj
+  if (Array.isArray(obj)) return obj.map(nullsToUndefined) as any
+  
+  const result: any = {}
+  for (const key in obj) {
+    result[key] = obj[key] === null ? undefined : obj[key]
+  }
+  return result
+}
+
 // Initialize Firebase (only if not already initialized)
 if (getApps().length === 0) {
   initializeApp({
@@ -88,10 +102,9 @@ export async function POST(request: NextRequest) {
         const crmDocument = await prisma.crmDocument.create({
           data: {
             trainerId,
-            originalFileName: fileName,
-            storagePath,
-            downloadUrl,
-            fileType: mimeType,
+            fileName,
+            fileUrl: downloadUrl,
+            fileType: mimeType.startsWith('image/') ? 'image' : mimeType === 'application/pdf' ? 'pdf' : 'note',
             fileSize,
             status: 'processing',
           },

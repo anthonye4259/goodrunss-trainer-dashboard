@@ -19,6 +19,20 @@ import type {
 
 const prisma = new PrismaClient()
 
+// Helper function to convert null to undefined for TypeScript compatibility
+function nullsToUndefined<T>(obj: T): T {
+  if (obj === null) return undefined as any
+  if (typeof obj !== 'object') return obj
+  if (obj instanceof Date) return obj
+  if (Array.isArray(obj)) return obj.map(nullsToUndefined) as any
+  
+  const result: any = {}
+  for (const key in obj) {
+    result[key] = obj[key] === null ? undefined : obj[key]
+  }
+  return result
+}
+
 /**
  * POST: Submit a new client lead and get AI-matched trainers
  */
@@ -53,38 +67,24 @@ export async function POST(request: NextRequest) {
     // 2. Use AI to match lead with trainers
     const matchResult = await matchLeadWithTrainers(body, trainers)
 
-    // 3. Save lead to database
+    // 3. Save lead to database (using schema fields only)
+    const locationStr = body.location?.city 
+      ? `${body.location.city}${body.location.state ? ', ' + body.location.state : ''}`
+      : 'Not specified'
+    
     const clientLead = await prisma.clientLead.create({
       data: {
         name: body.name,
         email: body.email,
-        phone: body.phone,
-        city: body.location?.city,
-        state: body.location?.state,
-        zipCode: body.location?.zipCode,
-        country: body.location?.country,
-        fitnessGoals: body.fitnessGoals as any,
-        experienceLevel: body.experienceLevel,
-        preferredSport: body.preferredSport,
-        availableDays: body.availability?.daysOfWeek as any,
-        availableTimes: body.availability?.timeOfDay as any,
-        sessionsPerWeek: body.availability?.sessionsPerWeek,
-        preferredGender: body.trainerPreferences?.gender,
-        preferredLanguages: body.trainerPreferences?.language as any,
-        preferredCertifications: body.trainerPreferences?.certifications as any,
-        minYearsExperience: body.trainerPreferences?.minYearsExperience,
-        budgetMin: body.budgetRange?.min,
-        budgetMax: body.budgetRange?.max,
-        budgetCurrency: body.budgetRange?.currency,
-        additionalNotes: body.additionalNotes,
-        howDidYouHear: body.howDidYouHear,
-        source: body.source,
-        referredBy: body.referredBy,
-        status: 'new',
-        aiProcessed: true,
-        aiProcessedAt: new Date(),
-        aiModel: 'claude-3-5-sonnet',
-        aiSummary: matchResult.aiSummary,
+        phone: body.phone || null,
+        interest: body.preferredSport || 'General fitness',
+        level: body.experienceLevel || 'beginner',
+        location: locationStr,
+        preferredTime: body.availability?.timeOfDay?.[0] || 'Flexible',
+        notes: body.additionalNotes || null,
+        status: 'pending',
+        source: body.source || 'web',
+        utmParams: body.utmParams || null,
       },
     })
 
