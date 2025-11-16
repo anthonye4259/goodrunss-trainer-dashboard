@@ -180,9 +180,7 @@ export async function GET(request: NextRequest) {
           matches: matches.map(m => ({
             ...m,
             lead,
-            matchReasons: m.matchReasons as string[],
-            potentialConcerns: m.potentialConcerns as string[] | undefined,
-          })),
+          })) as any,
           total: matches.length,
         },
       }
@@ -202,12 +200,7 @@ export async function GET(request: NextRequest) {
       const response: GetMatchesResponse = {
         success: true,
         data: {
-          matches: matches.map(m => ({
-            ...m,
-            lead: m.lead as any,
-            matchReasons: m.matchReasons as string[],
-            potentialConcerns: m.potentialConcerns as string[] | undefined,
-          })),
+          matches: matches as any,
           total: matches.length,
         },
       }
@@ -223,14 +216,7 @@ export async function GET(request: NextRequest) {
       const response: GetLeadsResponse = {
         success: true,
         data: {
-          leads: leads.map(l => ({
-            ...l,
-            fitnessGoals: l.fitnessGoals as string[],
-            availableDays: l.availableDays as string[],
-            availableTimes: l.availableTimes as string[],
-            preferredLanguages: l.preferredLanguages as string[],
-            preferredCertifications: l.preferredCertifications as string[],
-          })),
+          leads: leads as any,
           total: leads.length,
         },
       }
