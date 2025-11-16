@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
         progressions: sessionPlan.progressions ?? undefined,
         messageToClient: sessionPlan.messageToClient ?? undefined,
         pdfUrl: sessionPlan.pdfUrl ?? undefined,
+        pdfGeneratedAt: sessionPlan.pdfGeneratedAt ?? undefined,
         warmup: sessionPlan.warmup as any,
         drills: sessionPlan.drills as any,
         cooldown: sessionPlan.cooldown as any,
