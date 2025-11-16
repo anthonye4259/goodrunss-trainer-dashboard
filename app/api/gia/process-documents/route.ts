@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
           data: {
             status: 'completed',
             processedAt: new Date(),
-            extractedData: aiAnalysis.extractedData || {},
+            extractedData: (aiAnalysis.extractedData || {}) as any,
             confidence: aiAnalysis.confidence || 0.9,
           },
         })
