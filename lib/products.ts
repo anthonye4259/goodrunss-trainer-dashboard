@@ -10,45 +10,51 @@ export interface Product {
 
 // Source of truth for all products
 export const PRODUCTS: Product[] = [
-  // Subscription Plans
+  // Subscription Plans (Early Access Pricing)
   {
-    id: "basic-plan",
-    name: "Basic",
-    description: "Perfect for getting started",
-    priceInCents: 2900, // $29/month
-    type: "plan",
-    features: ["Up to 10 clients", "Basic workout templates", "Email support", "Mobile app access"],
-  },
-  {
-    id: "pro-plan",
-    name: "Pro",
-    description: "For growing training businesses",
-    priceInCents: 7900, // $79/month
+    id: "3-month",
+    name: "3 Month Plan",
+    description: "Perfect to get started • Early Access Pricing",
+    priceInCents: 4000, // $40 total (paid upfront)
     type: "plan",
     popular: true,
     features: [
-      "Up to 50 clients",
-      "Advanced workout builder",
+      "Unlimited clients",
+      "AI Session Plan Generator",
+      "Auto CRM Document Parser",
+      "Client Lead Matching",
+      "Advanced analytics & insights",
       "Priority support",
-      "Custom branding",
-      "Analytics dashboard",
-      "Client progress tracking",
     ],
   },
   {
-    id: "enterprise-plan",
-    name: "Enterprise",
-    description: "For established training businesses",
-    priceInCents: 14900, // $149/month
+    id: "6-month",
+    name: "6 Month Plan",
+    description: "Best for trying it out • Early Access Pricing",
+    priceInCents: 7500, // $75 total (paid upfront)
     type: "plan",
     features: [
       "Unlimited clients",
-      "White-label solution",
-      "24/7 phone support",
-      "API access",
-      "Advanced analytics",
-      "Team collaboration",
-      "Custom integrations",
+      "AI Session Plan Generator",
+      "Auto CRM Document Parser",
+      "Client Lead Matching",
+      "Advanced analytics & insights",
+      "Priority support",
+    ],
+  },
+  {
+    id: "1-year",
+    name: "1 Year Plan",
+    description: "Best value — save the most • Early Access Pricing",
+    priceInCents: 10000, // $100 total (paid upfront)
+    type: "plan",
+    features: [
+      "Unlimited clients",
+      "AI Session Plan Generator",
+      "Auto CRM Document Parser",
+      "Client Lead Matching",
+      "Advanced analytics & insights",
+      "Priority support",
     ],
   },
   // Add-ons

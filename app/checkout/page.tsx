@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Loader2, CheckCircle2 } from "lucide-react"
 import Checkout from "@/components/checkout"
+import { PRODUCTS } from "@/lib/products"
 
 export default function CheckoutPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
@@ -37,21 +38,20 @@ export default function CheckoutPage() {
     )
   }
 
-  const planDetails = {
-    basic: { name: "Basic", price: "$29/mo", features: ["Up to 25 clients", "Basic analytics", "Email support"] },
-    pro: {
-      name: "Pro",
-      price: "$79/mo",
-      features: ["Up to 100 clients", "Advanced analytics", "Priority support", "AI insights"],
-    },
-    enterprise: {
-      name: "Enterprise",
-      price: "$149/mo",
-      features: ["Unlimited clients", "Custom analytics", "24/7 support", "White-label"],
-    },
+  const plan = PRODUCTS.find((p) => p.id === selectedPlan)
+  
+  if (!plan) {
+    router.push("/signup")
+    return null
   }
 
-  const plan = planDetails[selectedPlan as keyof typeof planDetails]
+  const billingPeriod = {
+    "3-month": "3 months",
+    "6-month": "6 months",
+    "1-year": "1 year"
+  }[selectedPlan] || "one-time"
+
+  const priceDisplay = `$${(plan.priceInCents / 100).toFixed(0)}`
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background grid-pattern p-4 relative overflow-hidden">
@@ -79,16 +79,16 @@ export default function CheckoutPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center pb-4 border-b border-border/50">
                   <div>
-                    <h3 className="text-xl font-bold">{plan.name} Plan</h3>
-                    <p className="text-sm text-muted-foreground">Billed monthly</p>
+                    <h3 className="text-xl font-bold">{plan.name}</h3>
+                    <p className="text-sm text-muted-foreground">Paid upfront • {billingPeriod}</p>
                   </div>
-                  <div className="text-2xl font-bold gradient-text">{plan.price}</div>
+                  <div className="text-2xl font-bold gradient-text">{priceDisplay}</div>
                 </div>
 
                 <div className="space-y-3">
                   <p className="text-sm font-semibold">Included features:</p>
                   <ul className="space-y-2">
-                    {plan.features.map((feature, index) => (
+                    {plan.features?.map((feature, index) => (
                       <li key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
                         <CheckCircle2 className="h-4 w-4 text-primary" />
                         {feature}
@@ -100,14 +100,14 @@ export default function CheckoutPage() {
                 <div className="pt-4 border-t border-border/50 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span>{plan.price}</span>
+                    <span>{priceDisplay}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold pt-2 border-t border-border/50">
                     <span>Due today</span>
-                    <span className="gradient-text">{plan.price}</span>
+                    <span className="gradient-text">{priceDisplay}</span>
                   </div>
                   <p className="text-xs text-muted-foreground pt-2">
-                    Your subscription will renew automatically each month. Cancel anytime from your dashboard.
+                    🔒 Early access pricing — your rate is locked forever and will never increase.
                   </p>
                 </div>
               </div>
