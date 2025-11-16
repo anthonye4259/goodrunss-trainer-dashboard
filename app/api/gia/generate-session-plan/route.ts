@@ -12,6 +12,20 @@ import type { GenerateSessionPlanInput, GenerateSessionPlanResponse } from '@/li
 
 const prisma = new PrismaClient()
 
+// Helper function to convert null to undefined for TypeScript compatibility
+function nullsToUndefined<T>(obj: T): T {
+  if (obj === null) return undefined as any
+  if (typeof obj !== 'object') return obj
+  if (obj instanceof Date) return obj
+  if (Array.isArray(obj)) return obj.map(nullsToUndefined) as any
+  
+  const result: any = {}
+  for (const key in obj) {
+    result[key] = obj[key] === null ? undefined : obj[key]
+  }
+  return result
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now()
 
@@ -81,18 +95,12 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Session plan created in ${totalTime}ms (ID: ${sessionPlan.id})`)
 
-    // Format response
+    // Format response - convert all nulls to undefined for TypeScript
     const response: GenerateSessionPlanResponse = {
       success: true,
       data: {
-        ...sessionPlan,
-        clientAge: sessionPlan.clientAge ?? undefined,
+        ...nullsToUndefined(sessionPlan),
         clientLevel: sessionPlan.clientLevel as "beginner" | "intermediate" | "advanced",
-        notes: sessionPlan.notes ?? undefined,
-        progressions: sessionPlan.progressions ?? undefined,
-        messageToClient: sessionPlan.messageToClient ?? undefined,
-        pdfUrl: sessionPlan.pdfUrl ?? undefined,
-        pdfGeneratedAt: sessionPlan.pdfGeneratedAt ?? undefined,
         warmup: sessionPlan.warmup as any,
         drills: sessionPlan.drills as any,
         cooldown: sessionPlan.cooldown as any,
