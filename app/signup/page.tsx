@@ -41,102 +41,50 @@ export default function SignupPage() {
         <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent/10 rounded-full blur-[120px] opacity-50"></div>
 
         <div className="w-full max-w-5xl relative z-10 space-y-8">
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold tracking-tight">
-              Choose Your <span className="gradient-text">Plan</span>
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Select the perfect plan to start growing your training business
-            </p>
-            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <span className="text-sm font-semibold">
-                <span className="text-primary">Early Access</span> • Limited time offer • Get started today
-              </span>
+          <div className="text-center space-y-6">
+            {/* GoodRunss Logo */}
+            <div className="flex justify-center">
+              <div className="h-16 w-16 rounded-xl bg-white flex items-center justify-center shadow-lg p-2">
+                <img 
+                  src="/goodrunss-logo.svg" 
+                  alt="GoodRunss Logo" 
+                  className="h-full w-full object-contain"
+                />
+              </div>
+            </div>
+
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight mb-2">
+                Choose Your <span className="gradient-text">Billing Period</span>
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Save more when you commit longer • All plans include full access
+              </p>
+            </div>
+            
+            <div className="inline-flex flex-col items-center gap-2 px-6 py-4 rounded-2xl bg-primary/10 border border-primary/20 backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <span className="text-sm font-semibold">
+                  <span className="text-primary">Early Access Pricing</span> • Limited Time Offer
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground max-w-md">
+                🔒 Lock in this rate forever — prices will <span className="font-semibold text-primary">never increase</span> for early users
+              </p>
             </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {/* Basic Plan */}
+            {/* 6 Month Plan */}
             <Card className="glass border-border/50 backdrop-blur-xl glow-on-hover p-6 space-y-6">
               <div className="space-y-2">
-                <h3 className="text-2xl font-bold">Basic</h3>
-                <p className="text-sm text-muted-foreground">Perfect for getting started</p>
+                <h3 className="text-2xl font-bold">6 Months</h3>
+                <p className="text-sm text-muted-foreground">Best for trying it out</p>
               </div>
               <div className="space-y-1">
-                <div className="text-4xl font-bold gradient-text">$29</div>
-                <div className="text-sm text-muted-foreground">per month</div>
-              </div>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Up to 25 clients
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Basic analytics
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Email support
-                </li>
-              </ul>
-              <Button onClick={() => handlePlanSelection("basic")} variant="outline" className="w-full">
-                Get Started
-              </Button>
-            </Card>
-
-            {/* Pro Plan */}
-            <Card className="glass border-2 border-primary backdrop-blur-xl glow-on-hover p-6 space-y-6 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <div className="bg-primary text-black px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  Most Popular
-                </div>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold">Pro</h3>
-                <p className="text-sm text-muted-foreground">For growing businesses</p>
-              </div>
-              <div className="space-y-1">
-                <div className="text-4xl font-bold gradient-text">$79</div>
-                <div className="text-sm text-muted-foreground">per month</div>
-              </div>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Up to 100 clients
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Advanced analytics
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Priority support
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  AI-powered insights
-                </li>
-              </ul>
-              <Button
-                onClick={() => handlePlanSelection("pro")}
-                className="w-full bg-gradient-to-r from-primary via-accent to-primary text-black font-semibold"
-              >
-                Get Started
-              </Button>
-            </Card>
-
-            {/* Enterprise Plan */}
-            <Card className="glass border-border/50 backdrop-blur-xl glow-on-hover p-6 space-y-6">
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold">Enterprise</h3>
-                <p className="text-sm text-muted-foreground">For established businesses</p>
-              </div>
-              <div className="space-y-1">
-                <div className="text-4xl font-bold gradient-text">$149</div>
-                <div className="text-sm text-muted-foreground">per month</div>
+                <div className="text-4xl font-bold gradient-text">$75</div>
+                <div className="text-sm text-muted-foreground">paid upfront • $12.50/month</div>
               </div>
               <ul className="space-y-3 text-sm">
                 <li className="flex items-center gap-2">
@@ -145,18 +93,117 @@ export default function SignupPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Custom analytics
+                  AI Session Plan Generator
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  24/7 phone support
+                  Auto CRM Document Parser
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  White-label options
+                  Client Lead Matching
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  Advanced analytics & insights
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  Priority support
                 </li>
               </ul>
-              <Button onClick={() => handlePlanSelection("enterprise")} variant="outline" className="w-full">
+              <Button onClick={() => handlePlanSelection("6-month")} variant="outline" className="w-full h-12">
+                Get Started
+              </Button>
+            </Card>
+
+            {/* 3 Month Plan - MOST POPULAR */}
+            <Card className="glass border-2 border-primary backdrop-blur-xl glow-on-hover p-6 space-y-6 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <div className="bg-primary text-black px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Most Popular
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold">3 Months</h3>
+                <p className="text-sm text-muted-foreground">Perfect to get started</p>
+              </div>
+              <div className="space-y-1">
+                <div className="text-4xl font-bold gradient-text">$40</div>
+                <div className="text-sm text-muted-foreground">paid upfront • $13.33/month</div>
+              </div>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  Unlimited clients
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  AI Session Plan Generator
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  Auto CRM Document Parser
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  Client Lead Matching
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  Advanced analytics & insights
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  Priority support
+                </li>
+              </ul>
+              <Button
+                onClick={() => handlePlanSelection("3-month")}
+                className="w-full h-12 bg-gradient-to-r from-primary via-accent to-primary text-black font-semibold"
+              >
+                Get Started
+              </Button>
+            </Card>
+
+            {/* 1 Year Plan */}
+            <Card className="glass border-border/50 backdrop-blur-xl glow-on-hover p-6 space-y-6">
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold">1 Year</h3>
+                <p className="text-sm text-muted-foreground">Best value — save the most</p>
+              </div>
+              <div className="space-y-1">
+                <div className="text-4xl font-bold gradient-text">$100</div>
+                <div className="text-sm text-muted-foreground">paid upfront • $8.33/month</div>
+              </div>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  Unlimited clients
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  AI Session Plan Generator
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  Auto CRM Document Parser
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  Client Lead Matching
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  Advanced analytics & insights
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  Priority support
+                </li>
+              </ul>
+              <Button onClick={() => handlePlanSelection("1-year")} variant="outline" className="w-full h-12">
                 Get Started
               </Button>
             </Card>
@@ -165,7 +212,7 @@ export default function SignupPage() {
           <div className="flex flex-wrap justify-center gap-8 pt-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-primary"></div>
-              <span>Early access pricing</span>
+              <span>🔒 Price locked forever for early users</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-primary"></div>
