@@ -53,10 +53,15 @@ export default function LanguageSelectPage() {
 
       <div className="w-full max-w-md space-y-8 relative z-10">
         <div className="text-center space-y-4">
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-6">
             <div className="relative">
-              <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-lg shadow-primary/50 border border-primary/20">
-                <Zap className="h-10 w-10 text-background" fill="currentColor" />
+              {/* GoodRunss Logo */}
+              <div className="h-24 w-24 rounded-2xl bg-white flex items-center justify-center shadow-lg shadow-primary/50 border border-primary/20 p-3">
+                <img 
+                  src="/goodrunss-logo.svg" 
+                  alt="GoodRunss Logo" 
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-accent flex items-center justify-center animate-pulse">
                 <Globe className="h-3 w-3 text-background" />
@@ -65,10 +70,8 @@ export default function LanguageSelectPage() {
           </div>
 
           <div>
-            <h1 className="text-4xl font-bold tracking-tight mb-2">
-              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient-shift">
-                GOODRUNSS
-              </span>
+            <h1 className="text-4xl font-bold tracking-tight mb-2 text-white">
+              GOODRUNSS
             </h1>
             <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">
               Global Training Platform

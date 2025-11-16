@@ -2678,6 +2678,15 @@ model FacilityReport {
   isVerified          Boolean @default(false)
   gpsLat              Float?
   gpsLng              Float?
+  appVersion          String? // App version that submitted report
+  deviceType          String? // iOS, Android, Web
+  reportSource        String? // mobile_app, web_portal
+  ipAddress           String?
+  userAgent           String?
+  reportHash          String? // Unique hash to prevent duplicates
+  moderationStatus    String? // pending, approved, flagged, rejected
+  moderatedBy         String?
+  moderatedAt         DateTime?
   
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
