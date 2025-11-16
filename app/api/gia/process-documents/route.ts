@@ -121,8 +121,8 @@ export async function POST(request: NextRequest) {
           data: {
             status: 'completed',
             processedAt: new Date(),
-            aiModel: 'claude-3-5-sonnet',
-            processingTime: Date.now() - startTime,
+            extractedData: aiAnalysis.extractedData || {},
+            confidence: aiAnalysis.confidence || 0.9,
           },
         })
 
