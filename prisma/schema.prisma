@@ -1541,6 +1541,65 @@ model PhoneNumber {
 }
 
 // ========================================
+// GIA SESSION PLAN GENERATOR (Feature 1)
+// ========================================
+
+// AI-generated session plans (instant generation under 20 seconds)
+model GiaSessionPlan {
+  id        String @id @default(uuid())
+  trainerId String
+  
+  // Client context (minimal input)
+  clientName     String
+  clientAge      Int?
+  clientLevel    String // beginner, intermediate, advanced
+  sport          String // tennis, basketball, pilates, etc
+  
+  // Generated content (all under 20 seconds)
+  sessionDuration Int @default(45) // minutes
+  warmup          Json // { exercises: [], duration: 5 }
+  drills          Json // Array of drills with instructions
+  cooldown        Json // { exercises: [], duration: 5 }
+  notes           String? @db.Text
+  progressions    String? @db.Text
+  
+  // Video playlist
+  videoPlaylist   Json? // { platform: 'youtube', videos: [{id, title, url}] }
+  
+  // Social media content
+  instagramContent Json? // { caption, hashtags, tips }
+  messageToClient  String? @db.Text
+  
+  // PDF generation
+  pdfUrl          String?
+  pdfGeneratedAt  DateTime?
+  
+  // AI metadata
+  aiModel         String @default("claude-3-sonnet") // which AI model used
+  promptTokens    Int?
+  completionTokens Int?
+  generationTime  Int? // milliseconds
+  
+  // Status
+  status          String @default("generated") // generated, sent, viewed
+  sentAt          DateTime?
+  viewedAt        DateTime?
+  
+  // Relationships
+  downloadCount   Int @default(0)
+  shareCount      Int @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([trainerId])
+  @@index([sport])
+  @@index([status])
+  @@index([createdAt])
+  @@map("gia_session_plans")
+}
+
+// ========================================
 // AUTO-GENERATED WORKOUT PLANS
 // ========================================
 
