@@ -84,7 +84,6 @@ export async function POST(request: NextRequest) {
         notes: body.additionalNotes || null,
         status: 'pending',
         source: 'web',
-        utmParams: null,
       },
     })
 
