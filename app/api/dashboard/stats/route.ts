@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+// import { auth } from '@clerk/nextjs/server' // TODO: Enable auth after setup
 // import { prisma } from '@/lib/db' // TODO: Enable after first deploy
 
 export async function GET() {
   try {
-    const { userId } = await auth()
+    // TODO: Enable auth after Clerk setup
+    // const { userId } = await auth()
+    // if (!userId) {
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // }
     
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const userId = 'demo-user' // Temporary for testing
 
     // TEMPORARY: Return mock data for first deploy
     // TODO: Replace with real database queries after successful deployment
