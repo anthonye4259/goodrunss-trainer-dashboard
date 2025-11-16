@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...sessionPlan,
         clientAge: sessionPlan.clientAge ?? undefined,
+        clientLevel: sessionPlan.clientLevel as "beginner" | "intermediate" | "advanced",
         warmup: sessionPlan.warmup as any,
         drills: sessionPlan.drills as any,
         cooldown: sessionPlan.cooldown as any,
