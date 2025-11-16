@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
         cooldown: cleanedPlan.cooldown as any,
         videoPlaylist: cleanedPlan.videoPlaylist as any,
         instagramContent: cleanedPlan.instagramContent as any,
-      },
+      } as any,
       generationTime: totalTime,
     }
 
