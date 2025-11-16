@@ -94,19 +94,16 @@ export async function POST(request: NextRequest) {
     for (const match of matchResult.topMatches) {
       await prisma.leadMatch.create({
         data: {
-          clientLeadId: clientLead.id,
+          leadId: clientLead.id,
           trainerId: match.trainerId,
-          overallScore: match.overallScore,
-          specializationScore: match.scores.specialization,
-          locationScore: match.scores.location,
-          availabilityScore: match.scores.availability,
-          budgetScore: match.scores.budget,
-          experienceScore: match.scores.experience,
-          preferencesScore: match.scores.preferences,
-          matchReasons: match.matchReasons as any,
-          potentialConcerns: match.potentialConcerns as any,
-          confidence: match.confidence,
-          status: 'suggested',
+          matchScore: Math.round(match.overallScore),
+          matchReasons: {
+            reasons: match.matchReasons,
+            scores: match.scores,
+            concerns: match.potentialConcerns,
+            confidence: match.confidence,
+          },
+          status: 'pending',
         },
       })
     }
