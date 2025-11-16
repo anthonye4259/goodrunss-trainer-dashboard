@@ -96,16 +96,17 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Session plan created in ${totalTime}ms (ID: ${sessionPlan.id})`)
 
     // Format response - convert all nulls to undefined for TypeScript
+    const cleanedPlan = nullsToUndefined(sessionPlan)
     const response: GenerateSessionPlanResponse = {
       success: true,
       data: {
-        ...nullsToUndefined(sessionPlan),
-        clientLevel: sessionPlan.clientLevel as "beginner" | "intermediate" | "advanced",
-        warmup: sessionPlan.warmup as any,
-        drills: sessionPlan.drills as any,
-        cooldown: sessionPlan.cooldown as any,
-        videoPlaylist: sessionPlan.videoPlaylist as any,
-        instagramContent: sessionPlan.instagramContent as any,
+        ...cleanedPlan,
+        clientLevel: cleanedPlan.clientLevel as "beginner" | "intermediate" | "advanced",
+        warmup: cleanedPlan.warmup as any,
+        drills: cleanedPlan.drills as any,
+        cooldown: cleanedPlan.cooldown as any,
+        videoPlaylist: cleanedPlan.videoPlaylist as any,
+        instagramContent: cleanedPlan.instagramContent as any,
       },
       generationTime: totalTime,
     }
