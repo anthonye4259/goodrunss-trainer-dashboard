@@ -170,8 +170,8 @@ export async function GET(request: NextRequest) {
       }
 
       const matches = await prisma.leadMatch.findMany({
-        where: { clientLeadId: leadId },
-        orderBy: { overallScore: 'desc' },
+        where: { leadId: leadId },
+        orderBy: { matchScore: 'desc' },
       })
 
       const response: GetMatchesResponse = {
@@ -195,10 +195,7 @@ export async function GET(request: NextRequest) {
           trainerId,
           ...(status && { status }),
         },
-        include: {
-          lead: true,
-        },
-        orderBy: { overallScore: 'desc' },
+        orderBy: { matchScore: 'desc' },
         take: 50,
       })
 
@@ -284,14 +281,14 @@ export async function PUT(request: NextRequest) {
       data: {
         status: action === 'accept' ? 'accepted' : 'declined',
         respondedAt: new Date(),
-        trainerResponse: message,
+        ...(action === 'decline' && message && { declineReason: message }),
       },
     })
 
     // If accepted, update lead status
     if (action === 'accept') {
       await prisma.clientLead.update({
-        where: { id: match.clientLeadId },
+        where: { id: match.leadId },
         data: { status: 'matched' },
       })
     }
