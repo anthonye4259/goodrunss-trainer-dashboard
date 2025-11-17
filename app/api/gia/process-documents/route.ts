@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
               sport: null,
               level: null,
               notes: null,
-              goals: (extractedData.goals?.map(g => g.goal || g.description || 'Goal') || []) as any,
+              goals: (extractedData.goals?.map(g => g.description) || []) as any,
               preferences: {
                 emergencyContact: extractedData.clientInfo.emergencyContact,
                 medicalHistory: extractedData.clientInfo.medicalHistory,
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
                   trainerId,
                   documentId: crmDocument.id,
                   clientName: extractedData.clientInfo.name || clientName || 'Unknown',
-                  goal: goalInfo.goal || goalInfo.description || 'Unnamed goal',
+                  goal: goalInfo.description || 'Unnamed goal',
                   deadline: goalInfo.targetDate || null,
                   priority: goalInfo.priority || null,
                   status: 'active',
