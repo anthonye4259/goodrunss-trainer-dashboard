@@ -26,7 +26,7 @@ export default function SessionPlannerPage() {
   // Form state
   const [clientName, setClientName] = useState("")
   const [age, setAge] = useState("")
-  const [level, setLevel] = useState<"beginner" | "intermediate" | "advanced" | "">("")
+  const [level, setLevel] = useState("")
   const [sport, setSport] = useState("")
   const [additionalNotes, setAdditionalNotes] = useState("")
 
