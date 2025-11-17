@@ -296,16 +296,17 @@ export async function GET(request: NextRequest) {
       profiles = await prisma.extractedClientProfile.findMany({
         where: { id: profileId, trainerId },
       })
+      const profile = profiles[0]
       progress = await prisma.extractedProgress.findMany({
-        where: { extractedClientProfileId: profileId, trainerId },
-        orderBy: { progressDate: 'desc' },
+        where: { clientName: profile?.name, trainerId },
+        orderBy: { date: 'desc' },
       })
       goals = await prisma.extractedGoal.findMany({
-        where: { extractedClientProfileId: profileId, trainerId },
+        where: { clientName: profile?.name, trainerId },
         orderBy: { createdAt: 'desc' },
       })
       recommendations = await prisma.recommendedSession.findMany({
-        where: { extractedClientProfileId: profileId, trainerId },
+        where: { clientName: profile?.name, trainerId },
         orderBy: { createdAt: 'desc' },
       })
     } else {
@@ -317,7 +318,7 @@ export async function GET(request: NextRequest) {
       })
       progress = await prisma.extractedProgress.findMany({
         where: { trainerId },
-        orderBy: { progressDate: 'desc' },
+        orderBy: { date: 'desc' },
         take: 100,
       })
       goals = await prisma.extractedGoal.findMany({
