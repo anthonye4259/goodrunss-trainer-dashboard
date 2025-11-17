@@ -133,20 +133,25 @@ export async function POST(request: NextRequest) {
         if (extractedData.clientInfo) {
           const profile = await prisma.extractedClientProfile.create({
             data: {
-              crmDocumentId: crmDocument.id,
+              documentId: crmDocument.id,
               trainerId,
-              clientName: extractedData.clientInfo.name || clientName || 'Unknown',
-              clientAge: extractedData.clientInfo.age,
-              clientEmail: extractedData.clientInfo.email,
-              clientPhone: extractedData.clientInfo.phone,
-              emergencyContactName: extractedData.clientInfo.emergencyContact?.name,
-              emergencyContactPhone: extractedData.clientInfo.emergencyContact?.phone,
-              emergencyContactRelationship: extractedData.clientInfo.emergencyContact?.relationship,
-              medicalHistory: extractedData.clientInfo.medicalHistory as any,
-              injuries: extractedData.clientInfo.injuries as any,
-              medications: extractedData.clientInfo.medications as any,
-              allergies: extractedData.clientInfo.allergies as any,
-              confidence: aiAnalysis.confidence,
+              name: extractedData.clientInfo.name || clientName || 'Unknown',
+              age: extractedData.clientInfo.age || null,
+              email: extractedData.clientInfo.email || null,
+              phone: extractedData.clientInfo.phone || null,
+              sport: extractedData.clientInfo.sport || null,
+              level: extractedData.clientInfo.level || null,
+              notes: extractedData.clientInfo.notes || null,
+              goals: (extractedData.goals?.map(g => g.goal) || []) as any,
+              preferences: {
+                emergencyContact: extractedData.clientInfo.emergencyContact,
+                medicalHistory: extractedData.clientInfo.medicalHistory,
+                injuries: extractedData.clientInfo.injuries,
+                medications: extractedData.clientInfo.medications,
+                allergies: extractedData.clientInfo.allergies,
+              } as any,
+              source: 'document',
+              confidence: aiAnalysis.confidence || 0.8,
             },
           })
 
@@ -163,13 +168,13 @@ export async function POST(request: NextRequest) {
             for (const recText of recs) {
               const recommendation = await prisma.recommendedSession.create({
                 data: {
-                  extractedClientProfileId: profile.id,
                   trainerId,
-                  recommendationText: recText,
-                  suggestedDuration: 45,
-                  aiModel: 'claude-3-5-sonnet',
-                  confidence: aiAnalysis.confidence,
-                  status: 'suggested',
+                  clientName: extractedData.clientInfo.name || clientName || 'Unknown',
+                  sessionType: 'Recommended Training',
+                  description: recText,
+                  duration: 45,
+                  focus: [] as any,
+                  status: 'pending',
                 },
               })
               recommendations.push(recommendation)
@@ -178,21 +183,18 @@ export async function POST(request: NextRequest) {
 
           // Save goals
           if (extractedData.goals) {
-            for (const goal of extractedData.goals) {
+            for (const goalInfo of extractedData.goals) {
               const extractedGoal = await prisma.extractedGoal.create({
                 data: {
-                  crmDocumentId: crmDocument.id,
-                  extractedClientProfileId: profile.id,
                   trainerId,
-                  goalDescription: goal.description,
-                  goalCategory: goal.category,
-                  targetDate: goal.targetDate,
-                  priority: goal.priority,
-                  currentMetric: goal.metrics?.current,
-                  targetMetric: goal.metrics?.target,
-                  unit: goal.metrics?.unit,
+                  documentId: crmDocument.id,
+                  clientName: extractedData.clientInfo.name || clientName || 'Unknown',
+                  goal: goalInfo.goal || goalInfo.description || 'Unnamed goal',
+                  deadline: goalInfo.targetDate || null,
+                  priority: goalInfo.priority || null,
                   status: 'active',
-                  confidence: aiAnalysis.confidence,
+                  source: 'document',
+                  confidence: aiAnalysis.confidence || 0.8,
                 },
               })
               extractedGoals.push(extractedGoal)
@@ -204,15 +206,15 @@ export async function POST(request: NextRequest) {
             for (const prog of extractedData.progress) {
               const extractedProgress = await prisma.extractedProgress.create({
                 data: {
-                  crmDocumentId: crmDocument.id,
-                  extractedClientProfileId: profile.id,
                   trainerId,
-                  progressDate: prog.date,
-                  progressType: prog.type,
-                  description: prog.description,
-                  metrics: prog.metrics as any,
-                  notes: prog.notes,
-                  confidence: aiAnalysis.confidence,
+                  documentId: crmDocument.id,
+                  clientName: extractedData.clientInfo.name || clientName || 'Unknown',
+                  date: prog.date || new Date(),
+                  metric: prog.metric || prog.type || 'Progress',
+                  value: prog.value || prog.description || 'N/A',
+                  notes: prog.notes || null,
+                  source: 'document',
+                  confidence: aiAnalysis.confidence || 0.8,
                 },
               })
               extractedProgressList.push(extractedProgress)
