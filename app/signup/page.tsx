@@ -27,6 +27,7 @@ export default function SignupPage() {
 
   const handlePlanSelection = (planId: string) => {
     localStorage.setItem("trainer_email", email)
+    localStorage.setItem("trainer_password", password) // Store temporarily for Clerk creation
     localStorage.setItem("trainer_name", name)
     localStorage.setItem("trainer_business", businessName)
     localStorage.setItem("selected_plan", planId)

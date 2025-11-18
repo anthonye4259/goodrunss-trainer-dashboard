@@ -53,11 +53,12 @@ model VerificationToken {
 
 model User {
   id            String    @id @default(cuid())
+  clerkId       String?   @unique // Clerk user ID for authentication
   name          String?
   email         String    @unique
   emailVerified DateTime?
   image         String?
-  role          UserRole  @default(CLIENT) // NEW: Support both trainers and clients
+  role          UserRole  @default(TRAINER) // Default to TRAINER for trainer dashboard signups
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
