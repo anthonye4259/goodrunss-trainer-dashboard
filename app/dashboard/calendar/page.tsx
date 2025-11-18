@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -26,8 +26,6 @@ import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/
 import { RescheduleModal } from "@/components/reschedule-modal"
 
 // Sessions will be loaded from your database
-const mockSessions: any[] = []
-
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 const months = [
   "January",
@@ -46,14 +44,39 @@ const months = [
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [sessions, setSessions] = useState(mockSessions)
+  const [sessions, setSessions] = useState<any[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [viewMode, setViewMode] = useState<"month" | "week" | "day">("month")
+  const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
-  const [rescheduleSession, setRescheduleSession] = useState<(typeof mockSessions)[0] | null>(null)
+  const [rescheduleSession, setRescheduleSession] = useState<any | null>(null)
   const { toast } = useToast()
+
+  // Fetch sessions on mount
+  useEffect(() => {
+    fetchSessions()
+  }, [])
+
+  const fetchSessions = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/sessions')
+      if (!response.ok) throw new Error('Failed to fetch sessions')
+      const data = await response.json()
+      setSessions(data.sessions || [])
+    } catch (error) {
+      console.error('Error fetching sessions:', error)
+      toast({
+        title: "Error loading sessions",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
@@ -122,26 +145,44 @@ export default function CalendarPage() {
 
     setIsSubmitting(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientName: formData.get("client") as string,
+          date: formData.get("date") as string,
+          time: formData.get("time") as string,
+          duration: Number(formData.get("duration")),
+          type: formData.get("type") as string,
+          location: formData.get("location") as string,
+          notes: formData.get("notes") as string,
+        }),
+      })
 
-    const newSession = {
-      id: String(sessions.length + 1),
-      clientName: formData.get("client") as string,
-      date: formData.get("date") as string,
-      time: formData.get("time") as string,
-      duration: Number(formData.get("duration")),
-      type: formData.get("type") as string,
-      status: "upcoming" as const,
+      if (!response.ok) throw new Error('Failed to schedule session')
+
+      const data = await response.json()
+      
+      // Refresh the sessions list
+      await fetchSessions()
+      
+      setIsAddDialogOpen(false)
+      setFormErrors({})
+      toast({
+        title: "Session scheduled",
+        description: `Session with ${data.session.clientName} has been scheduled.`,
+      })
+    } catch (error) {
+      console.error('Error scheduling session:', error)
+      toast({
+        title: "Error scheduling session",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setSessions([...sessions, newSession])
-    setIsAddDialogOpen(false)
-    setIsSubmitting(false)
-    setFormErrors({})
-    toast({
-      title: "Session scheduled",
-      description: `Session with ${newSession.clientName} has been scheduled.`,
-    })
   }
 
   const handleDeleteSession = (sessionId: string) => {

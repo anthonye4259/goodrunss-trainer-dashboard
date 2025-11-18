@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -23,36 +23,83 @@ import { DollarSign, TrendingUp, Clock, Download, Plus, CheckCircle2 } from "luc
 import { useToast } from "@/hooks/use-toast"
 
 // Payments will be loaded from your database
-const mockPayments: any[] = []
-
 export default function PaymentsPage() {
-  const [payments, setPayments] = useState(mockPayments)
+  const [payments, setPayments] = useState<any[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+
+  // Fetch payments on mount
+  useEffect(() => {
+    fetchPayments()
+  }, [])
+
+  const fetchPayments = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/payments')
+      if (!response.ok) throw new Error('Failed to fetch payments')
+      const data = await response.json()
+      setPayments(data.payments || [])
+    } catch (error) {
+      console.error('Error fetching payments:', error)
+      toast({
+        title: "Error loading payments",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const totalRevenue = payments.filter((p) => p.status === "paid").reduce((sum, p) => sum + p.amount, 0)
   const pendingAmount = payments.filter((p) => p.status === "pending").reduce((sum, p) => sum + p.amount, 0)
   const paidCount = payments.filter((p) => p.status === "paid").length
 
-  const handleRecordPayment = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleRecordPayment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
-    const newPayment = {
-      id: String(payments.length + 1),
-      clientName: formData.get("client") as string,
-      amount: Number(formData.get("amount")),
-      date: formData.get("date") as string,
-      status: "paid" as const,
-      method: formData.get("method") as string,
-      sessionType: formData.get("sessionType") as string,
-    }
 
-    setPayments([newPayment, ...payments])
-    setIsAddDialogOpen(false)
-    toast({
-      title: "Payment recorded",
-      description: `Payment of $${newPayment.amount} from ${newPayment.clientName} has been recorded.`,
-    })
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientName: formData.get("client") as string,
+          amount: Number(formData.get("amount")),
+          date: formData.get("date") as string,
+          status: "paid",
+          method: formData.get("method") as string,
+          sessionType: formData.get("sessionType") as string,
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to record payment')
+
+      const data = await response.json()
+      
+      // Refresh the payments list
+      await fetchPayments()
+      
+      setIsAddDialogOpen(false)
+      toast({
+        title: "Payment recorded",
+        description: `Payment of $${data.payment.amount} from ${data.payment.clientName} has been recorded.`,
+      })
+    } catch (error) {
+      console.error('Error recording payment:', error)
+      toast({
+        title: "Error recording payment",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const markAsPaid = (id: string) => {

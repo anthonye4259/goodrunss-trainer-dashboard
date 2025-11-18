@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,17 +25,39 @@ import { Spinner } from "@/components/ui/spinner"
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
 
 // Clients will be loaded from your database
-const mockClients: any[] = []
-
 export default function ClientsPage() {
-  const [clients, setClients] = useState(mockClients)
+  const [clients, setClients] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { toast } = useToast()
+
+  // Fetch clients on mount
+  useEffect(() => {
+    fetchClients()
+  }, [])
+
+  const fetchClients = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/clients')
+      if (!response.ok) throw new Error('Failed to fetch clients')
+      const data = await response.json()
+      setClients(data.clients || [])
+    } catch (error) {
+      console.error('Error fetching clients:', error)
+      toast({
+        title: "Error loading clients",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const filteredClients = clients.filter((client) => {
     const matchesSearch =
@@ -78,28 +100,43 @@ export default function ClientsPage() {
 
     setIsSubmitting(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const response = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.get("name") as string,
+          email: formData.get("email") as string,
+          phone: formData.get("phone") as string,
+          sport: formData.get("sport") as string,
+          level: formData.get("level") as string,
+          notes: formData.get("notes") as string,
+        }),
+      })
 
-    const newClient = {
-      id: String(clients.length + 1),
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      phone: formData.get("phone") as string,
-      sport: formData.get("sport") as string,
-      status: "active" as const,
-      sessions: 0,
-      nextSession: null,
-      joinedDate: new Date().toISOString().split("T")[0],
+      if (!response.ok) throw new Error('Failed to add client')
+
+      const data = await response.json()
+      
+      // Refresh the client list
+      await fetchClients()
+      
+      setIsAddDialogOpen(false)
+      setFormErrors({})
+      toast({
+        title: "Client added successfully",
+        description: `${data.client.name} has been added to your client list.`,
+      })
+    } catch (error) {
+      console.error('Error adding client:', error)
+      toast({
+        title: "Error adding client",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setClients([...clients, newClient])
-    setIsAddDialogOpen(false)
-    setIsSubmitting(false)
-    setFormErrors({})
-    toast({
-      title: "Client added successfully",
-      description: `${newClient.name} has been added to your client list.`,
-    })
   }
 
   return (

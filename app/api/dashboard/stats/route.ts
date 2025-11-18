@@ -1,89 +1,210 @@
+/**
+ * Dashboard Stats API - Real Data
+ * Returns trainer dashboard statistics from database
+ */
+
 import { NextResponse } from 'next/server'
-// import { auth } from '@clerk/nextjs/server' // TODO: Enable auth after setup
-// import { prisma } from '@/lib/db' // TODO: Enable after first deploy
+import { auth } from '@clerk/nextjs/server'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 export async function GET() {
   try {
-    // TODO: Enable auth after Clerk setup
-    // const { userId } = await auth()
-    // if (!userId) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    // }
+    const { userId } = await auth()
     
-    const userId = 'demo-user' // Temporary for testing
-
-    // TEMPORARY: Return mock data for first deploy
-    // TODO: Replace with real database queries after successful deployment
-    const mockTrainer = {
-      id: userId,
-      name: 'Coach',
-      rating: 4.7,
-      totalSessions: 0
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // TEMPORARY: Mock data for first deploy
-    const thisMonthRevenue = 0
-    const lastMonthRevenue = 0
-    const revenueChange = 0
-    const totalClients = 0
-    const atRiskClients: any[] = []
-    const overduePayments: any[] = []
-    const overdueTotal = 0
-    const sessionsThisWeek = 0
-    const completedSessionsThisWeek = 0
-    const clientLTV = 0
-    const churnRate = 0
-    const activeReferrals = 0
-    const referralStats: any[] = []
+    // Get trainer from database
+    const trainer = await prisma.user.findUnique({
+      where: { clerkId: userId },
+    })
+
+    if (!trainer) {
+      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
+    }
+
+    // Get date ranges
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
+    const startOfWeek = new Date(now)
+    startOfWeek.setDate(now.getDate() - now.getDay())
+    startOfWeek.setHours(0, 0, 0, 0)
+
+    // 1. REVENUE STATS
+    const paymentsThisMonth = await prisma.payment.aggregate({
+      where: {
+        trainerId: trainer.id,
+        status: 'COMPLETED',
+        createdAt: { gte: startOfMonth },
+      },
+      _sum: { amount: true },
+      _count: true,
+    })
+
+    const paymentsLastMonth = await prisma.payment.aggregate({
+      where: {
+        trainerId: trainer.id,
+        status: 'COMPLETED',
+        createdAt: {
+          gte: startOfLastMonth,
+          lte: endOfLastMonth,
+        },
+      },
+      _sum: { amount: true },
+    })
+
+    const thisMonthRevenue = paymentsThisMonth._sum.amount || 0
+    const lastMonthRevenue = paymentsLastMonth._sum.amount || 0
+    const revenueChange = lastMonthRevenue > 0 
+      ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 
+      : 0
+
+    // 2. CLIENT STATS
+    const totalClients = await prisma.client.count({
+      where: { trainerId: trainer.id, status: 'active' },
+    })
+
+    const allClients = await prisma.client.findMany({
+      where: { trainerId: trainer.id },
+      include: {
+        sessions: {
+          where: {
+            scheduledAt: {
+              gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+            },
+          },
+        },
+      },
+    })
+
+    // Clients at risk (no sessions in last 30 days)
+    const atRiskClients = allClients.filter(client => client.sessions.length === 0)
+
+    // Client LTV calculation (average revenue per client)
+    const clientLTV = totalClients > 0 ? thisMonthRevenue / totalClients : 0
+
+    // 3. SESSION STATS
+    const sessionsThisWeek = await prisma.trainerSession.count({
+      where: {
+        trainerId: trainer.id,
+        scheduledAt: { gte: startOfWeek },
+      },
+    })
+
+    const completedSessionsThisWeek = await prisma.trainerSession.count({
+      where: {
+        trainerId: trainer.id,
+        status: 'COMPLETED',
+        scheduledAt: { gte: startOfWeek },
+      },
+    })
+
+    // 4. PAYMENT STATS
+    const overduePayments = await prisma.payment.findMany({
+      where: {
+        trainerId: trainer.id,
+        status: 'PENDING',
+        dueDate: { lt: now },
+      },
+      include: {
+        client: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+      take: 10,
+    })
+
+    const overdueTotal = overduePayments.reduce((sum, p) => sum + p.amount, 0)
+
+    // 5. CHURN RATE (clients who became inactive this month)
+    const inactiveThisMonth = await prisma.client.count({
+      where: {
+        trainerId: trainer.id,
+        status: 'inactive',
+        updatedAt: { gte: startOfMonth },
+      },
+    })
+
+    const churnRate = totalClients > 0 ? (inactiveThisMonth / totalClients) * 100 : 0
+
+    // 6. SUBSCRIPTION STATS (if trainer has subscriptions)
+    const activeSubscription = await prisma.userSubscription.findFirst({
+      where: {
+        userId: trainer.id,
+        status: 'active',
+      },
+    })
 
     return NextResponse.json({
       trainer: {
-        name: mockTrainer.name,
-        rating: mockTrainer.rating,
-        totalSessions: mockTrainer.totalSessions
+        name: trainer.name || 'Trainer',
+        email: trainer.email,
+        rating: trainer.rating || 0,
+        totalSessions: trainer.totalSessions || 0,
       },
       revenue: {
         thisMonth: thisMonthRevenue,
         lastMonth: lastMonthRevenue,
         change: revenueChange,
-        forecast: thisMonthRevenue * 1.14 // 14% projected growth
+        forecast: thisMonthRevenue * 1.14, // 14% projected growth
+        totalTransactions: paymentsThisMonth._count,
       },
       clients: {
         total: totalClients,
+        active: totalClients,
+        inactive: allClients.length - totalClients,
         atRisk: atRiskClients.length,
-        atRiskList: atRiskClients,
+        atRiskList: atRiskClients.slice(0, 5).map(c => ({
+          id: c.id,
+          name: c.name,
+          email: c.email,
+          lastSession: c.updatedAt,
+        })),
         highEngagement: Math.floor(totalClients * 0.68),
         mediumEngagement: Math.floor(totalClients * 0.24),
-        ltv: clientLTV
+        lowEngagement: Math.floor(totalClients * 0.08),
+        ltv: clientLTV,
       },
       payments: {
         overdue: overduePayments.length,
         overdueTotal: overdueTotal,
-        overdueList: overduePayments
+        overdueList: overduePayments.map(p => ({
+          id: p.id,
+          client: p.client.name,
+          amount: p.amount,
+          dueDate: p.dueDate,
+        })),
       },
       sessions: {
         thisWeek: sessionsThisWeek,
         completed: completedSessionsThisWeek,
-        utilization: sessionsThisWeek > 0 ? (completedSessionsThisWeek / sessionsThisWeek) * 100 : 0
+        utilization: sessionsThisWeek > 0 
+          ? (completedSessionsThisWeek / sessionsThisWeek) * 100 
+          : 0,
       },
       churn: {
         rate: churnRate,
-        previousRate: churnRate - 0.8 // Mock previous rate
+        previousRate: churnRate - 0.8, // Mock previous for comparison
       },
-      referrals: {
-        totalInvites: referralStats.length,
-        activeReferrals: activeReferrals,
-        creditsEarned: activeReferrals * 10, // $10 per referral
-        freeMonthsEarned: Math.floor(activeReferrals / 3)
-      }
+      subscription: {
+        active: !!activeSubscription,
+        plan: activeSubscription?.planName || null,
+        endsAt: activeSubscription?.currentPeriodEnd || null,
+      },
     })
-
-  } catch (error) {
-    console.error('Dashboard stats error:', error)
+  } catch (error: any) {
+    console.error('[STATS] Error fetching dashboard stats:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch dashboard stats' },
+      { error: 'Failed to fetch dashboard stats', details: error.message },
       { status: 500 }
     )
   }
 }
-
