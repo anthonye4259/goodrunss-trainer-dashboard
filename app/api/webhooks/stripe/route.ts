@@ -217,15 +217,74 @@ export async function POST(request: NextRequest) {
               body: JSON.stringify({
                 from: 'GoodRunss <anthony@goodrunss.com>',
                 to: [customerEmail],
-                subject: 'Welcome to GoodRunss Trainer Dashboard! 🎉',
+                subject: '🎉 Welcome to GoodRunss Trainer Dashboard!',
                 html: `
-                  <h1>Welcome to GoodRunss!</h1>
-                  <p>Hi ${customerName || 'there'},</p>
-                  <p>Your ${plan} plan is now active! You can log in at:</p>
-                  <p><a href="https://goodrunss-trainer-dashboard.vercel.app/login">Login to Dashboard</a></p>
-                  <p>If you have any questions, just reply to this email.</p>
-                  <p>Let's get training! 💪</p>
-                  <p>- The GoodRunss Team</p>
+                  <!DOCTYPE html>
+                  <html>
+                    <head>
+                      <meta charset="utf-8">
+                      <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
+                        .header { text-align: center; margin-bottom: 40px; }
+                        .logo { width: 80px; height: 80px; margin: 0 auto 20px; }
+                        h1 { color: #8b5cf6; margin: 0 0 10px; font-size: 28px; }
+                        .subtitle { color: #666; font-size: 16px; }
+                        .plan-badge { display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold; margin: 20px 0; }
+                        .button { display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+                        .features { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 30px 0; }
+                        .features ul { margin: 0; padding-left: 20px; }
+                        .features li { margin: 8px 0; }
+                        .footer { text-align: center; margin-top: 40px; padding-top: 30px; border-top: 1px solid #e5e7eb; color: #666; font-size: 14px; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="container">
+                        <div class="header">
+                          <div class="logo">🏃</div>
+                          <h1>Welcome to GoodRunss!</h1>
+                          <p class="subtitle">Your AI-Powered Training Dashboard</p>
+                        </div>
+
+                        <p>Hi <strong>${customerName || 'there'}</strong>,</p>
+                        
+                        <p>Thank you for joining GoodRunss! Your account is now active and ready to go. 🚀</p>
+                        
+                        <div style="text-align: center;">
+                          <div class="plan-badge">${plan.replace('-', ' ').toUpperCase()} PLAN</div>
+                        </div>
+
+                        <div class="features">
+                          <h3 style="margin-top: 0;">✨ What You Get:</h3>
+                          <ul>
+                            <li><strong>Unlimited Clients</strong> - Manage as many clients as you want</li>
+                            <li><strong>AI Session Plan Generator</strong> - Create custom workouts in seconds</li>
+                            <li><strong>Gia AI Assistant</strong> - 24/7 AI chatbot for training questions</li>
+                            <li><strong>Auto CRM</strong> - Intelligent document parsing</li>
+                            <li><strong>Client Lead Matching</strong> - Find your perfect clients</li>
+                            <li><strong>Advanced Analytics</strong> - Track your business growth</li>
+                          </ul>
+                        </div>
+
+                        <div style="text-align: center;">
+                          <a href="https://goodrunss-trainer-dashboard.vercel.app/login" class="button">
+                            Access Your Dashboard →
+                          </a>
+                        </div>
+
+                        <p style="margin-top: 30px;">🎁 <strong>Early Access Bonus:</strong> Your rate is locked forever and will never increase!</p>
+
+                        <p>Need help getting started? Just reply to this email - we're here for you!</p>
+
+                        <div class="footer">
+                          <p><strong>The GoodRunss Team</strong></p>
+                          <p style="font-size: 12px; color: #999;">
+                            Questions? Email us at <a href="mailto:anthony@goodrunss.com">anthony@goodrunss.com</a>
+                          </p>
+                        </div>
+                      </div>
+                    </body>
+                  </html>
                 `,
               }),
             }).catch(err => {
