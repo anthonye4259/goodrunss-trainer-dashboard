@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,30 +23,89 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Exercises will be loaded from your database
-const mockExercises: any[] = []
-
 export default function ExercisesPage() {
+  const [exercises, setExercises] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedExercise, setSelectedExercise] = useState<(typeof mockExercises)[0] | null>(null)
+  const [selectedExercise, setSelectedExercise] = useState<any | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
-  const filteredExercises = mockExercises.filter((exercise) => {
+  // Fetch exercises on mount
+  useEffect(() => {
+    fetchExercises()
+  }, [])
+
+  const fetchExercises = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/exercises')
+      if (!response.ok) throw new Error('Failed to fetch exercises')
+      const data = await response.json()
+      setExercises(data.exercises || [])
+    } catch (error) {
+      console.error('Error fetching exercises:', error)
+      toast({
+        title: "Error loading exercises",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const filteredExercises = exercises.filter((exercise) => {
     const matchesSearch =
       exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      exercise.muscleGroup.toLowerCase().includes(searchQuery.toLowerCase())
+      (exercise.muscleGroups && exercise.muscleGroups.some((mg: string) => mg.toLowerCase().includes(searchQuery.toLowerCase())))
     const matchesCategory = selectedCategory === "all" || exercise.category === selectedCategory
     return matchesSearch && matchesCategory
   })
 
-  const handleCreateExercise = (e: React.FormEvent) => {
+  const handleCreateExercise = async (e: React.FormEvent) => {
     e.preventDefault()
-    toast({
-      title: "Exercise Added",
-      description: "New exercise has been added to your library.",
-    })
-    setIsCreateDialogOpen(false)
+    const formData = new FormData(e.target as HTMLFormElement)
+
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch('/api/exercises', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.get('exerciseName'),
+          description: formData.get('description'),
+          category: formData.get('category'),
+          difficulty: formData.get('difficulty'),
+          instructions: formData.get('instructions'),
+          muscleGroups: formData.get('muscleGroups') ? (formData.get('muscleGroups') as string).split(',').map(s => s.trim()) : [],
+          equipment: formData.get('equipment') ? (formData.get('equipment') as string).split(',').map(s => s.trim()) : [],
+          videoUrl: formData.get('videoUrl') || null,
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to create exercise')
+
+      await fetchExercises()
+      
+      toast({
+        title: "Exercise Added",
+        description: "New exercise has been added to your library.",
+      })
+      setIsCreateDialogOpen(false)
+    } catch (error) {
+      console.error('Error creating exercise:', error)
+      toast({
+        title: "Error creating exercise",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

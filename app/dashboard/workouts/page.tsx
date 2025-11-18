@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,34 +23,90 @@ import { Badge } from "@/components/ui/badge"
 import { Spinner } from "@/components/ui/spinner" // Fixed import to use named export instead of default
 
 // Workout plans will be loaded from your database
-const mockWorkoutPlans: any[] = []
-
 export default function WorkoutsPage() {
+  const [workoutPlans, setWorkoutPlans] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false) // Added loading state
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
-  const filteredPlans = mockWorkoutPlans.filter(
+  // Fetch workout plans on mount
+  useEffect(() => {
+    fetchWorkoutPlans()
+  }, [])
+
+  const fetchWorkoutPlans = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/workouts')
+      if (!response.ok) throw new Error('Failed to fetch workout plans')
+      const data = await response.json()
+      setWorkoutPlans(data.workoutPlans || [])
+    } catch (error) {
+      console.error('Error fetching workout plans:', error)
+      toast({
+        title: "Error loading workout plans",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const filteredPlans = workoutPlans.filter(
     (plan) =>
       plan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      plan.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      (plan.description && plan.description.toLowerCase().includes(searchQuery.toLowerCase())),
   )
 
   const handleCreatePlan = async (e: React.FormEvent) => {
     e.preventDefault()
+    const formData = new FormData(e.target as HTMLFormElement)
+
     setIsSubmitting(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const response = await fetch('/api/workouts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: formData.get('clientId') || 'default-client', // You'd get this from a client selector
+          name: formData.get('planName'),
+          description: formData.get('description'),
+          goal: formData.get('goal'),
+          duration: Number(formData.get('duration')),
+          difficulty: formData.get('difficulty'),
+          fitnessLevel: formData.get('difficulty'), // Use same value
+          availableTime: Number(formData.get('sessionDuration')) || 60,
+          sessionsPerWeek: Number(formData.get('sessionsPerWeek')) || 3,
+          equipment: [],
+          injuries: [],
+          clientGoals: {},
+        }),
+      })
 
-    setIsSubmitting(false)
-    toast({
-      title: "Workout Plan Created",
-      description: "New workout plan has been created successfully.",
-    })
-    setIsCreateDialogOpen(false)
+      if (!response.ok) throw new Error('Failed to create workout plan')
+
+      await fetchWorkoutPlans()
+      
+      toast({
+        title: "Workout Plan Created",
+        description: "New workout plan has been created successfully.",
+      })
+      setIsCreateDialogOpen(false)
+    } catch (error) {
+      console.error('Error creating workout plan:', error)
+      toast({
+        title: "Error creating workout plan",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleDuplicatePlan = (planId: string) => {

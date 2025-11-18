@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,36 +23,127 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 
 // Reminders will be loaded from your database
-const mockReminders: any[] = []
-
 export default function RemindersPage() {
-  const [reminders, setReminders] = useState(mockReminders)
+  const [reminders, setReminders] = useState<any[]>([])
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
-  const handleCreateReminder = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetchReminders()
+  }, [])
+
+  const fetchReminders = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/reminders')
+      if (!response.ok) throw new Error('Failed to fetch reminders')
+      const data = await response.json()
+      setReminders(data.reminders || [])
+    } catch (error) {
+      console.error('Error fetching reminders:', error)
+      toast({
+        title: "Error loading reminders",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCreateReminder = async (e: React.FormEvent) => {
     e.preventDefault()
-    toast({
-      title: "Reminder Created",
-      description: "New automated reminder has been created.",
-    })
-    setIsCreateDialogOpen(false)
+    const formData = new FormData(e.target as HTMLFormElement)
+
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch('/api/reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientName: formData.get('clientName'),
+          reminder: formData.get('message'),
+          dueDate: formData.get('dueDate'),
+          priority: formData.get('priority') || 'medium',
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to create reminder')
+
+      await fetchReminders()
+
+      toast({
+        title: "Reminder Created",
+        description: "New automated reminder has been created.",
+      })
+      setIsCreateDialogOpen(false)
+    } catch (error) {
+      console.error('Error creating reminder:', error)
+      toast({
+        title: "Error creating reminder",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const handleToggleReminder = (id: string) => {
-    setReminders(reminders.map((r) => (r.id === id ? { ...r, active: !r.active } : r)))
-    toast({
-      title: "Reminder Updated",
-      description: "Reminder status has been changed.",
-    })
+  const handleToggleReminder = async (id: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'pending' ? 'completed' : 'pending'
+      const response = await fetch('/api/reminders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reminderId: id,
+          status: newStatus,
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to update reminder')
+
+      await fetchReminders()
+
+      toast({
+        title: "Reminder Updated",
+        description: "Reminder status has been changed.",
+      })
+    } catch (error) {
+      console.error('Error updating reminder:', error)
+      toast({
+        title: "Error updating reminder",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleDeleteReminder = (id: string) => {
-    setReminders(reminders.filter((r) => r.id !== id))
-    toast({
-      title: "Reminder Deleted",
-      description: "Reminder has been removed.",
-    })
+  const handleDeleteReminder = async (id: string) => {
+    try {
+      const response = await fetch(`/api/reminders?id=${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) throw new Error('Failed to delete reminder')
+
+      await fetchReminders()
+
+      toast({
+        title: "Reminder Deleted",
+        description: "Reminder has been removed.",
+      })
+    } catch (error) {
+      console.error('Error deleting reminder:', error)
+      toast({
+        title: "Error deleting reminder",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (

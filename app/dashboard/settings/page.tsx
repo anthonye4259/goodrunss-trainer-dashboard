@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,8 @@ import { useLanguage } from "@/contexts/language-context"
 export default function SettingsPage() {
   const { toast } = useToast()
   const { language, setLanguage } = useLanguage()
+  const [profile, setProfile] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [isProfileSaving, setIsProfileSaving] = useState(false)
   const [isNotificationsSaving, setIsNotificationsSaving] = useState(false)
   const [isPasswordSaving, setIsPasswordSaving] = useState(false)
@@ -27,18 +29,66 @@ export default function SettingsPage() {
   const [marketingEmails, setMarketingEmails] = useState(false)
   const [weeklyReports, setWeeklyReports] = useState(true)
 
+  useEffect(() => {
+    fetchProfile()
+  }, [])
+
+  const fetchProfile = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/profile')
+      if (!response.ok) throw new Error('Failed to fetch profile')
+      const data = await response.json()
+      setProfile(data.profile)
+    } catch (error) {
+      console.error('Error fetching profile:', error)
+      toast({
+        title: "Error loading profile",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSaveProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const formData = new FormData(e.currentTarget)
     setIsProfileSaving(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.get('name'),
+          phoneNumber: formData.get('phone'),
+          bio: formData.get('bio'),
+          specialty: formData.get('specialty'),
+          yearsExperience: Number(formData.get('experience')),
+          timezone: formData.get('timezone'),
+        }),
+      })
 
-    setIsProfileSaving(false)
-    toast({
-      title: "Profile updated",
-      description: "Your profile information has been saved successfully.",
-    })
+      if (!response.ok) throw new Error('Failed to update profile')
+
+      await fetchProfile()
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile information has been saved successfully.",
+      })
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      toast({
+        title: "Error updating profile",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsProfileSaving(false)
+    }
   }
 
   const handleSaveNotifications = async () => {

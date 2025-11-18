@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useToast } from "@/hooks/use-toast"
 import { Search, Send, Phone, Video, MoreVertical, Paperclip, Smile, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,7 +29,46 @@ type Conversation = {
 }
 
 export default function MessagesPage() {
-  const [conversations] = useState<Conversation[]>([
+  const { toast } = useToast()
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    fetchConversations()
+  }, [])
+
+  const fetchConversations = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/messages')
+      if (!response.ok) throw new Error('Failed to fetch conversations')
+      const data = await response.json()
+      // Map API response to expected format
+      const mappedConversations = (data.conversations || []).map((conv: any) => ({
+        id: conv.partnerId,
+        clientId: conv.partnerId,
+        clientName: conv.partner?.name || 'Unknown',
+        clientAvatar: conv.partner?.image || '/placeholder.svg',
+        lastMessage: conv.lastMessage?.content || '',
+        lastMessageTime: new Date(conv.lastMessage?.createdAt || Date.now()),
+        unreadCount: conv.unreadCount || 0,
+        messages: [], // Load messages when conversation is selected
+      }))
+      setConversations(mappedConversations)
+    } catch (error) {
+      console.error('Error fetching conversations:', error)
+      toast({
+        title: "Error loading conversations",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Fallback mock data if no conversations
+  const mockConversations: Conversation[] = [
     {
       id: "1",
       clientId: "c1",
