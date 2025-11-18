@@ -19,44 +19,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 
-const mockPrograms = [
-  {
-    id: 1,
-    name: "Strength Foundation",
-    description: "12-week progressive strength training program for beginners",
-    duration: "12 weeks",
-    sessions: 36,
-    price: 899,
-    clients: 8,
-  },
-  {
-    id: 2,
-    name: "HIIT Transformation",
-    description: "8-week high-intensity interval training for fat loss",
-    duration: "8 weeks",
-    sessions: 24,
-    price: 599,
-    clients: 12,
-  },
-  {
-    id: 3,
-    name: "Yoga & Wellness",
-    description: "6-week mindfulness and flexibility program",
-    duration: "6 weeks",
-    sessions: 18,
-    price: 449,
-    clients: 15,
-  },
-  {
-    id: 4,
-    name: "Marathon Prep",
-    description: "16-week endurance training for marathon runners",
-    duration: "16 weeks",
-    sessions: 48,
-    price: 1199,
-    clients: 5,
-  },
-]
+// Programs will be loaded from your database
+const mockPrograms: any[] = []
 
 export default function ProgramsPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)

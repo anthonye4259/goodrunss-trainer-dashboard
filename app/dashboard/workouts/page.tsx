@@ -22,35 +22,8 @@ import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Spinner } from "@/components/ui/spinner" // Fixed import to use named export instead of default
 
-const mockWorkoutPlans = [
-  {
-    id: "1",
-    name: "Strength Building - Beginner",
-    description: "4-week program focused on building foundational strength",
-    duration: "4 weeks",
-    difficulty: "Beginner",
-    exercises: 12,
-    assignedTo: 3,
-  },
-  {
-    id: "2",
-    name: "HIIT Fat Loss",
-    description: "High-intensity interval training for maximum fat burn",
-    duration: "6 weeks",
-    difficulty: "Intermediate",
-    exercises: 15,
-    assignedTo: 5,
-  },
-  {
-    id: "3",
-    name: "Athletic Performance",
-    description: "Sport-specific training for basketball players",
-    duration: "8 weeks",
-    difficulty: "Advanced",
-    exercises: 20,
-    assignedTo: 2,
-  },
-]
+// Workout plans will be loaded from your database
+const mockWorkoutPlans: any[] = []
 
 export default function WorkoutsPage() {
   const [searchQuery, setSearchQuery] = useState("")

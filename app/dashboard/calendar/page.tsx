@@ -25,44 +25,8 @@ import { Spinner } from "@/components/ui/spinner"
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
 import { RescheduleModal } from "@/components/reschedule-modal"
 
-const mockSessions = [
-  {
-    id: "1",
-    clientName: "Sarah Johnson",
-    date: "2024-01-15",
-    time: "09:00",
-    duration: 60,
-    type: "Training",
-    status: "upcoming",
-  },
-  {
-    id: "2",
-    clientName: "Mike Chen",
-    date: "2024-01-15",
-    time: "11:30",
-    duration: 60,
-    type: "Training",
-    status: "upcoming",
-  },
-  {
-    id: "3",
-    clientName: "Emma Davis",
-    date: "2024-01-15",
-    time: "14:00",
-    duration: 90,
-    type: "Assessment",
-    status: "upcoming",
-  },
-  {
-    id: "4",
-    clientName: "James Wilson",
-    date: "2024-01-16",
-    time: "10:00",
-    duration: 60,
-    type: "Training",
-    status: "upcoming",
-  },
-]
+// Sessions will be loaded from your database
+const mockSessions: any[] = []
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 const months = [

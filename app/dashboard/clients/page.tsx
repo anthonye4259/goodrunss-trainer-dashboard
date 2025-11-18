@@ -24,52 +24,8 @@ import { useToast } from "@/hooks/use-toast"
 import { Spinner } from "@/components/ui/spinner"
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
 
-const mockClients = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah.j@email.com",
-    phone: "+1 (555) 123-4567",
-    sport: "Basketball",
-    status: "active",
-    sessions: 24,
-    nextSession: "2024-01-15 09:00",
-    joinedDate: "2023-06-15",
-  },
-  {
-    id: "2",
-    name: "Mike Chen",
-    email: "mike.chen@email.com",
-    phone: "+1 (555) 234-5678",
-    sport: "Tennis",
-    status: "active",
-    sessions: 18,
-    nextSession: "2024-01-15 11:30",
-    joinedDate: "2023-08-22",
-  },
-  {
-    id: "3",
-    name: "Emma Davis",
-    email: "emma.d@email.com",
-    phone: "+1 (555) 345-6789",
-    sport: "Running",
-    status: "active",
-    sessions: 31,
-    nextSession: "2024-01-15 14:00",
-    joinedDate: "2023-04-10",
-  },
-  {
-    id: "4",
-    name: "James Wilson",
-    email: "j.wilson@email.com",
-    phone: "+1 (555) 456-7890",
-    sport: "Soccer",
-    status: "inactive",
-    sessions: 12,
-    nextSession: null,
-    joinedDate: "2023-09-05",
-  },
-]
+// Clients will be loaded from your database
+const mockClients: any[] = []
 
 export default function ClientsPage() {
   const [clients, setClients] = useState(mockClients)

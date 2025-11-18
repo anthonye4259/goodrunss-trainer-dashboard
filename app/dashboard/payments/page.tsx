@@ -22,45 +22,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DollarSign, TrendingUp, Clock, Download, Plus, CheckCircle2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
-// Mock payment data
-const mockPayments = [
-  {
-    id: "1",
-    clientName: "Sarah Johnson",
-    amount: 150,
-    date: "2024-01-12",
-    status: "paid",
-    method: "Credit Card",
-    sessionType: "Training",
-  },
-  {
-    id: "2",
-    clientName: "Mike Chen",
-    amount: 150,
-    date: "2024-01-12",
-    status: "paid",
-    method: "Cash",
-    sessionType: "Training",
-  },
-  {
-    id: "3",
-    clientName: "Emma Davis",
-    amount: 200,
-    date: "2024-01-10",
-    status: "paid",
-    method: "Bank Transfer",
-    sessionType: "Assessment",
-  },
-  {
-    id: "4",
-    clientName: "James Wilson",
-    amount: 150,
-    date: "2024-01-15",
-    status: "pending",
-    method: "Credit Card",
-    sessionType: "Training",
-  },
-]
+// Payments will be loaded from your database
+const mockPayments: any[] = []
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState(mockPayments)

@@ -22,45 +22,8 @@ import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 
-const mockReminders = [
-  {
-    id: "1",
-    name: "Session Reminder - 24h Before",
-    type: "email",
-    trigger: "24h before session",
-    message: "Hi {client_name}, this is a reminder about your training session tomorrow at {session_time}.",
-    active: true,
-    sentCount: 156,
-  },
-  {
-    id: "2",
-    name: "Session Reminder - 1h Before",
-    type: "sms",
-    trigger: "1h before session",
-    message: "Your training session with Coach Alex starts in 1 hour at {session_time}. See you soon!",
-    active: true,
-    sentCount: 142,
-  },
-  {
-    id: "3",
-    name: "Payment Due Reminder",
-    type: "email",
-    trigger: "Payment overdue",
-    message: "Hi {client_name}, your payment of ${amount} is now overdue. Please settle at your earliest convenience.",
-    active: true,
-    sentCount: 23,
-  },
-  {
-    id: "4",
-    name: "Weekly Check-in",
-    type: "email",
-    trigger: "Every Monday 9am",
-    message:
-      "Hi {client_name}, how was your training last week? Let me know if you need any adjustments to your program.",
-    active: false,
-    sentCount: 89,
-  },
-]
+// Reminders will be loaded from your database
+const mockReminders: any[] = []
 
 export default function RemindersPage() {
   const [reminders, setReminders] = useState(mockReminders)

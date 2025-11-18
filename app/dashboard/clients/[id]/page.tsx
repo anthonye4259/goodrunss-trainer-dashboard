@@ -37,87 +37,26 @@ import { Line, LineChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } fro
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 // Mock client data
-const mockClient = {
+// Client data will be loaded from your database
+const mockClient: any = {
   id: "1",
-  name: "Sarah Johnson",
-  email: "sarah.j@email.com",
-  phone: "+1 (555) 123-4567",
-  sport: "Basketball",
+  name: "Client",
+  email: "",
+  phone: "",
+  sport: "",
   status: "active",
-  joinedDate: "2023-06-15",
-  totalSessions: 24,
-  completedSessions: 22,
-  upcomingSessions: 2,
-  totalRevenue: 3600,
-  sessions: [
-    {
-      id: "1",
-      date: "2024-01-15",
-      time: "09:00",
-      duration: 60,
-      type: "Training",
-      status: "upcoming",
-      notes: "Focus on shooting drills",
-    },
-    {
-      id: "2",
-      date: "2024-01-12",
-      time: "09:00",
-      duration: 60,
-      type: "Training",
-      status: "completed",
-      notes: "Great progress on defense",
-    },
-    {
-      id: "3",
-      date: "2024-01-10",
-      time: "09:00",
-      duration: 60,
-      type: "Assessment",
-      status: "completed",
-      notes: "Baseline fitness test completed",
-    },
-  ],
-  notes: [
-    {
-      id: "1",
-      date: "2024-01-12",
-      content: "Client showed significant improvement in defensive positioning. Continue with current training plan.",
-      author: "Coach Alex",
-    },
-    {
-      id: "2",
-      date: "2024-01-05",
-      content: "Discussed goals for the month. Focus areas: shooting accuracy and stamina.",
-      author: "Coach Alex",
-    },
-  ],
+  joinedDate: new Date().toISOString(),
+  totalSessions: 0,
+  completedSessions: 0,
+  upcomingSessions: 0,
+  totalRevenue: 0,
+  sessions: [],
+  notes: [],
 }
 
-const mockProgressData = [
-  { date: "2024-01-01", weight: 185, bodyFat: 18 },
-  { date: "2024-01-08", weight: 183, bodyFat: 17.5 },
-  { date: "2024-01-15", weight: 181, bodyFat: 17 },
-  { date: "2024-01-22", weight: 180, bodyFat: 16.5 },
-]
-
-const mockMeasurements = [
-  { date: "2024-01-01", chest: 42, waist: 34, hips: 40, arms: 15, thighs: 24 },
-  { date: "2024-01-15", chest: 42.5, waist: 33, hips: 39.5, arms: 15.5, thighs: 24.5 },
-]
-
-const mockGoals = [
-  { id: "1", title: "Lose 10 lbs", target: "175 lbs", current: "180 lbs", progress: 50, deadline: "2024-03-01" },
-  { id: "2", title: "Run 5K under 25 min", target: "25:00", current: "27:30", progress: 70, deadline: "2024-02-15" },
-  {
-    id: "3",
-    title: "Bench Press 225 lbs",
-    target: "225 lbs",
-    current: "205 lbs",
-    progress: 91,
-    deadline: "2024-04-01",
-  },
-]
+const mockProgressData: any[] = []
+const mockMeasurements: any[] = []
+const mockGoals: any[] = []
 
 export default function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)

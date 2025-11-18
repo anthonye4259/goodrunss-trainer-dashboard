@@ -22,75 +22,8 @@ import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-const mockExercises = [
-  {
-    id: "1",
-    name: "Barbell Squat",
-    category: "Strength",
-    muscleGroup: "Legs",
-    equipment: "Barbell",
-    difficulty: "Intermediate",
-    description: "A compound exercise that targets the quadriceps, hamstrings, and glutes.",
-    instructions:
-      "Stand with feet shoulder-width apart, bar on upper back. Lower by bending knees and hips. Return to start.",
-    videoUrl: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: "2",
-    name: "Bench Press",
-    category: "Strength",
-    muscleGroup: "Chest",
-    equipment: "Barbell",
-    difficulty: "Intermediate",
-    description: "A fundamental upper body exercise targeting the chest, shoulders, and triceps.",
-    instructions: "Lie on bench, grip bar slightly wider than shoulders. Lower to chest, press back up.",
-    videoUrl: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: "3",
-    name: "Burpees",
-    category: "Cardio",
-    muscleGroup: "Full Body",
-    equipment: "Bodyweight",
-    difficulty: "Intermediate",
-    description: "A full-body exercise that combines a squat, plank, and jump.",
-    instructions: "Start standing, drop to plank, do push-up, jump feet to hands, jump up with arms overhead.",
-    videoUrl: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: "4",
-    name: "Deadlift",
-    category: "Strength",
-    muscleGroup: "Back",
-    equipment: "Barbell",
-    difficulty: "Advanced",
-    description: "A compound movement that works the entire posterior chain.",
-    instructions: "Stand with feet hip-width, grip bar. Keep back straight, lift by extending hips and knees.",
-    videoUrl: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: "5",
-    name: "Mountain Climbers",
-    category: "Cardio",
-    muscleGroup: "Core",
-    equipment: "Bodyweight",
-    difficulty: "Beginner",
-    description: "A dynamic exercise that builds cardiovascular endurance and core strength.",
-    instructions: "Start in plank position. Alternate bringing knees to chest in a running motion.",
-    videoUrl: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: "6",
-    name: "Pull-ups",
-    category: "Strength",
-    muscleGroup: "Back",
-    equipment: "Pull-up Bar",
-    difficulty: "Intermediate",
-    description: "An upper body exercise that primarily targets the back and biceps.",
-    instructions: "Hang from bar with overhand grip. Pull body up until chin is over bar. Lower with control.",
-    videoUrl: "/placeholder.svg?height=200&width=300",
-  },
-]
+// Exercises will be loaded from your database
+const mockExercises: any[] = []
 
 export default function ExercisesPage() {
   const [searchQuery, setSearchQuery] = useState("")

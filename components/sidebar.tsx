@@ -56,7 +56,6 @@ export function Sidebar() {
     { name: t("reports"), href: "/dashboard/reports", icon: FileText },
     { name: t("payments"), href: "/dashboard/payments", icon: DollarSign },
     { name: t("analytics"), href: "/dashboard/analytics", icon: BarChart3 },
-    { name: t("gia"), href: "/dashboard/gia", icon: MessageSquare },
     { name: t("aiPersona"), href: "/dashboard/ai-persona", icon: Zap },
     { name: t("referrals"), href: "/dashboard/referrals", icon: Gift },
     { name: t("marketing"), href: "/dashboard/marketing", icon: Megaphone },

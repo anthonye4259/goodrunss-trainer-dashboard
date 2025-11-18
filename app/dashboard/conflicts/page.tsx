@@ -10,63 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertTriangle, CheckCircle, Clock, Search, TrendingUp } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
-// Mock conflicts data
-const mockConflicts = [
-  {
-    id: "1",
-    type: "Double Booking",
-    severity: "high",
-    date: "2024-01-15",
-    time: "10:00",
-    clients: ["Sarah Johnson", "Mike Chen"],
-    status: "pending",
-    autoResolved: false,
-  },
-  {
-    id: "2",
-    type: "Back-to-back Sessions",
-    severity: "medium",
-    date: "2024-01-16",
-    time: "14:00",
-    clients: ["Emma Davis"],
-    status: "resolved",
-    autoResolved: true,
-  },
-  {
-    id: "3",
-    type: "Travel Time Conflict",
-    severity: "low",
-    date: "2024-01-17",
-    time: "09:00",
-    clients: ["James Wilson", "Lisa Brown"],
-    status: "pending",
-    autoResolved: false,
-  },
-]
-
-const mockSuggestions = [
-  {
-    id: "1",
-    dateTime: "2024-01-15 at 11:30 AM",
-    confidence: 92,
-    pros: ["No other bookings", "Client's preferred time window", "Adequate travel time"],
-    cons: ["Slightly later than original request"],
-  },
-  {
-    id: "2",
-    dateTime: "2024-01-15 at 2:00 PM",
-    confidence: 88,
-    pros: ["Client available", "Good time spacing"],
-    cons: ["Outside preferred morning slot", "Lower energy time"],
-  },
-  {
-    id: "3",
-    dateTime: "2024-01-16 at 9:00 AM",
-    confidence: 85,
-    pros: ["Next day alternative", "Fresh start morning"],
-    cons: ["Requires rescheduling", "One day delay"],
-  },
-]
+// Conflicts will be loaded from your database
+const mockConflicts: any[] = []
+const mockSuggestions: any[] = []
 
 export default function ConflictsPage() {
   const [conflicts, setConflicts] = useState(mockConflicts)

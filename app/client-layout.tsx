@@ -8,6 +8,7 @@ import { Sidebar, MobileNav } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { Toaster } from "@/components/ui/toaster"
 import { LanguageProvider } from "@/contexts/language-context"
+import { GiaChatbot } from "@/components/gia-chatbot"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -52,6 +53,7 @@ export function ClientLayout({
           <main className="flex-1 overflow-y-auto">{children}</main>
         </div>
         <MobileNav />
+        <GiaChatbot />
       </div>
       <Toaster />
     </LanguageProvider>
