@@ -37,7 +37,7 @@ export async function GET(
         trainerId: trainer.id,
       },
       include: {
-        client: true,
+        clients: true,
       },
     })
 
