@@ -8,7 +8,8 @@
     "lint": "eslint .",
     "start": "next start",
     "mcp": "node mcp/server.js",
-    "vercel-install": "npm install --legacy-peer-deps"
+    "vercel-install": "npm install --legacy-peer-deps",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
