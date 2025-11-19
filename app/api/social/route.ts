@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuth } from "@clerk/nextjs/server"
-import { prisma } from "@/lib/prisma"
 
-// GET /api/social - Get social/viral content for a trainer
+// GET /api/social - Get social media content for a trainer
 export async function GET(req: NextRequest) {
   try {
     const { userId } = getAuth(req)
@@ -11,51 +10,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: "Trainer not found" }, { status: 404 })
-    }
-
-    const { searchParams } = new URL(req.url)
-    const contentType = searchParams.get("contentType")
-
-    const where: any = { userId: trainer.id }
-    if (contentType) {
-      where.contentType = contentType
-    }
-
-    const content = await prisma.viralContent.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-    })
-
-    // Get viral metrics
-    const metrics = await prisma.viralMetrics.findMany({
-      where: { userId: trainer.id },
-      orderBy: { createdAt: "desc" },
-      take: 100,
-    })
-
-    // Get referral tracking
-    const referrals = await prisma.referralTracking.findMany({
-      where: { referrerId: trainer.id },
-      orderBy: { createdAt: "desc" },
-    })
-
-    return NextResponse.json({
-      content,
-      metrics,
-      referrals,
-      summary: {
-        totalContent: content.length,
-        totalShares: content.reduce((sum, c) => sum + c.shareCount, 0),
-        totalReferrals: referrals.length,
-        conversions: referrals.filter((r) => r.converted).length,
-      },
-    })
+    // TODO: Implement social media tools when schema is ready
+    return NextResponse.json({ content: [] })
   } catch (error) {
     console.error("Error fetching social content:", error)
     return NextResponse.json(
@@ -65,7 +21,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/social - Create viral content
+// POST /api/social - Create social media content
 export async function POST(req: NextRequest) {
   try {
     const { userId } = getAuth(req)
@@ -74,34 +30,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: "Trainer not found" }, { status: 404 })
-    }
-
-    const body = await req.json()
-    const { contentType, contentData } = body
-
-    // Validation
-    if (!contentType || !contentData) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      )
-    }
-
-    const content = await prisma.viralContent.create({
-      data: {
-        userId: trainer.id,
-        contentType,
-        contentData,
-      },
-    })
-
-    return NextResponse.json({ content }, { status: 201 })
+    // TODO: Implement content creation when schema is ready
+    return NextResponse.json({ message: "Feature coming soon" }, { status: 501 })
   } catch (error) {
     console.error("Error creating social content:", error)
     return NextResponse.json(
@@ -110,4 +40,3 @@ export async function POST(req: NextRequest) {
     )
   }
 }
-

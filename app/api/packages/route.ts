@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuth } from "@clerk/nextjs/server"
-import { prisma } from "@/lib/prisma"
 
 // GET /api/packages - List all packages for a trainer
 export async function GET(req: NextRequest) {
@@ -11,25 +10,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: "Trainer not found" }, { status: 404 })
-    }
-
-    const packages = await prisma.servicePackage.findMany({
-      where: { trainerId: trainer.id },
-      include: {
-        _count: {
-          select: { purchases: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    })
-
-    return NextResponse.json({ packages })
+    // TODO: Implement packages when schema is ready
+    return NextResponse.json({ packages: [] })
   } catch (error) {
     console.error("Error fetching packages:", error)
     return NextResponse.json(
@@ -48,55 +30,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: "Trainer not found" }, { status: 404 })
-    }
-
-    const body = await req.json()
-    const {
-      name,
-      description,
-      sessionsIncluded,
-      packageType,
-      sport,
-      price,
-      savings,
-      currency,
-      validityDays,
-      features,
-      stripePriceId,
-    } = body
-
-    // Validation
-    if (!name || !sessionsIncluded || !packageType || !price) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      )
-    }
-
-    const servicePackage = await prisma.servicePackage.create({
-      data: {
-        trainerId: trainer.id,
-        name,
-        description,
-        sessionsIncluded,
-        packageType,
-        sport,
-        price,
-        savings,
-        currency: currency || "USD",
-        validityDays,
-        features: features || [],
-        stripePriceId,
-      },
-    })
-
-    return NextResponse.json({ package: servicePackage }, { status: 201 })
+    // TODO: Implement package creation when schema is ready
+    return NextResponse.json({ message: "Feature coming soon" }, { status: 501 })
   } catch (error) {
     console.error("Error creating package:", error)
     return NextResponse.json(
@@ -105,4 +40,3 @@ export async function POST(req: NextRequest) {
     )
   }
 }
-
