@@ -247,7 +247,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
         </TabsList>
 
         <TabsContent value="sessions" className="space-y-4">
-          {client.sessions.map((session) => (
+          {client.sessions.map((session: any) => (
             <Card key={session.id} className="glass border-border/50">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
