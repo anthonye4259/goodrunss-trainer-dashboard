@@ -26,7 +26,7 @@ export async function GET(
     const workoutPlan = await prisma.workout_plans.findUnique({
       where: { id },
       include: {
-        workouts: {
+        workout_sessions: {
           orderBy: { scheduledFor: 'asc' },
         },
       },
