@@ -4,13 +4,29 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Sparkles, X, Send, Minimize2 } from "lucide-react"
+import { Sparkles, X, Send, Minimize2, Users, Calendar, Dumbbell, TrendingUp, MessageCircle, Zap } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Badge } from "@/components/ui/badge"
 
 interface Message {
   role: "user" | "assistant"
   content: string
 }
+
+const quickActions = [
+  { icon: Calendar, label: "Create session plan", prompt: "Help me create a session plan for a beginner" },
+  { icon: Users, label: "Client management tips", prompt: "Give me tips for managing clients better" },
+  { icon: TrendingUp, label: "Grow my business", prompt: "How can I grow my sports coaching business?" },
+  { icon: MessageCircle, label: "Marketing ideas", prompt: "Give me marketing content ideas for social media" },
+]
+
+const integrations = [
+  { name: "Your Dashboard", icon: "📊" },
+  { name: "Client Manager", icon: "👥" },
+  { name: "Calendar", icon: "📅" },
+  { name: "Session Planner", icon: "🎯" },
+  { name: "Marketing Tools", icon: "📱" },
+]
 
 export function GiaChatbot() {
   const [isOpen, setIsOpen] = useState(false)
@@ -18,11 +34,12 @@ export function GiaChatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm Gia, your AI assistant for sports & wellness professionals. I can help you create session plans, manage clients, and grow your business. How can I help you today?",
+      content: "Hi! I'm Gia, your AI assistant for sports & wellness professionals. 🎾⚽🏀\n\nI can help you with:\n• Creating custom session plans\n• Managing clients & schedules\n• Growing your business\n• Marketing content ideas\n• Coaching tips & best practices\n\nWhat would you like help with today?",
     },
   ])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -31,13 +48,20 @@ export function GiaChatbot() {
     }
   }, [messages])
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return
+  const handleQuickAction = (prompt: string) => {
+    setShowSuggestions(false)
+    setInput(prompt)
+    handleSendMessage(prompt)
+  }
 
-    const userMessage = input.trim()
+  const handleSendMessage = async (message?: string) => {
+    const userMessage = message || input.trim()
+    if (!userMessage || isLoading) return
+
     setInput("")
     setMessages((prev) => [...prev, { role: "user", content: userMessage }])
     setIsLoading(true)
+    setShowSuggestions(false)
 
     try {
       const response = await fetch("/api/gia/chat", {
@@ -83,7 +107,7 @@ export function GiaChatbot() {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      handleSend()
+      handleSendMessage()
     }
   }
 
@@ -153,6 +177,41 @@ export function GiaChatbot() {
                   </div>
                 </div>
               ))}
+              
+              {/* Quick Actions - Show on first open */}
+              {showSuggestions && messages.length === 1 && (
+                <div className="space-y-3 mt-4">
+                  <p className="text-xs text-muted-foreground font-semibold">Quick Actions:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {quickActions.map((action, idx) => (
+                      <Button
+                        key={idx}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuickAction(action.prompt)}
+                        className="h-auto py-3 flex flex-col items-start gap-1 bg-secondary/30 hover:bg-secondary/50 border-border/50"
+                      >
+                        <action.icon className="h-4 w-4 text-primary" />
+                        <span className="text-xs text-left">{action.label}</span>
+                      </Button>
+                    ))}
+                  </div>
+                  
+                  {/* Integrations Display */}
+                  <div className="mt-4 pt-4 border-t border-border/50">
+                    <p className="text-xs text-muted-foreground font-semibold mb-2">Integrated with:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {integrations.map((int, idx) => (
+                        <Badge key={idx} variant="secondary" className="bg-secondary/30 text-xs">
+                          <span className="mr-1">{int.icon}</span>
+                          {int.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="bg-secondary/50 rounded-2xl px-4 py-2">
@@ -179,7 +238,7 @@ export function GiaChatbot() {
                 className="flex-1"
               />
               <Button
-                onClick={handleSend}
+                onClick={() => handleSendMessage()}
                 disabled={isLoading || !input.trim()}
                 size="icon"
                 className="bg-primary hover:bg-primary/90"

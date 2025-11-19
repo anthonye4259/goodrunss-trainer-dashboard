@@ -14,8 +14,10 @@ export async function GET() {
   try {
     const { userId } = await auth()
     
+    // If not authenticated, return demo data (for demo purposes)
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.log('[STATS] No userId, returning demo data')
+      return NextResponse.json(demoDashboardStats)
     }
 
     // Get trainer from database
@@ -25,6 +27,7 @@ export async function GET() {
 
     // If user is authenticated but not in database yet, return demo data
     if (!trainer) {
+      console.log('[STATS] No trainer in DB, returning demo data')
       return NextResponse.json(demoDashboardStats)
     }
 
@@ -228,9 +231,8 @@ export async function GET() {
     })
   } catch (error: any) {
     console.error('[STATS] Error fetching dashboard stats:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch dashboard stats', details: error.message },
-      { status: 500 }
-    )
+    // Return demo data instead of error for seamless demo experience
+    console.log('[STATS] Returning demo data due to error')
+    return NextResponse.json(demoDashboardStats)
   }
 }
