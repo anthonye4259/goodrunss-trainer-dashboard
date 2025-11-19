@@ -7,13 +7,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from "@/lib/prisma"
 import { initializeApp, getApps } from 'firebase/app'
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { parseDocument, generateRecommendations } from '@/lib/services/document-parser'
 import type { ProcessDocumentsResponse } from '@/lib/types/auto-crm'
 
-const prisma = new PrismaClient()
+
 
 // Helper function to convert null to undefined for TypeScript compatibility
 function nullsToUndefined<T>(obj: T): T {

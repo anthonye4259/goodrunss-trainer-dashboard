@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from "@/lib/prisma"
 
-const prisma = new PrismaClient()
+
 
 // GET /api/clients/[id] - Get client details
 export async function GET(

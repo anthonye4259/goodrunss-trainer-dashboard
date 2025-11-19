@@ -6,11 +6,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from "@/lib/prisma"
 import { generateSessionPlan } from '@/lib/services/gia-session-generator'
 import type { GenerateSessionPlanInput, GenerateSessionPlanResponse } from '@/lib/types/gia-session-plan'
 
-const prisma = new PrismaClient()
+
 
 // Helper function to convert null to undefined for TypeScript compatibility
 function nullsToUndefined<T>(obj: T): T {

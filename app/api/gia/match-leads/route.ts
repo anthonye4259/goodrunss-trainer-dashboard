@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from "@/lib/prisma"
 import { matchLeadWithTrainers } from '@/lib/services/lead-matcher'
 import type {
   ClientLeadInput,
@@ -17,7 +17,7 @@ import type {
   GetMatchesResponse,
 } from '@/lib/types/lead-matching'
 
-const prisma = new PrismaClient()
+
 
 // Helper function to convert null to undefined for TypeScript compatibility
 function nullsToUndefined<T>(obj: T): T {

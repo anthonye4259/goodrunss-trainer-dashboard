@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from "@/lib/prisma"
 
-const prisma = new PrismaClient()
+
 
 // GET /api/clients - List all clients for authenticated trainer
 export async function GET(request: NextRequest) {
