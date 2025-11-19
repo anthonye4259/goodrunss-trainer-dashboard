@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-// Exercises will be loaded from your database
+// Drills & activities will be loaded from your database
 export default function ExercisesPage() {
   const [exercises, setExercises] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -33,7 +33,7 @@ export default function ExercisesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
-  // Fetch exercises on mount
+  // Fetch drills & activities on mount
   useEffect(() => {
     fetchExercises()
   }, [])
@@ -42,13 +42,13 @@ export default function ExercisesPage() {
     try {
       setIsLoading(true)
       const response = await fetch('/api/exercises')
-      if (!response.ok) throw new Error('Failed to fetch exercises')
+      if (!response.ok) throw new Error('Failed to fetch drills & activities')
       const data = await response.json()
       setExercises(data.exercises || [])
     } catch (error) {
-      console.error('Error fetching exercises:', error)
+      console.error('Error fetching drills & activities:', error)
       toast({
-        title: "Error loading exercises",
+        title: "Error loading drills & activities",
         description: "Please try again later.",
         variant: "destructive",
       })

@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Spinner } from "@/components/ui/spinner" // Fixed import to use named export instead of default
 
-// Workout plans will be loaded from your database
+// Session plans will be loaded from your database
 export default function WorkoutsPage() {
   const [workoutPlans, setWorkoutPlans] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -32,7 +32,7 @@ export default function WorkoutsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
-  // Fetch workout plans on mount
+  // Fetch session plans on mount
   useEffect(() => {
     fetchWorkoutPlans()
   }, [])
@@ -41,13 +41,13 @@ export default function WorkoutsPage() {
     try {
       setIsLoading(true)
       const response = await fetch('/api/workouts')
-      if (!response.ok) throw new Error('Failed to fetch workout plans')
+      if (!response.ok) throw new Error('Failed to fetch session plans')
       const data = await response.json()
       setWorkoutPlans(data.workoutPlans || [])
     } catch (error) {
-      console.error('Error fetching workout plans:', error)
+      console.error('Error fetching session plans:', error)
       toast({
-        title: "Error loading workout plans",
+        title: "Error loading session plans",
         description: "Please try again later.",
         variant: "destructive",
       })

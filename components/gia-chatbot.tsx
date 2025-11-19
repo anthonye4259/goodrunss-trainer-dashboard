@@ -18,7 +18,7 @@ export function GiaChatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm Gia, your AI training assistant. I can help you generate session plans, manage clients, and answer questions about your training business. How can I help you today?",
+      content: "Hi! I'm Gia, your AI assistant for sports & wellness professionals. I can help you create session plans, manage clients, and grow your business. How can I help you today?",
     },
   ])
   const [input, setInput] = useState("")
@@ -108,7 +108,7 @@ export function GiaChatbot() {
           </div>
           <div>
             <h3 className="font-bold text-white">Gia</h3>
-            <p className="text-xs text-muted-foreground">AI Training Assistant</p>
+            <p className="text-xs text-muted-foreground">AI Sports & Wellness Assistant</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -195,4 +195,5 @@ export function GiaChatbot() {
     </Card>
   )
 }
+
 

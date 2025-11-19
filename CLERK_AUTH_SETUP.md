@@ -253,3 +253,4 @@ Your dashboard now has **full authentication**! Users can:
 - **Stripe Webhooks**: https://stripe.com/docs/webhooks
 - **Webhook Testing**: Use Stripe CLI: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
 
+

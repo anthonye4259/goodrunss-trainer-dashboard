@@ -277,3 +277,4 @@ export function generateShareableLink(sessionPlanId: string): string {
   return `${process.env.NEXT_PUBLIC_APP_URL}/session-plan/${sessionPlanId}`
 }
 
+

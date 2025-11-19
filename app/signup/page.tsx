@@ -281,7 +281,7 @@ export default function SignupPage() {
               <Input
                 id="businessName"
                 type="text"
-                placeholder="Fitness Studio"
+                placeholder="Tennis Academy, Pickleball Center, etc."
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 required
