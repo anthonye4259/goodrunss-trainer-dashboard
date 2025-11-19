@@ -40,7 +40,7 @@ export async function GET(
       },
       include: {
         sessions: {
-          orderBy: { date: 'desc' },
+          orderBy: { scheduledAt: 'desc' },
           take: 10,
         },
         notes: {
