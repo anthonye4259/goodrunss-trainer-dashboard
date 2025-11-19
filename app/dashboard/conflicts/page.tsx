@@ -251,7 +251,7 @@ export default function ConflictsPage() {
                         <div>
                           <p className="text-xs font-semibold text-primary mb-2">Pros</p>
                           <ul className="space-y-1">
-                            {suggestion.pros.map((pro, idx) => (
+                            {suggestion.pros.map((pro: string, idx: number) => (
                               <li key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
                                 <CheckCircle className="h-3 w-3 text-primary mt-0.5 shrink-0" />
                                 {pro}
