@@ -121,7 +121,8 @@ export async function PUT(request: NextRequest) {
         clerkUpdate.profileImageUrl = image
       }
       
-      await clerkClient.users.updateUser(userId, clerkUpdate)
+      const client = await clerkClient()
+      await client.users.updateUser(userId, clerkUpdate)
     }
 
     return NextResponse.json({
