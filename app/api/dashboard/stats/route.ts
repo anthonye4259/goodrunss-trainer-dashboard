@@ -66,7 +66,7 @@ export async function GET() {
 
     // 2. CLIENT STATS
     const totalClients = await prisma.client.count({
-      where: { trainerId: trainer.id, status: 'active' },
+      where: { trainerId: trainer.id },
     })
 
     const allClients = await prisma.client.findMany({
