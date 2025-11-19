@@ -15,11 +15,23 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { useLanguage } from "@/contexts/language-context"
+import { useUser } from "@clerk/nextjs"
+import { useEffect, useState } from "react"
 
 export function Header() {
   const router = useRouter()
   const { toast } = useToast()
   const { language, setLanguage } = useLanguage()
+  const { user, isLoaded } = useUser()
+  const [userEmail, setUserEmail] = useState<string>("")
+  const [userName, setUserName] = useState<string>("")
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      setUserEmail(user.primaryEmailAddress?.emailAddress || "")
+      setUserName(user.fullName || user.firstName || "Trainer")
+    }
+  }, [isLoaded, user])
 
   const handleLogout = () => {
     localStorage.removeItem("trainer_authenticated")
@@ -200,16 +212,18 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-primary/10 transition-colors">
               <Avatar className="h-10 w-10">
-                <AvatarImage src="/placeholder.svg?height=40&width=40" alt="Trainer" />
-                <AvatarFallback className="bg-primary text-background font-semibold">CA</AvatarFallback>
+                <AvatarImage src={user?.imageUrl} alt={userName} />
+                <AvatarFallback className="bg-primary text-background font-semibold">
+                  {userName.split(' ').map(n => n[0]).join('').toUpperCase() || 'T'}
+                </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56 bg-card border-primary/20" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-semibold text-primary">Coach Alex</p>
-                <p className="text-xs text-primary/70">alex@goodrunss.com</p>
+                <p className="text-sm font-semibold text-primary">{userName || "Trainer"}</p>
+                <p className="text-xs text-primary/70">{userEmail || "Loading..."}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-primary/20" />
