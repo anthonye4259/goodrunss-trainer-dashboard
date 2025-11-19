@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getOrCreateUser } from "@/lib/get-or-create-user"
 
 // GET /api/gia/match-leads - Get lead matches
 export async function GET(request: NextRequest) {
   try {
     const trainer = await getOrCreateUser()
-    if (!userId) {
+    if (!trainer) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const trainer = await getOrCreateUser()
-    if (!userId) {
+    if (!trainer) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -42,20 +43,20 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT /api/gia/match-leads - Update match
-export async function PUT(request: NextRequest) {
+// DELETE /api/gia/match-leads - Delete lead
+export async function DELETE(request: NextRequest) {
   try {
     const trainer = await getOrCreateUser()
-    if (!userId) {
+    if (!trainer) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // TODO: Implement match update when schema is ready
+    // TODO: Implement lead deletion when schema is ready
     return NextResponse.json({ message: "Feature coming soon" }, { status: 501 })
   } catch (error) {
-    console.error('Error updating match:', error)
+    console.error('Error deleting lead:', error)
     return NextResponse.json(
-      { error: 'Failed to update match' },
+      { error: 'Failed to delete lead' },
       { status: 500 }
     )
   }
