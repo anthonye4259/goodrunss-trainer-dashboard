@@ -71,7 +71,7 @@ export async function GET() {
     const allClients = await prisma.clients.findMany({
       where: { trainerId: trainer.id },
       include: {
-        sessions: {
+        trainer_sessions: {
           where: {
             scheduledAt: {
               gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
@@ -82,7 +82,7 @@ export async function GET() {
     })
 
     // Clients at risk (no sessions in last 30 days)
-    const atRiskClients = allClients.filter(client => client.sessions.length === 0)
+    const atRiskClients = allClients.filter(client => client.trainer_sessions.length === 0)
 
     // Client LTV calculation (average revenue per client)
     const clientLTV = totalClients > 0 ? thisMonthRevenue / totalClients : 0
