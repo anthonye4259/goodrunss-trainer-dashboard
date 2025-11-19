@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getOrCreateUser } from "@/lib/get-or-create-user"
 
 // GET /api/reminders - Get all reminders
 export async function GET(request: NextRequest) {

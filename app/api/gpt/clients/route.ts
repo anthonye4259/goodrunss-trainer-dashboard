@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getOrCreateUser } from "@/lib/get-or-create-user"
 
 // GET /api/gpt/clients - Get extracted client profiles
 export async function GET(request: NextRequest) {
