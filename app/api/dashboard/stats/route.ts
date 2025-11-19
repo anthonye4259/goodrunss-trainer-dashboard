@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
+import { demoDashboardStats } from '@/lib/demo-data'
 
 const prisma = new PrismaClient()
 
@@ -22,56 +23,28 @@ export async function GET() {
       where: { clerkId: userId },
     })
 
-    // If user is authenticated but not in database yet (hasn't paid), return empty stats
+    // If user is authenticated but not in database yet, return demo data
     if (!trainer) {
+      return NextResponse.json(demoDashboardStats)
+    }
+
+    // Check if trainer has any real data
+    const hasClients = await prisma.client.count({ where: { trainerId: trainer.id } })
+    
+    // If no real data exists, return demo data
+    if (hasClients === 0) {
       return NextResponse.json({
+        ...demoDashboardStats,
         trainer: {
-          name: 'Trainer',
-          email: '',
-          rating: 0,
-          totalSessions: 0,
+          name: trainer.name || 'Kai',
+          email: trainer.email,
+          rating: trainer.rating || 4.9,
+          totalSessions: trainer.totalSessions || 342,
         },
-        revenue: {
-          thisMonth: 0,
-          lastMonth: 0,
-          change: 0,
-          forecast: 0,
-          totalTransactions: 0,
-        },
-        clients: {
-          total: 0,
-          active: 0,
-          inactive: 0,
-          atRisk: 0,
-          atRiskList: [],
-          highEngagement: 0,
-          mediumEngagement: 0,
-          lowEngagement: 0,
-          ltv: 0,
-        },
-        payments: {
-          overdue: 0,
-          overdueTotal: 0,
-          overdueList: [],
-        },
-        sessions: {
-          thisWeek: 0,
-          completed: 0,
-          utilization: 0,
-        },
-        churn: {
-          rate: 0,
-          previousRate: 0,
-        },
-        subscription: {
-          active: false,
-          plan: null,
-          endsAt: null,
-        },
-        needsSetup: true, // Flag to show setup prompt in UI
       })
     }
 
+    // Otherwise fetch and return real data from database
     // Get date ranges
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)

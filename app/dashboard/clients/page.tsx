@@ -23,8 +23,9 @@ import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { Spinner } from "@/components/ui/spinner"
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
+import { demoClients } from "@/lib/demo-data"
 
-// Clients will be loaded from your database
+// Clients will be loaded from your database or demo data
 export default function ClientsPage() {
   const [clients, setClients] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -46,14 +47,17 @@ export default function ClientsPage() {
       const response = await fetch('/api/clients')
       if (!response.ok) throw new Error('Failed to fetch clients')
       const data = await response.json()
-      setClients(data.clients || [])
+      
+      // If no real clients, use demo data
+      if (!data.clients || data.clients.length === 0) {
+        setClients(demoClients)
+      } else {
+        setClients(data.clients)
+      }
     } catch (error) {
       console.error('Error fetching clients:', error)
-      toast({
-        title: "Error loading clients",
-        description: "Please try again later.",
-        variant: "destructive",
-      })
+      // Fallback to demo data on error
+      setClients(demoClients)
     } finally {
       setIsLoading(false)
     }

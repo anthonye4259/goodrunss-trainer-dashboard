@@ -21,8 +21,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DollarSign, TrendingUp, Clock, Download, Plus, CheckCircle2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { demoPayments } from "@/lib/demo-data"
 
-// Payments will be loaded from your database
+// Payments will be loaded from your database or demo data
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<any[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -41,22 +42,25 @@ export default function PaymentsPage() {
       const response = await fetch('/api/payments')
       if (!response.ok) throw new Error('Failed to fetch payments')
       const data = await response.json()
-      setPayments(data.payments || [])
+      
+      // If no real payments, use demo data
+      if (!data.payments || data.payments.length === 0) {
+        setPayments(demoPayments)
+      } else {
+        setPayments(data.payments)
+      }
     } catch (error) {
       console.error('Error fetching payments:', error)
-      toast({
-        title: "Error loading payments",
-        description: "Please try again later.",
-        variant: "destructive",
-      })
+      // Fallback to demo data on error
+      setPayments(demoPayments)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const totalRevenue = payments.filter((p) => p.status === "paid").reduce((sum, p) => sum + p.amount, 0)
-  const pendingAmount = payments.filter((p) => p.status === "pending").reduce((sum, p) => sum + p.amount, 0)
-  const paidCount = payments.filter((p) => p.status === "paid").length
+  const totalRevenue = payments.filter((p) => p.status === "COMPLETED" || p.status === "paid").reduce((sum, p) => sum + p.amount, 0)
+  const pendingAmount = payments.filter((p) => p.status === "PENDING" || p.status === "pending").reduce((sum, p) => sum + p.amount, 0)
+  const paidCount = payments.filter((p) => p.status === "COMPLETED" || p.status === "paid").length
 
   const handleRecordPayment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
