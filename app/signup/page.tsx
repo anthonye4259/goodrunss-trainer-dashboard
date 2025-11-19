@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
 import { Sparkles, ArrowRight, Zap } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function SignupPage() {
   const [step, setStep] = useState<"account" | "plan">("account")
