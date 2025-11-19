@@ -54,14 +54,14 @@ export async function GET(request: NextRequest) {
     const payments = await prisma.payments.findMany({
       where,
       include: {
-        client: {
+        clients: {
           select: {
             id: true,
             name: true,
             email: true,
           },
         },
-        session: {
+        trainer_sessions: {
           select: {
             id: true,
             title: true,
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
       },
       include: {
-        client: {
+        clients: {
           select: {
             id: true,
             name: true,

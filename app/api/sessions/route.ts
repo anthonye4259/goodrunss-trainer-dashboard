@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     const sessions = await prisma.trainer_sessions.findMany({
       where,
       include: {
-        client: {
+        clients: {
           select: {
             id: true,
             name: true,
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
       },
       include: {
-        client: {
+        clients: {
           select: {
             id: true,
             name: true,

@@ -107,7 +107,7 @@ export async function PUT(
         ...(status && { status }),
       },
       include: {
-        client: {
+        clients: {
           select: {
             id: true,
             name: true,
