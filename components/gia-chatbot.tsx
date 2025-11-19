@@ -57,11 +57,12 @@ export function GiaChatbot() {
           { role: "assistant", content: data.message },
         ])
       } else {
+        // Show the actual error message from the API (helpful for debugging)
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: "Sorry, I encountered an error. Please try again.",
+            content: data.message || data.error || "Sorry, I encountered an error. Please try again.",
           },
         ])
       }
