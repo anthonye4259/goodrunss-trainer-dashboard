@@ -343,10 +343,10 @@ export async function POST(request: NextRequest) {
           where: { stripeSubscriptionId: subscription.id },
           data: {
             status: subscription.status,
-            currentPeriodStart: new Date(subscription.current_period_start * 1000),
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
-            canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
+            currentPeriodStart: new Date((subscription as any).currentPeriodStart * 1000),
+            currentPeriodEnd: new Date((subscription as any).currentPeriodEnd * 1000),
+            cancelAtPeriodEnd: (subscription as any).cancelAtPeriodEnd || false,
+            canceledAt: (subscription as any).canceledAt ? new Date((subscription as any).canceledAt * 1000) : null,
           },
         })
 
