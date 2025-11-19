@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db'
 // GET /api/exercises/[id] - Get single exercise
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = auth()
@@ -13,8 +13,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const exercise = await prisma.exercise.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!exercise) {
@@ -37,7 +38,7 @@ export async function GET(
 // PUT /api/exercises/[id] - Update exercise
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = auth()
@@ -45,6 +46,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     const {
       name,
@@ -63,7 +65,7 @@ export async function PUT(
     } = body
 
     const exercise = await prisma.exercise.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(name && { name }),
         ...(description && { description }),
@@ -97,7 +99,7 @@ export async function PUT(
 // DELETE /api/exercises/[id] - Delete exercise
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = auth()
@@ -105,8 +107,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     await prisma.exercise.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({

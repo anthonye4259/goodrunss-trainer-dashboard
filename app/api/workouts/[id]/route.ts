@@ -5,13 +5,15 @@ import { prisma } from '@/lib/db'
 // GET /api/workouts/[id] - Get single workout plan
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const { id } = await params
 
     const trainer = await prisma.user.findUnique({
       where: { clerkId: userId },
@@ -22,7 +24,7 @@ export async function GET(
     }
 
     const workoutPlan = await prisma.workoutPlan.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         workouts: {
           orderBy: { scheduledFor: 'asc' },
@@ -54,13 +56,15 @@ export async function GET(
 // PUT /api/workouts/[id] - Update workout plan
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const { id } = await params
 
     const trainer = await prisma.user.findUnique({
       where: { clerkId: userId },
@@ -86,7 +90,7 @@ export async function PUT(
 
     // Verify ownership
     const existingPlan = await prisma.workoutPlan.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!existingPlan) {
@@ -98,7 +102,7 @@ export async function PUT(
     }
 
     const workoutPlan = await prisma.workoutPlan.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
@@ -129,13 +133,15 @@ export async function PUT(
 // DELETE /api/workouts/[id] - Delete workout plan
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const { id } = await params
 
     const trainer = await prisma.user.findUnique({
       where: { clerkId: userId },
@@ -147,7 +153,7 @@ export async function DELETE(
 
     // Verify ownership
     const existingPlan = await prisma.workoutPlan.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!existingPlan) {
@@ -159,7 +165,7 @@ export async function DELETE(
     }
 
     await prisma.workoutPlan.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({
