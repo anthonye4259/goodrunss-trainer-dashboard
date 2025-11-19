@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
             duration: 60,
             scheduledAt: new Date(`${metadata.date} ${metadata.time}`),
             status: "SCHEDULED",
-            bookedFrom: "BOOKING_LINK",
+            bookedFrom: "WEB",
             updatedAt: new Date(),
           },
         })
