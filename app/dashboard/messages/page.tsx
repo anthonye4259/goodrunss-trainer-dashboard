@@ -226,7 +226,7 @@ export default function MessagesPage() {
         </div>
 
         <ScrollArea className="flex-1">
-          {filteredConversations.map((conversation) => (
+          {filteredConversations.map((conversation: any) => (
             <button
               key={conversation.id}
               onClick={() => setSelectedConversation(conversation)}
@@ -240,7 +240,7 @@ export default function MessagesPage() {
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {conversation.clientName
                     .split(" ")
-                    .map((n) => n[0])
+                    .map((n: string) => n[0])
                     .join("")}
                 </AvatarFallback>
               </Avatar>
@@ -279,7 +279,7 @@ export default function MessagesPage() {
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {selectedConversation.clientName
                     .split(" ")
-                    .map((n) => n[0])
+                    .map((n: string) => n[0])
                     .join("")}
                 </AvatarFallback>
               </Avatar>
@@ -304,7 +304,7 @@ export default function MessagesPage() {
           {/* Messages */}
           <ScrollArea className="flex-1 p-6">
             <div className="space-y-4">
-              {selectedConversation.messages.map((message) => (
+              {selectedConversation.messages.map((message: any) => (
                 <div
                   key={message.id}
                   className={cn("flex gap-3", message.senderId === "trainer" ? "justify-end" : "justify-start")}
@@ -315,7 +315,7 @@ export default function MessagesPage() {
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                         {selectedConversation.clientName
                           .split(" ")
-                          .map((n) => n[0])
+                          .map((n: string) => n[0])
                           .join("")}
                       </AvatarFallback>
                     </Avatar>

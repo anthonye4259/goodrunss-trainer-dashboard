@@ -275,7 +275,7 @@ export default function PaymentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {payments.map((payment) => (
+              {payments.map((payment: any) => (
                 <TableRow key={payment.id}>
                   <TableCell>{new Date(payment.date).toLocaleDateString()}</TableCell>
                   <TableCell className="font-medium">{payment.clientName}</TableCell>

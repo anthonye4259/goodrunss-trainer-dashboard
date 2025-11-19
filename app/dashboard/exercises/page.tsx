@@ -240,7 +240,7 @@ export default function ExercisesPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredExercises.map((exercise) => (
+            {filteredExercises.map((exercise: any) => (
               <Card
                 key={exercise.id}
                 className="glass-card hover:bg-secondary/50 transition-colors cursor-pointer"

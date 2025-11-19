@@ -301,7 +301,7 @@ export default function ClientsPage() {
       </div>
 
       <div className="grid gap-4">
-        {filteredClients.map((client) => (
+        {filteredClients.map((client: any) => (
           <Card key={client.id} className="glass border-border/50 transition-smooth hover:border-primary/50">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">

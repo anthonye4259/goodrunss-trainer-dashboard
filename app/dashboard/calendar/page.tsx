@@ -385,7 +385,7 @@ export default function CalendarPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {(selectedDate ? getSessionsForDate(selectedDate) : sessions.slice(0, 5)).map((session) => (
+            {(selectedDate ? getSessionsForDate(selectedDate) : sessions.slice(0, 5)).map((session: any) => (
               <div key={session.id} className="rounded-lg border border-border/50 bg-card/50 p-4 space-y-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">

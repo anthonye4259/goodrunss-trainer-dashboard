@@ -256,7 +256,7 @@ export default function RemindersPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {reminders.map((reminder) => (
+            {reminders.map((reminder: any) => (
               <Card key={reminder.id} className="glass-card">
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between">

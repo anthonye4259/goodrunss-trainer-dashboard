@@ -210,7 +210,7 @@ export default function WorkoutsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredPlans.map((plan) => (
+            {filteredPlans.map((plan: any) => (
               <Card key={plan.id} className="glass-card hover:bg-secondary/50 transition-colors">
                 <CardHeader>
                   <div className="flex items-start justify-between">

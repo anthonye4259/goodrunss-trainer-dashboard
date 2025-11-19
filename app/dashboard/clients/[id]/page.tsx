@@ -432,7 +432,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map((i) => (
+                {[1, 2, 3, 4].map((i: number) => (
                   <div
                     key={i}
                     className="aspect-square rounded-lg bg-secondary/50 flex items-center justify-center cursor-pointer hover:bg-secondary transition-colors"
@@ -487,7 +487,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
             </Dialog>
           </div>
 
-          {goals.map((goal) => (
+          {goals.map((goal: any) => (
             <Card key={goal.id} className="glass-card">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between mb-4">
