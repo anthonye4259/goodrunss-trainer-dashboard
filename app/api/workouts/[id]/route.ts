@@ -23,7 +23,7 @@ export async function GET(
       return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
     }
 
-    const workoutPlan = await prisma.workoutPlan.findUnique({
+    const workoutPlan = await prisma.workout_plans.findUnique({
       where: { id },
       include: {
         workouts: {
@@ -89,7 +89,7 @@ export async function PUT(
     } = body
 
     // Verify ownership
-    const existingPlan = await prisma.workoutPlan.findUnique({
+    const existingPlan = await prisma.workout_plans.findUnique({
       where: { id },
     })
 
@@ -101,7 +101,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const workoutPlan = await prisma.workoutPlan.update({
+    const workoutPlan = await prisma.workout_plans.update({
       where: { id },
       data: {
         ...(name && { name }),
@@ -152,7 +152,7 @@ export async function DELETE(
     }
 
     // Verify ownership
-    const existingPlan = await prisma.workoutPlan.findUnique({
+    const existingPlan = await prisma.workout_plans.findUnique({
       where: { id },
     })
 
@@ -164,7 +164,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    await prisma.workoutPlan.delete({
+    await prisma.workout_plans.delete({
       where: { id },
     })
 

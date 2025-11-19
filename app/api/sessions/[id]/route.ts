@@ -31,7 +31,7 @@ export async function GET(
       return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
     }
 
-    const session = await prisma.trainerSession.findFirst({
+    const session = await prisma.trainer_sessions.findFirst({
       where: {
         id,
         trainerId: trainer.id,
@@ -80,7 +80,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
     }
 
-    const existingSession = await prisma.trainerSession.findFirst({
+    const existingSession = await prisma.trainer_sessions.findFirst({
       where: {
         id,
         trainerId: trainer.id,
@@ -94,7 +94,7 @@ export async function PUT(
     const body = await request.json()
     const { title, description, type, duration, scheduledAt, location, notes, status } = body
 
-    const session = await prisma.trainerSession.update({
+    const session = await prisma.trainer_sessions.update({
       where: { id },
       data: {
         ...(title && { title }),
@@ -153,7 +153,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
     }
 
-    const existingSession = await prisma.trainerSession.findFirst({
+    const existingSession = await prisma.trainer_sessions.findFirst({
       where: {
         id,
         trainerId: trainer.id,
@@ -164,7 +164,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
 
-    await prisma.trainerSession.delete({
+    await prisma.trainer_sessions.delete({
       where: { id },
     })
 

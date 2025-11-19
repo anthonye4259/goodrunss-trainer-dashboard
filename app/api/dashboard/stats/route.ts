@@ -88,14 +88,14 @@ export async function GET() {
     const clientLTV = totalClients > 0 ? thisMonthRevenue / totalClients : 0
 
     // 3. SESSION STATS
-    const sessionsThisWeek = await prisma.trainerSession.count({
+    const sessionsThisWeek = await prisma.trainer_sessions.count({
       where: {
         trainerId: trainer.id,
         scheduledAt: { gte: startOfWeek },
       },
     })
 
-    const completedSessionsThisWeek = await prisma.trainerSession.count({
+    const completedSessionsThisWeek = await prisma.trainer_sessions.count({
       where: {
         trainerId: trainer.id,
         status: 'COMPLETED',
@@ -128,7 +128,7 @@ export async function GET() {
     // 5. CHURN RATE (clients with no recent activity)
     // Count clients with no sessions in the last 60 days as potentially churned
     const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
-    const clientsWithRecentSessions = await prisma.trainerSession.groupBy({
+    const clientsWithRecentSessions = await prisma.trainer_sessions.groupBy({
       by: ['clientId'],
       where: {
         trainerId: trainer.id,
@@ -142,7 +142,7 @@ export async function GET() {
     const churnRate = totalClients > 0 ? (inactiveThisMonth / totalClients) * 100 : 0
 
     // 6. SUBSCRIPTION STATS (if trainer has subscriptions)
-    const activeSubscription = await prisma.userSubscription.findFirst({
+    const activeSubscription = await prisma.user_subscriptions.findFirst({
       where: {
         userId: trainer.id,
         status: 'active',

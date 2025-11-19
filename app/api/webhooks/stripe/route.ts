@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
           console.log(`[WEBHOOK] User ${customerEmail} already exists`)
           
           // Check if they already have an active subscription for this payment
-          const existingSubscription = await prisma.userSubscription.findFirst({
+          const existingSubscription = await prisma.user_subscriptions.findFirst({
             where: {
               userId: existingUser.id,
               stripeCustomerId: customerId,
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
           const endDate = new Date(now)
           endDate.setDate(endDate.getDate() + planDuration)
 
-          await prisma.userSubscription.create({
+          await prisma.user_subscriptions.create({
             data: {
               userId: existingUser.id,
               userEmail: customerEmail,
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
           const endDate = new Date(now)
           endDate.setDate(endDate.getDate() + planDuration)
 
-          await prisma.userSubscription.create({
+          await prisma.user_subscriptions.create({
             data: {
               userId: dbUserId,
               userEmail: customerEmail,
@@ -339,7 +339,7 @@ export async function POST(request: NextRequest) {
 
         console.log(`[WEBHOOK] Updating subscription ${subscription.id}`)
         
-        const updated = await prisma.userSubscription.updateMany({
+        const updated = await prisma.user_subscriptions.updateMany({
           where: { stripeSubscriptionId: subscription.id },
           data: {
             status: subscription.status,

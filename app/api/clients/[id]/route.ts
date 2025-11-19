@@ -39,7 +39,7 @@ export async function GET(
         trainerId: trainer.id, // Ensure trainer owns this client
       },
       include: {
-        sessions: {
+        trainer_sessions: {
           orderBy: { scheduledAt: 'desc' },
           take: 10,
         },
@@ -51,7 +51,7 @@ export async function GET(
     }
 
     // Get session stats
-    const sessionStats = await prisma.trainerSession.aggregate({
+    const sessionStats = await prisma.trainer_sessions.aggregate({
       where: {
         clientId: id,
         trainerId: trainer.id,

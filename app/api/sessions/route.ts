@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       where.status = status
     }
 
-    const sessions = await prisma.trainerSession.findMany({
+    const sessions = await prisma.trainer_sessions.findMany({
       where,
       include: {
         client: {
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for scheduling conflicts
-    const conflict = await prisma.trainerSession.findFirst({
+    const conflict = await prisma.trainer_sessions.findFirst({
       where: {
         trainerId: trainer.id,
         scheduledAt: new Date(scheduledAt),
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create session
-    const session = await prisma.trainerSession.create({
+    const session = await prisma.trainer_sessions.create({
       data: {
         trainerId: trainer.id,
         clientId,

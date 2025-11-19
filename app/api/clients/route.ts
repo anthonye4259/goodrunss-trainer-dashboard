@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     // Get session counts for each client
     const clientsWithStats = await Promise.all(
       clients.map(async (client) => {
-        const sessionCount = await prisma.trainerSession.count({
+        const sessionCount = await prisma.trainer_sessions.count({
           where: {
             clientId: client.id,
             trainerId: trainer.id,

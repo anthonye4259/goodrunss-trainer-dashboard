@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     if (clientId) where.clientId = clientId
     if (status) where.status = status
 
-    const workoutPlans = await prisma.workoutPlan.findMany({
+    const workoutPlans = await prisma.workout_plans.findMany({
       where,
       include: {
         workouts: {
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
 
     const totalSessions = duration * sessionsPerWeek
 
-    const workoutPlan = await prisma.workoutPlan.create({
+    const workoutPlan = await prisma.workout_plans.create({
       data: {
         trainerId: trainer.id,
         clientId,
