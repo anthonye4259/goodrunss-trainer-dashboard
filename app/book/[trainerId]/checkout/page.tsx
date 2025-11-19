@@ -7,9 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft, CreditCard } from "lucide-react"
-import { loadStripe } from "@stripe/stripe-js"
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 export default function CheckoutPage() {
   const params = useParams()
@@ -73,16 +70,12 @@ export default function CheckoutPage() {
         return
       }
 
-      // Redirect to Stripe Checkout
-      const stripe = await stripePromise
-      if (stripe && data.sessionId) {
-        const { error } = await stripe.redirectToCheckout({
-          sessionId: data.sessionId,
-        })
-        if (error) {
-          setError(error.message || "Failed to redirect to checkout")
-          setLoading(false)
-        }
+      // Redirect to Stripe Checkout URL
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        setError("Failed to get checkout URL")
+        setLoading(false)
       }
     } catch (err: any) {
       setError(err.message || "Something went wrong")
