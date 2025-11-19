@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-
-// Simple in-memory storage for services (MVP)
-// TODO: Move to database table in production
-const servicesStorage = new Map<string, any>()
-const availabilityStorage = new Map<string, any>()
-const sportTypeStorage = new Map<string, string>()
+import {
+  getTrainerServices,
+  setTrainerServices,
+  setTrainerAvailability,
+  setTrainerSportType,
+} from "@/lib/storage"
 
 export async function GET(
   request: NextRequest,
@@ -13,8 +13,8 @@ export async function GET(
   try {
     const { trainerId } = await params
     
-    // Get services from in-memory storage
-    const services = servicesStorage.get(trainerId) || []
+    // Get services from storage
+    const services = getTrainerServices(trainerId)
 
     return NextResponse.json({
       success: true,
@@ -39,13 +39,13 @@ export async function POST(
 
     // Store in memory
     if (services) {
-      servicesStorage.set(trainerId, services)
+      setTrainerServices(trainerId, services)
     }
     if (sportType) {
-      sportTypeStorage.set(trainerId, sportType)
+      setTrainerSportType(trainerId, sportType)
     }
     if (availability) {
-      availabilityStorage.set(trainerId, availability)
+      setTrainerAvailability(trainerId, availability)
     }
 
     return NextResponse.json({
@@ -60,6 +60,3 @@ export async function POST(
     )
   }
 }
-
-// Export storage for use by other APIs
-export { servicesStorage, availabilityStorage, sportTypeStorage }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { servicesStorage, sportTypeStorage } from "@/app/api/public/services/[trainerId]/route"
+import { getTrainerServices, getTrainerSportType } from "@/lib/storage"
 
 export async function GET(
   request: NextRequest,
@@ -32,7 +32,7 @@ export async function GET(
     }
 
     // Get services from in-memory storage
-    let services = servicesStorage.get(trainerId) || []
+    let services = getTrainerServices(trainerId)
 
     // If no services, provide fallback
     if (services.length === 0) {
@@ -55,7 +55,7 @@ export async function GET(
     }
 
     // Get sport type from storage
-    const sportType = sportTypeStorage.get(trainerId) || "PERSONAL_TRAINING"
+    const sportType = getTrainerSportType(trainerId)
 
     return NextResponse.json({
       success: true,
