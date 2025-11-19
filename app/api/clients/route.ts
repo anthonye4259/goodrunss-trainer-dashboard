@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     // Client model only has: id, name, email, phone, age, goals, notes
 
     // Fetch clients
-    const clients = await prisma.client.findMany({
+    const clients = await prisma.clients.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       select: {
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if client email already exists for this trainer
-    const existingClient = await prisma.client.findFirst({
+    const existingClient = await prisma.clients.findFirst({
       where: {
         trainerId: trainer.id,
         email: email.toLowerCase(),
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create client
-    const client = await prisma.client.create({
+    const client = await prisma.clients.create({
       data: {
         trainerId: trainer.id,
         name,

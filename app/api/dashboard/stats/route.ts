@@ -35,7 +35,7 @@ export async function GET() {
     startOfWeek.setHours(0, 0, 0, 0)
 
     // 1. REVENUE STATS
-    const paymentsThisMonth = await prisma.payment.aggregate({
+    const paymentsThisMonth = await prisma.payments.aggregate({
       where: {
         trainerId: trainer.id,
         status: 'COMPLETED',
@@ -45,7 +45,7 @@ export async function GET() {
       _count: true,
     })
 
-    const paymentsLastMonth = await prisma.payment.aggregate({
+    const paymentsLastMonth = await prisma.payments.aggregate({
       where: {
         trainerId: trainer.id,
         status: 'COMPLETED',
@@ -64,11 +64,11 @@ export async function GET() {
       : 0
 
     // 2. CLIENT STATS
-    const totalClients = await prisma.client.count({
+    const totalClients = await prisma.clients.count({
       where: { trainerId: trainer.id },
     })
 
-    const allClients = await prisma.client.findMany({
+    const allClients = await prisma.clients.findMany({
       where: { trainerId: trainer.id },
       include: {
         sessions: {
@@ -106,7 +106,7 @@ export async function GET() {
     // 4. PAYMENT STATS
     // Get pending payments (created more than 7 days ago as "overdue")
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    const overduePayments = await prisma.payment.findMany({
+    const overduePayments = await prisma.payments.findMany({
       where: {
         trainerId: trainer.id,
         status: 'PENDING',

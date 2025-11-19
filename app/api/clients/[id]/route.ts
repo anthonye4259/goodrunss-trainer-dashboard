@@ -33,7 +33,7 @@ export async function GET(
     }
 
     // Fetch client with all details
-    const client = await prisma.client.findFirst({
+    const client = await prisma.clients.findFirst({
       where: {
         id,
         trainerId: trainer.id, // Ensure trainer owns this client
@@ -99,7 +99,7 @@ export async function PUT(
     }
 
     // Verify client ownership
-    const existingClient = await prisma.client.findFirst({
+    const existingClient = await prisma.clients.findFirst({
       where: {
         id,
         trainerId: trainer.id,
@@ -114,7 +114,7 @@ export async function PUT(
     const { name, email, phone, age, goals, notes } = body
 
     // Update client
-    const updatedClient = await prisma.client.update({
+    const updatedClient = await prisma.clients.update({
       where: { id },
       data: {
         ...(name && { name }),
@@ -164,7 +164,7 @@ export async function DELETE(
     }
 
     // Verify client ownership
-    const existingClient = await prisma.client.findFirst({
+    const existingClient = await prisma.clients.findFirst({
       where: {
         id,
         trainerId: trainer.id,
@@ -176,7 +176,7 @@ export async function DELETE(
     }
 
     // Delete client (cascade will handle related records)
-    await prisma.client.delete({
+    await prisma.clients.delete({
       where: { id },
     })
 

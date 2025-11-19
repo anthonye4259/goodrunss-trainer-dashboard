@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify client belongs to trainer
-    const client = await prisma.client.findFirst({
+    const client = await prisma.clients.findFirst({
       where: {
         id: clientId,
         trainerId: trainer.id,
