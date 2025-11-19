@@ -5,8 +5,9 @@ import { prisma } from "@/lib/prisma"
 // GET /api/programs/[id] - Get a specific program
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const params = context.params
   try {
     const { userId } = getAuth(req)
     
@@ -53,8 +54,9 @@ export async function GET(
 // PATCH /api/programs/[id] - Update a program
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const params = context.params
   try {
     const { userId } = getAuth(req)
     
@@ -115,8 +117,9 @@ export async function PATCH(
 // DELETE /api/programs/[id] - Delete a program
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const params = context.params
   try {
     const { userId } = getAuth(req)
     
