@@ -22,8 +22,54 @@ export async function GET() {
       where: { clerkId: userId },
     })
 
+    // If user is authenticated but not in database yet (hasn't paid), return empty stats
     if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
+      return NextResponse.json({
+        trainer: {
+          name: 'Trainer',
+          email: '',
+          rating: 0,
+          totalSessions: 0,
+        },
+        revenue: {
+          thisMonth: 0,
+          lastMonth: 0,
+          change: 0,
+          forecast: 0,
+          totalTransactions: 0,
+        },
+        clients: {
+          total: 0,
+          active: 0,
+          inactive: 0,
+          atRisk: 0,
+          atRiskList: [],
+          highEngagement: 0,
+          mediumEngagement: 0,
+          lowEngagement: 0,
+          ltv: 0,
+        },
+        payments: {
+          overdue: 0,
+          overdueTotal: 0,
+          overdueList: [],
+        },
+        sessions: {
+          thisWeek: 0,
+          completed: 0,
+          utilization: 0,
+        },
+        churn: {
+          rate: 0,
+          previousRate: 0,
+        },
+        subscription: {
+          active: false,
+          plan: null,
+          endsAt: null,
+        },
+        needsSetup: true, // Flag to show setup prompt in UI
+      })
     }
 
     // Get date ranges

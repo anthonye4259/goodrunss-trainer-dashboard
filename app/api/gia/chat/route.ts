@@ -19,6 +19,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if API key is configured
+    if (!process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Gemini API key not configured',
+          message: "Hi! I'm Gia, your AI assistant. To activate me, please add your Google Gemini API key to your Vercel environment variables. Get a free key at https://makersuite.google.com/app/apikey" 
+        },
+        { status: 503 }
+      )
+    }
+
     // Initialize Gemini model
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
 
