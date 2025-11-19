@@ -30,43 +30,7 @@ type Conversation = {
 
 export default function MessagesPage() {
   const { toast } = useToast()
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    fetchConversations()
-  }, [])
-
-  const fetchConversations = async () => {
-    try {
-      setIsLoading(true)
-      const response = await fetch('/api/messages')
-      if (!response.ok) throw new Error('Failed to fetch conversations')
-      const data = await response.json()
-      // Map API response to expected format
-      const mappedConversations = (data.conversations || []).map((conv: any) => ({
-        id: conv.partnerId,
-        clientId: conv.partnerId,
-        clientName: conv.partner?.name || 'Unknown',
-        clientAvatar: conv.partner?.image || '/placeholder.svg',
-        lastMessage: conv.lastMessage?.content || '',
-        lastMessageTime: new Date(conv.lastMessage?.createdAt || Date.now()),
-        unreadCount: conv.unreadCount || 0,
-        messages: [], // Load messages when conversation is selected
-      }))
-      setConversations(mappedConversations)
-    } catch (error) {
-      console.error('Error fetching conversations:', error)
-      toast({
-        title: "Error loading conversations",
-        description: "Please try again later.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
+  
   // Fallback mock data if no conversations
   const mockConversations: Conversation[] = [
     {
@@ -162,14 +126,58 @@ export default function MessagesPage() {
           content: "We're scheduled for 2:00 PM on Friday!",
           timestamp: new Date(Date.now() - 86000000),
           read: true,
-        },
-      ],
-    },
-  ])
+      },
+    ],
+  },
+  ];
 
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(conversations[0])
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [messageInput, setMessageInput] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    fetchConversations()
+  }, [])
+
+  // Select first conversation when conversations load
+  useEffect(() => {
+    if (conversations.length > 0 && !selectedConversation) {
+      setSelectedConversation(conversations[0])
+    }
+  }, [conversations, selectedConversation])
+
+  const fetchConversations = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/messages')
+      if (!response.ok) throw new Error('Failed to fetch conversations')
+      const data = await response.json()
+      // Map API response to expected format
+      const mappedConversations = (data.conversations || []).map((conv: any) => ({
+        id: conv.partnerId,
+        clientId: conv.partnerId,
+        clientName: conv.partner?.name || 'Unknown',
+        clientAvatar: conv.partner?.image || '/placeholder.svg',
+        lastMessage: conv.lastMessage?.content || '',
+        lastMessageTime: new Date(conv.lastMessage?.createdAt || Date.now()),
+        unreadCount: conv.unreadCount || 0,
+        messages: [], // Load messages when conversation is selected
+      }))
+      // Use mock data as fallback if no conversations found
+      setConversations(mappedConversations.length > 0 ? mappedConversations : mockConversations)
+    } catch (error) {
+      console.error('Error fetching conversations:', error)
+      toast({
+        title: "Error loading conversations",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const filteredConversations = conversations.filter((conv) =>
     conv.clientName.toLowerCase().includes(searchQuery.toLowerCase()),
