@@ -62,14 +62,15 @@ export default function PublicBookingPage() {
     "05:00 PM", "06:00 PM", "07:00 PM", "08:00 PM"
   ]
 
-  const handleBooking = async () => {
+  const handleBooking = () => {
     if (!selectedDate || !selectedTime || !selectedService) {
       alert("Please select a service, date, and time")
       return
     }
 
     // Redirect to checkout
-    window.location.href = `/book/${trainerId}/checkout?service=${selectedService}&date=${selectedDate.toISOString()}&time=${selectedTime}`
+    const checkoutUrl = `/book/${trainerId}/checkout?service=${selectedService}&date=${selectedDate.toISOString()}&time=${encodeURIComponent(selectedTime)}`
+    window.location.href = checkoutUrl
   }
 
   if (loading) {

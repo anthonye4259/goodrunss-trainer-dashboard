@@ -1,49 +1,93 @@
-# Stripe Payment Setup 
+# Stripe Payment Integration Setup
 
-## ✅ What I Fixed:
+## ✅ Features Implemented
 
-1. **Updated pricing structure** - Changed from old plans ($29, $79, $149) to new billing periods ($40, $75, $100)
-2. **Fixed product IDs** - Now using "3-month", "6-month", "1-year" 
-3. **Updated checkout page** - Dynamically loads plan details from products file
-4. **Added early access messaging** - "Price locked forever" messaging
+1. **Public Booking Page** - `/book/[trainerId]`
+   - Select service, date, and time
+   - Beautiful calendar and time slot picker
 
-## 🔑 Required: Add Stripe API Keys to Vercel
+2. **Checkout Page** - `/book/[trainerId]/checkout`
+   - Client enters name, email, phone
+   - Shows booking summary
+   - Redirects to Stripe Checkout
 
-The payment form needs these environment variables:
+3. **Payment Processing** - Secure Stripe Checkout
+   - Credit card payment
+   - Secure and PCI compliant
+   - Mobile friendly
 
-### 1. Get Your Stripe Keys
-- Go to https://dashboard.stripe.com/test/apikeys
-- Copy your **Publishable key** (starts with `pk_test_...`)
-- Copy your **Secret key** (starts with `sk_test_...`)
+4. **Success Page** - `/book/[trainerId]/success`
+   - Confirmation message
+   - Booking details
+   - Email confirmation notice
 
-### 2. Add to Vercel
-Go to your Vercel dashboard → Project → Settings → Environment Variables
+5. **Database Integration**
+   - Automatically creates session in database after payment
+   - Stores client information
+   - Links to trainer
 
-Add these two:
+## 🔑 Required Environment Variables
+
+Add these to your Vercel environment variables:
+
 ```
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxx
-STRIPE_SECRET_KEY=sk_test_xxxxxxxxxxxxx
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
 ```
 
-### 3. Redeploy
-After adding env vars, trigger a new deployment (or just push a commit).
+## 📝 How to Get Stripe Keys
 
-## How It Works:
+1. Go to https://dashboard.stripe.com/register
+2. Create a Stripe account (free)
+3. Go to **Developers** → **API Keys**
+4. Copy your **Publishable key** (starts with `pk_test_`)
+5. Copy your **Secret key** (starts with `sk_test_`)
+6. Add both to Vercel environment variables
+7. Redeploy
 
-1. User selects plan on `/signup` page
-2. Clicks "Get Started" → goes to `/checkout`
-3. Stripe Embedded Checkout loads with payment form
-4. User enters card info directly in Stripe's secure form
-5. On success → redirects to `/onboarding`
+## 🧪 Testing Payments
 
-## Testing:
+Use Stripe test cards:
+- **Success**: `4242 4242 4242 4242`
+- **Decline**: `4000 0000 0000 0002`
+- **Requires auth**: `4000 0025 0000 3155`
 
-Use Stripe test card:
-- Card: `4242 4242 4242 4242`
-- Expiry: Any future date
-- CVC: Any 3 digits
-- ZIP: Any 5 digits
+Any future date for expiry, any 3-digit CVC, any ZIP code.
 
+## 🚀 How It Works
 
+1. **Client** visits your booking link
+2. **Selects** service, date, time
+3. **Enters** contact info on checkout page
+4. **Pays** via Stripe Checkout (secure)
+5. **Redirected** to success page
+6. **Session created** in your database
+7. **Email sent** to both trainer and client (via Stripe)
 
+## 💰 Stripe Pricing
 
+- **2.9% + 30¢** per successful transaction
+- No monthly fees for standard plan
+- You keep the rest
+
+## 🔒 Security
+
+- All payment data handled by Stripe
+- PCI compliant out of the box
+- Never store credit card numbers
+- SSL encrypted
+
+## 📧 Next Steps
+
+After adding Stripe keys:
+1. Test with test card numbers
+2. When ready, switch to live keys in production
+3. Set up Stripe email receipts (optional)
+4. Configure webhook for advanced features (optional)
+
+## ⚠️ Important
+
+- Start with TEST keys
+- Test thoroughly before going live
+- Switch to LIVE keys only when launching
+- Never commit keys to Git (use environment variables)
