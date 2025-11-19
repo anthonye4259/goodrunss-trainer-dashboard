@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getOrCreateUser } from \"@/lib/get-or-create-user\"
+import { getOrCreateUser } from "@/lib/get-or-create-user"
 
 // GET /api/exercises - Get all exercises (with filters)
 export async function GET(request: NextRequest) {
