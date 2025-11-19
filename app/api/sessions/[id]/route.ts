@@ -5,9 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from "@/lib/prisma"
-import { getOrCreateUser } from \"@/lib/get-or-create-user\"
-
-
+import { getOrCreateUser } from "@/lib/get-or-create-user"
 
 // GET /api/sessions/[id]
 export async function GET(
@@ -22,14 +20,6 @@ export async function GET(
     }
 
     const { id } = await params
-
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
-    }
 
     const session = await prisma.trainer_sessions.findFirst({
       where: {
@@ -71,14 +61,6 @@ export async function PUT(
     }
 
     const { id } = await params
-
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
-    }
 
     const existingSession = await prisma.trainer_sessions.findFirst({
       where: {
@@ -145,14 +127,6 @@ export async function DELETE(
 
     const { id } = await params
 
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
-    }
-
     const existingSession = await prisma.trainer_sessions.findFirst({
       where: {
         id,
@@ -180,7 +154,3 @@ export async function DELETE(
     )
   }
 }
-
-
-
-

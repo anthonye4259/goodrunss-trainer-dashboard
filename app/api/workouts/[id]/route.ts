@@ -15,14 +15,6 @@ export async function GET(
 
     const { id } = await params
 
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
-    }
-
     const workoutPlan = await prisma.workout_plans.findUnique({
       where: { id },
       include: {
@@ -65,14 +57,6 @@ export async function PUT(
     }
 
     const { id } = await params
-
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
-    }
 
     const body = await request.json()
     const {
@@ -143,14 +127,6 @@ export async function DELETE(
 
     const { id } = await params
 
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
-    }
-
     // Verify ownership
     const existingPlan = await prisma.workout_plans.findUnique({
       where: { id },
@@ -180,5 +156,3 @@ export async function DELETE(
     )
   }
 }
-
-
