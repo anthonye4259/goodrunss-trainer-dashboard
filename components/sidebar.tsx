@@ -28,6 +28,7 @@ import {
   Video,
   UserCheck,
   TrendingDown,
+  ShoppingBag,
 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useLanguage } from "@/contexts/language-context"
@@ -39,6 +40,7 @@ export function Sidebar() {
   const navigation = [
     { name: t("dashboard"), href: "/dashboard", icon: Home },
     { name: t("clients"), href: "/dashboard/clients", icon: Users },
+    { name: "Services & Pricing", href: "/services", icon: ShoppingBag },
     { name: t("calendar"), href: "/dashboard/calendar", icon: Calendar },
     { name: t("conflicts"), href: "/dashboard/conflicts", icon: AlertTriangle },
     { name: t("messages"), href: "/dashboard/messages", icon: MessageSquare },

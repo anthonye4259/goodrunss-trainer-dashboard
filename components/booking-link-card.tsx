@@ -19,16 +19,19 @@ export function BookingLinkCard() {
         const res = await fetch("/api/profile")
         if (res.ok) {
           const data = await res.json()
-          setTrainerId(data.user.id)
-          const link = `${window.location.origin}/book/${data.user.id}`
-          setBookingLink(link)
+          const id = data.profile?.id || user?.id
+          if (id) {
+            setTrainerId(id)
+            const link = `${window.location.origin}/book/${id}`
+            setBookingLink(link)
+          }
         }
       } catch (error) {
         console.error("Error fetching profile:", error)
       }
     }
     fetchTrainerId()
-  }, [])
+  }, [user])
 
   const copyToClipboard = async () => {
     try {
