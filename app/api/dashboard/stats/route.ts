@@ -185,9 +185,9 @@ export async function GET() {
         overdueTotal: overdueTotal,
         overdueList: overduePayments.map(p => ({
           id: p.id,
-          client: p.client.name,
+          client: p.client?.name || 'Unknown',
           amount: p.amount,
-          dueDate: p.dueDate,
+          createdAt: p.createdAt,
         })),
       },
       sessions: {
