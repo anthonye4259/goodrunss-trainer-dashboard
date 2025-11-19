@@ -262,7 +262,7 @@ export default function ConflictsPage() {
                         <div>
                           <p className="text-xs font-semibold text-yellow-500 mb-2">Cons</p>
                           <ul className="space-y-1">
-                            {suggestion.cons.map((con, idx) => (
+                            {suggestion.cons.map((con: string, idx: number) => (
                               <li key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
                                 <AlertTriangle className="h-3 w-3 text-yellow-500 mt-0.5 shrink-0" />
                                 {con}
