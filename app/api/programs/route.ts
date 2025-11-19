@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get trainer from database
-    const trainer = await prisma.user.findUnique({
+    const trainer = await prisma.users.findUnique({
       where: { clerkId: userId },
     })
 
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const trainer = await prisma.user.findUnique({
+    const trainer = await prisma.users.findUnique({
       where: { clerkId: userId },
     })
 

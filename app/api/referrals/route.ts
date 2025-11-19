@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const trainer = await prisma.user.findUnique({
+    const trainer = await prisma.users.findUnique({
       where: { clerkId: userId },
     })
 
