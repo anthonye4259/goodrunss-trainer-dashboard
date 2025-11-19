@@ -43,10 +43,6 @@ export async function GET(
           orderBy: { scheduledAt: 'desc' },
           take: 10,
         },
-        notes: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        },
       },
     })
 
