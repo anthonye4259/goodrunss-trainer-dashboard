@@ -31,7 +31,7 @@ export default function ConflictsPage() {
     const matchesStatus = filterStatus === "all" || conflict.status === filterStatus
     const matchesSearch =
       conflict.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conflict.clients.some((client) => client.toLowerCase().includes(searchQuery.toLowerCase()))
+      conflict.clients.some((client: string) => client.toLowerCase().includes(searchQuery.toLowerCase()))
     return matchesStatus && matchesSearch
   })
 
