@@ -182,7 +182,6 @@ export async function POST(request: NextRequest) {
               email: customerEmail,
               name: customerName || customerEmail.split('@')[0],
               role: 'TRAINER',
-              stripeCustomerId: customerId,
               emailVerified: new Date(),
               updatedAt: new Date(),
             },
