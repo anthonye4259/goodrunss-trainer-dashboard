@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db'
 // GET /api/reminders - Get all reminders
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 // POST /api/reminders - Create new reminder
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/reminders - Update reminder status
 export async function PUT(request: NextRequest) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -147,7 +147,7 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/reminders - Delete reminder
 export async function DELETE(request: NextRequest) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
