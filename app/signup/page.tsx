@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
-import { Sparkles, ArrowRight } from "lucide-react"
-import Image from "next/image"
+import { Sparkles, ArrowRight, Zap } from "lucide-react"
 import Link from "next/link"
 
 export default function SignupPage() {
@@ -46,12 +45,11 @@ export default function SignupPage() {
           <div className="text-center space-y-6">
             {/* GoodRunss Logo */}
             <div className="flex justify-center">
-              <div className="h-16 w-16 rounded-xl bg-white flex items-center justify-center shadow-lg p-2">
-                <img 
-                  src="/goodrunss-logo.svg" 
-                  alt="GoodRunss Logo" 
-                  className="h-full w-full object-contain"
-                />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent to-primary rounded-2xl blur-xl opacity-50"></div>
+                <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-2xl">
+                  <Zap className="h-10 w-10 text-black fill-black" />
+                </div>
               </div>
             </div>
 

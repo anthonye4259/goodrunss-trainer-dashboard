@@ -186,3 +186,4 @@ The floating Gia chatbot is now live on your dashboard. Trainers can click the s
 **Questions?** Just ask Gia! 😊
 
 
+
