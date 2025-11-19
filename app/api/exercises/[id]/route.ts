@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { prisma } from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 
 // GET /api/exercises/[id] - Get single exercise
 export async function GET(

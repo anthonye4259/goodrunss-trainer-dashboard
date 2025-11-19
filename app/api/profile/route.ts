@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth, clerkClient } from '@clerk/nextjs/server'
-import { prisma } from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 
 // GET /api/profile - Get trainer profile
 export async function GET(request: NextRequest) {
