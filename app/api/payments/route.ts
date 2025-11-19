@@ -148,8 +148,7 @@ export async function POST(request: NextRequest) {
         currency: 'USD',
         method: method || 'CASH',
         status: 'COMPLETED',
-        notes: notes || null,
-        dueDate: dueDate ? new Date(dueDate) : null,
+        description: notes || null,
         paidAt: new Date(),
       },
       include: {
