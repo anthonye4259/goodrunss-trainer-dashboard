@@ -3052,3 +3052,557 @@ model PublicBooking {
   @@map("public_bookings")
 }
 
+// ========================================
+// PROGRAMS - Long-term training programs
+// ========================================
+
+model TrainingProgram {
+  id          String   @id @default(uuid())
+  trainerId   String
+  
+  // Program info
+  name        String
+  description String?  @db.Text
+  duration    Int      // Total weeks
+  sport       String   // tennis, basketball, pickleball, etc.
+  level       String   // beginner, intermediate, advanced
+  
+  // Program structure
+  sessionsPerWeek Int
+  totalSessions   Int
+  programGoals    String[] // e.g., ["improve serve", "increase speed"]
+  
+  // Content
+  syllabus    Json?    // Week-by-week breakdown
+  milestones  Json?    // Key progress markers
+  
+  // Pricing
+  price       Float?
+  currency    String   @default("USD")
+  
+  // Status
+  status      String   @default("draft") // draft, active, archived
+  isTemplate  Boolean  @default(false) // Can be reused
+  
+  // Usage stats
+  enrollments Int      @default(0)
+  completions Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  enrolledClients ProgramEnrollment[]
+  
+  @@index([trainerId])
+  @@index([sport])
+  @@index([status])
+  @@map("training_programs")
+}
+
+model ProgramEnrollment {
+  id        String   @id @default(uuid())
+  programId String
+  program   TrainingProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  clientId  String
+  trainerId String
+  
+  // Progress
+  currentWeek     Int      @default(1)
+  completedSessions Int    @default(0)
+  progressPercent Float    @default(0)
+  
+  // Status
+  status      String   @default("active") // active, completed, paused, cancelled
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  completedAt DateTime?
+  
+  // Performance
+  attendance  Float?   // Percentage
+  performance Json?    // Metrics
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([programId])
+  @@index([clientId])
+  @@index([trainerId])
+  @@map("program_enrollments")
+}
+
+// ========================================
+// PACKAGES - Service packages/bundles
+// ========================================
+
+model ServicePackage {
+  id          String   @id @default(uuid())
+  trainerId   String
+  
+  // Package info
+  name        String
+  description String?  @db.Text
+  
+  // What's included
+  sessionsIncluded Int
+  packageType      String // e.g., "10-pack", "monthly", "starter"
+  sport            String?
+  
+  // Pricing
+  price       Float
+  savings     Float?   // Amount saved vs individual sessions
+  currency    String   @default("USD")
+  
+  // Validity
+  validityDays Int?    // Days until expiration (null = never expires)
+  
+  // Features
+  features    String[] // e.g., ["priority scheduling", "free assessment"]
+  
+  // Stripe
+  stripePriceId String?
+  
+  // Status
+  isActive    Boolean  @default(true)
+  
+  // Stats
+  sold        Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  purchases   PackagePurchase[]
+  
+  @@index([trainerId])
+  @@index([isActive])
+  @@map("service_packages")
+}
+
+model PackagePurchase {
+  id        String   @id @default(uuid())
+  packageId String
+  package   ServicePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  clientId  String
+  trainerId String
+  
+  // Purchase details
+  purchaseDate    DateTime @default(now())
+  expirationDate  DateTime?
+  
+  // Usage
+  sessionsUsed    Int      @default(0)
+  sessionsRemaining Int
+  
+  // Status
+  status      String   @default("active") // active, used, expired, refunded
+  
+  // Payment
+  paidAmount  Float
+  paymentId   String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([packageId])
+  @@index([clientId])
+  @@index([trainerId])
+  @@index([status])
+  @@map("package_purchases")
+}
+
+// ========================================
+// GROUP CLASSES - Group session management
+// ========================================
+
+model GroupClass {
+  id          String   @id @default(uuid())
+  trainerId   String
+  
+  // Class info
+  name        String
+  description String?  @db.Text
+  sport       String
+  level       String?  // beginner, intermediate, advanced, all
+  
+  // Schedule
+  dayOfWeek   Int?     // 0-6 for recurring classes
+  startTime   String?  // HH:MM for recurring
+  duration    Int      // minutes
+  
+  // Specific date (for one-time classes)
+  specificDate DateTime?
+  
+  // Capacity
+  maxParticipants Int
+  minParticipants Int     @default(1)
+  
+  // Pricing
+  pricePerPerson  Float
+  currency        String  @default("USD")
+  stripePriceId   String?
+  
+  // Location
+  location    String?
+  meetingLink String?  // For virtual classes
+  
+  // Status
+  status      String   @default("scheduled") // scheduled, in_progress, completed, cancelled
+  isRecurring Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  registrations GroupClassRegistration[]
+  
+  @@index([trainerId])
+  @@index([sport])
+  @@index([status])
+  @@index([specificDate])
+  @@map("group_classes")
+}
+
+model GroupClassRegistration {
+  id           String   @id @default(uuid())
+  classId      String
+  class        GroupClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  clientId     String
+  trainerId    String
+  
+  // Registration
+  registeredAt DateTime @default(now())
+  
+  // Status
+  status       String   @default("registered") // registered, attended, cancelled, no_show
+  
+  // Payment
+  paidAmount   Float?
+  paymentId    String?
+  
+  // Check-in
+  checkedInAt  DateTime?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([classId])
+  @@index([clientId])
+  @@index([status])
+  @@map("group_class_registrations")
+}
+
+// ========================================
+// CHECK-INS - Client progress check-ins
+// ========================================
+
+model ClientCheckIn {
+  id         String   @id @default(uuid())
+  clientId   String
+  trainerId  String
+  
+  // Check-in info
+  checkInDate DateTime @default(now())
+  checkInType String   // weekly, monthly, assessment, custom
+  
+  // Measurements
+  weight      Float?
+  bodyFat     Float?
+  muscleMass  Float?
+  measurements Json?   // Custom measurements
+  
+  // Performance metrics
+  performanceData Json? // Sport-specific metrics
+  
+  // Subjective feedback
+  energyLevel    Int?   // 1-10
+  motivation     Int?   // 1-10
+  overallFeeling Int?   // 1-10
+  
+  // Goals progress
+  goalsProgress  Json?  // Progress on each goal
+  
+  // Notes
+  clientNotes    String? @db.Text
+  trainerNotes   String? @db.Text
+  
+  // Photos
+  progressPhotos String[]
+  
+  // AI insights
+  aiAnalysis     String? @db.Text
+  recommendations String? @db.Text
+  
+  // Next steps
+  nextCheckInDate DateTime?
+  actionItems     String[]
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  @@index([clientId])
+  @@index([trainerId])
+  @@index([checkInDate])
+  @@map("client_check_ins")
+}
+
+// ========================================
+// BUSINESS REPORTS
+// ========================================
+
+model BusinessReport {
+  id         String   @id @default(uuid())
+  trainerId  String
+  
+  // Report info
+  reportType String   // revenue, clients, sessions, performance
+  reportName String
+  
+  // Time period
+  periodStart DateTime
+  periodEnd   DateTime
+  
+  // Report data
+  reportData  Json     // All the metrics
+  summary     Json?    // Key highlights
+  
+  // Generation
+  generatedAt DateTime @default(now())
+  generatedBy String   @default("system") // system, trainer
+  
+  // Format
+  format      String   @default("json") // json, pdf, csv
+  fileUrl     String?  // If exported to file
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([trainerId])
+  @@index([reportType])
+  @@index([periodStart])
+  @@map("business_reports")
+}
+
+// ========================================
+// CLIENT RETENTION TRACKING
+// ========================================
+
+model RetentionMetrics {
+  id         String   @id @default(uuid())
+  trainerId  String
+  
+  // Time period
+  periodStart DateTime
+  periodEnd   DateTime
+  periodType  String   // weekly, monthly, quarterly, yearly
+  
+  // Client metrics
+  totalClients      Int
+  newClients        Int
+  activeClients     Int
+  churnedClients    Int
+  retainedClients   Int
+  
+  // Rates
+  retentionRate     Float    // Percentage
+  churnRate         Float    // Percentage
+  growthRate        Float    // Percentage
+  
+  // Engagement
+  avgSessionsPerClient Float
+  avgRevenuePerClient  Float
+  
+  // Predictions
+  predictedChurn    Int?     // AI prediction
+  atRiskClients     String[] // Client IDs at risk
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([trainerId])
+  @@index([periodStart])
+  @@map("retention_metrics")
+}
+
+model ClientRetentionProfile {
+  id                String   @id @default(uuid())
+  clientId          String   @unique
+  trainerId         String
+  
+  // Engagement scores
+  engagementScore   Float    @default(0) // 0-100
+  sessionFrequency  Float    // Sessions per week
+  lastSessionDate   DateTime?
+  
+  // Risk assessment
+  churnRisk         String   @default("low") // low, medium, high
+  churnProbability  Float?   // 0-1
+  
+  // Patterns
+  cancellationRate  Float    @default(0)
+  noShowRate        Float    @default(0)
+  avgSessionGap     Int?     // Days between sessions
+  
+  // Value
+  lifetimeValue     Float    @default(0)
+  totalSessions     Int      @default(0)
+  totalSpent        Float    @default(0)
+  
+  // Alerts
+  needsAttention    Boolean  @default(false)
+  lastContactDate   DateTime?
+  
+  // AI recommendations
+  retentionStrategy String?  @db.Text
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([clientId])
+  @@index([trainerId])
+  @@index([churnRisk])
+  @@index([engagementScore])
+  @@map("client_retention_profiles")
+}
+
+// ========================================
+// MARKETING CAMPAIGNS
+// ========================================
+
+model MarketingCampaign {
+  id          String   @id @default(uuid())
+  trainerId   String
+  
+  // Campaign info
+  name        String
+  description String?  @db.Text
+  type        String   // email, sms, social, referral
+  
+  // Targeting
+  targetAudience String // all_clients, new_clients, inactive, etc.
+  targetFilters  Json?  // Advanced filters
+  
+  // Content
+  subject     String?
+  content     String   @db.Text
+  callToAction String?
+  
+  // Schedule
+  scheduledFor DateTime?
+  sentAt       DateTime?
+  
+  // Status
+  status      String   @default("draft") // draft, scheduled, sent, completed
+  
+  // Results
+  totalSent       Int      @default(0)
+  opened          Int      @default(0)
+  clicked         Int      @default(0)
+  converted       Int      @default(0)
+  revenue         Float    @default(0)
+  
+  // Metrics
+  openRate        Float?   // Percentage
+  clickRate       Float?   // Percentage
+  conversionRate  Float?   // Percentage
+  roi             Float?   // Return on investment
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([trainerId])
+  @@index([status])
+  @@index([scheduledFor])
+  @@map("marketing_campaigns")
+}
+
+model CampaignRecipient {
+  id          String   @id @default(uuid())
+  campaignId  String
+  clientId    String
+  
+  // Delivery
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  
+  // Engagement
+  opened      Boolean  @default(false)
+  openedAt    DateTime?
+  clicked     Boolean  @default(false)
+  clickedAt   DateTime?
+  converted   Boolean  @default(false)
+  convertedAt DateTime?
+  
+  // Outcome
+  revenue     Float?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([campaignId])
+  @@index([clientId])
+  @@map("campaign_recipients")
+}
+
+// ========================================
+// VIDEO LIBRARY
+// ========================================
+
+model VideoLibrary {
+  id          String   @id @default(uuid())
+  trainerId   String
+  
+  // Video info
+  title       String
+  description String?  @db.Text
+  sport       String
+  category    String   // technique, drill, warmup, cooldown, etc.
+  
+  // Video details
+  videoUrl    String   // Firebase Storage or YouTube
+  thumbnailUrl String?
+  duration    Int?     // seconds
+  
+  // Tags & organization
+  tags        String[]
+  level       String?  // beginner, intermediate, advanced
+  equipment   String[] // Required equipment
+  
+  // Visibility
+  isPublic    Boolean  @default(false)
+  isShared    Boolean  @default(false)
+  
+  // Usage stats
+  viewCount   Int      @default(0)
+  likeCount   Int      @default(0)
+  shareCount  Int      @default(0)
+  
+  // Status
+  status      String   @default("active") // active, archived
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  views       VideoView[]
+  
+  @@index([trainerId])
+  @@index([sport])
+  @@index([category])
+  @@index([status])
+  @@map("video_library")
+}
+
+model VideoView {
+  id         String   @id @default(uuid())
+  videoId    String
+  video      VideoLibrary @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  viewerId   String?  // Null for anonymous
+  
+  // Viewing details
+  watchedAt  DateTime @default(now())
+  duration   Int?     // Seconds watched
+  completed  Boolean  @default(false)
+  
+  @@index([videoId])
+  @@index([viewerId])
+  @@map("video_views")
+}
+
