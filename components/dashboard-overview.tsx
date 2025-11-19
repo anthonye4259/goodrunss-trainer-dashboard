@@ -32,6 +32,7 @@ import { ShareToSocial } from "@/components/share-to-social"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { BookingLinkCard } from "@/components/booking-link-card"
 
 interface DashboardStats {
   trainer: {
@@ -199,6 +200,9 @@ export function DashboardOverview() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Booking Link Card */}
+      <BookingLinkCard />
 
       <div className="space-y-3">
         <h2 className="text-xl font-semibold text-white flex items-center gap-2">
