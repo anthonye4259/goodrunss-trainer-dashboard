@@ -42,9 +42,23 @@ export default function ServicesPage() {
     }
   }
 
-  const saveServices = (updatedServices: Service[]) => {
+  const saveServices = async (updatedServices: Service[]) => {
+    // Save to localStorage
     localStorage.setItem("trainerServices", JSON.stringify(updatedServices))
     setServices(updatedServices)
+
+    // Also sync to API for public booking page
+    try {
+      if (user?.id) {
+        await fetch(`/api/public/services/${user.id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ services: updatedServices }),
+        })
+      }
+    } catch (error) {
+      console.error("Failed to sync services:", error)
+    }
   }
 
   const handleSave = () => {
