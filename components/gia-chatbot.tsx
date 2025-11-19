@@ -40,13 +40,56 @@ export function GiaChatbot() {
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(true)
+  
+  // Draggable position state
+  const [position, setPosition] = useState({ x: window.innerWidth - 450, y: 100 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  
   const scrollRef = useRef<HTMLDivElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages])
+
+  // Drag handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (cardRef.current) {
+      setIsDragging(true)
+      setDragOffset({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y,
+      })
+    }
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y,
+        })
+      }
+    }
+
+    const handleMouseUp = () => {
+      setIsDragging(false)
+    }
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDragging, dragOffset])
 
   const handleQuickAction = (prompt: string) => {
     setShowSuggestions(false)
@@ -124,9 +167,20 @@ export function GiaChatbot() {
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-[400px] h-[600px] shadow-2xl z-50 flex flex-col glass border-primary/20">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-accent/10">
+    <Card 
+      ref={cardRef}
+      className="fixed w-[400px] h-[600px] shadow-2xl z-50 flex flex-col bg-[#1a1f2e] border-primary/20"
+      style={{ 
+        left: `${position.x}px`, 
+        top: `${position.y}px`,
+        cursor: isDragging ? 'grabbing' : 'default'
+      }}
+    >
+      {/* Header - Draggable */}
+      <div 
+        className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-primary/20 to-accent/20 cursor-grab active:cursor-grabbing"
+        onMouseDown={handleMouseDown}
+      >
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary via-accent to-primary flex items-center justify-center">
             <Sparkles className="h-5 w-5 text-black" />
@@ -140,7 +194,11 @@ export function GiaChatbot() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsMinimized(!isMinimized)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsMinimized(!isMinimized)
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
             className="h-8 w-8"
           >
             <Minimize2 className="h-4 w-4" />
@@ -148,7 +206,11 @@ export function GiaChatbot() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsOpen(false)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsOpen(false)
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
             className="h-8 w-8"
           >
             <X className="h-4 w-4" />
@@ -170,7 +232,7 @@ export function GiaChatbot() {
                     className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                       message.role === "user"
                         ? "bg-primary text-black"
-                        : "bg-secondary/50 text-foreground"
+                        : "bg-[#2a2f3e] text-foreground"
                     }`}
                   >
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -189,7 +251,7 @@ export function GiaChatbot() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleQuickAction(action.prompt)}
-                        className="h-auto py-3 flex flex-col items-start gap-1 bg-secondary/30 hover:bg-secondary/50 border-border/50"
+                        className="h-auto py-3 flex flex-col items-start gap-1 bg-[#2a2f3e] hover:bg-[#3a3f4e] border-border/50"
                       >
                         <action.icon className="h-4 w-4 text-primary" />
                         <span className="text-xs text-left">{action.label}</span>
@@ -202,7 +264,7 @@ export function GiaChatbot() {
                     <p className="text-xs text-muted-foreground font-semibold mb-2">Integrated with:</p>
                     <div className="flex flex-wrap gap-2">
                       {integrations.map((int, idx) => (
-                        <Badge key={idx} variant="secondary" className="bg-secondary/30 text-xs">
+                        <Badge key={idx} variant="secondary" className="bg-[#2a2f3e] text-xs">
                           <span className="mr-1">{int.icon}</span>
                           {int.name}
                         </Badge>
@@ -214,7 +276,7 @@ export function GiaChatbot() {
               
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-secondary/50 rounded-2xl px-4 py-2">
+                  <div className="bg-[#2a2f3e] rounded-2xl px-4 py-2">
                     <div className="flex gap-1">
                       <div className="h-2 w-2 bg-primary rounded-full animate-bounce" />
                       <div className="h-2 w-2 bg-primary rounded-full animate-bounce delay-100" />
