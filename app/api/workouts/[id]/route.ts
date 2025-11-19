@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { getOrCreateUser } from "@/lib/get-or-create-user"
 
 // GET /api/workouts/[id] - Get single workout plan
 export async function GET(

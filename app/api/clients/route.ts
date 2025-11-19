@@ -4,114 +4,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 import { prisma } from "@/lib/prisma"
+import { getOrCreateUser } from "@/lib/get-or-create-user"
 
 
 
 // GET /api/clients - List all clients for authenticated trainer
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get trainer's database ID from Clerk ID
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
+    const trainer = await getOrCreateUser()
 
     if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
-    }
-
-    // Get query parameters for filtering
-    const { searchParams } = new URL(request.url)
-    const search = searchParams.get('search')
-    const status = searchParams.get('status')
-    const sport = searchParams.get('sport')
-
-    // Build where clause
-    const where: any = {
-      trainerId: trainer.id,
-    }
-
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-      ]
-    }
-
-    // Note: sport and status filters removed as these fields don't exist in Client model
-    // Client model only has: id, name, email, phone, age, goals, notes
-
-    // Fetch clients
-    const clients = await prisma.clients.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        age: true,
-        goals: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    })
-
-    // Get session counts for each client
-    const clientsWithStats = await Promise.all(
-      clients.map(async (client) => {
-        const sessionCount = await prisma.trainer_sessions.count({
-          where: {
-            clientId: client.id,
-            trainerId: trainer.id,
-          },
-        })
-
-        return {
-          ...client,
-          totalSessions: sessionCount,
-        }
-      })
-    )
-
-    return NextResponse.json({
-      success: true,
-      clients: clientsWithStats,
-      total: clientsWithStats.length,
-    })
-  } catch (error: any) {
-    console.error('[API] Error fetching clients:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch clients', details: error.message },
-      { status: 500 }
-    )
-  }
-}
-
-// POST /api/clients - Create new client
-export async function POST(request: NextRequest) {
-  try {
-    const { userId } = await auth()
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get trainer's database ID
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const body = await request.json()

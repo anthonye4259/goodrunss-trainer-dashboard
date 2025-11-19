@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth, clerkClient } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { getOrCreateUser } from "@/lib/get-or-create-user"
 
 // GET /api/profile - Get trainer profile
 export async function GET(request: NextRequest) {
@@ -57,17 +58,10 @@ export async function GET(request: NextRequest) {
 // PUT /api/profile - Update trainer profile
 export async function PUT(request: NextRequest) {
   try {
-    const { userId } = await auth()
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
+    const trainer = await getOrCreateUser()
 
     if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const body = await request.json()

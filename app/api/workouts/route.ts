@@ -1,72 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { getOrCreateUser } from "@/lib/get-or-create-user"
 
 // GET /api/workouts - Get all workout plans
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get trainer from database
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
+    const trainer = await getOrCreateUser()
 
     if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
-    }
-
-    const { searchParams } = new URL(request.url)
-    const clientId = searchParams.get('clientId')
-    const status = searchParams.get('status')
-
-    const where: any = { trainerId: trainer.id }
-    if (clientId) where.clientId = clientId
-    if (status) where.status = status
-
-    const workoutPlans = await prisma.workout_plans.findMany({
-      where,
-      include: {
-        workout_sessions: {
-          take: 5,
-          orderBy: { scheduledFor: 'asc' },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
-
-    return NextResponse.json({
-      success: true,
-      workoutPlans,
-      total: workoutPlans.length,
-    })
-  } catch (error) {
-    console.error('Error fetching workout plans:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch workout plans' },
-      { status: 500 }
-    )
-  }
-}
-
-// POST /api/workouts - Create new workout plan
-export async function POST(request: NextRequest) {
-  try {
-    const { userId } = await auth()
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get trainer from database
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const body = await request.json()
