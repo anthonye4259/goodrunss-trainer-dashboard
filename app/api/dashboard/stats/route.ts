@@ -4,24 +4,16 @@
  */
 
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { getOrCreateUser } from '@/lib/get-or-create-user'
 
 export async function GET() {
   try {
-    const { userId } = await auth()
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get trainer from database
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
+    // Get or create trainer from database
+    const trainer = await getOrCreateUser()
 
     if (!trainer) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Fetch and return real data from database
