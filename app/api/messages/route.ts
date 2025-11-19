@@ -62,10 +62,10 @@ export async function GET(request: NextRequest) {
     const messages = await prisma.messages.findMany({
       where,
       include: {
-        sender: {
+        users_messages_senderIdTousers: {
           select: { id: true, name: true, image: true },
         },
-        receiver: {
+        users_messages_receiverIdTousers: {
           select: { id: true, name: true, image: true },
         },
       },
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
       if (!conversations[partnerId]) {
         conversations[partnerId] = {
           partnerId,
-          partner: msg.senderId === trainer.id ? msg.receiver : msg.sender,
+          partner: msg.senderId === trainer.id ? msg.users_messages_receiverIdTousers : msg.users_messages_senderIdTousers,
           lastMessage: msg,
           unreadCount: 0,
           messages: [],
