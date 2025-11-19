@@ -24,9 +24,8 @@ import { useToast } from "@/hooks/use-toast"
 import { Spinner } from "@/components/ui/spinner"
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
 import { RescheduleModal } from "@/components/reschedule-modal"
-import { demoSessions } from "@/lib/demo-data"
 
-// Sessions will be loaded from your database or demo data
+// Sessions will be loaded from your database
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 const months = [
   "January",
@@ -66,17 +65,15 @@ export default function CalendarPage() {
       const response = await fetch('/api/sessions')
       if (!response.ok) throw new Error('Failed to fetch sessions')
       const data = await response.json()
-      
-      // If no real sessions, use demo data
-      if (!data.sessions || data.sessions.length === 0) {
-        setSessions(demoSessions)
-      } else {
-        setSessions(data.sessions)
-      }
+      setSessions(data.sessions || [])
     } catch (error) {
       console.error('Error fetching sessions:', error)
-      // Fallback to demo data on error
-      setSessions(demoSessions)
+      toast({
+        title: "Error loading sessions",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+      setSessions([])
     } finally {
       setIsLoading(false)
     }

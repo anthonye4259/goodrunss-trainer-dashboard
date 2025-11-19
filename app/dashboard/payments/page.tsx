@@ -21,9 +21,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DollarSign, TrendingUp, Clock, Download, Plus, CheckCircle2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { demoPayments } from "@/lib/demo-data"
 
-// Payments will be loaded from your database or demo data
+// Payments will be loaded from your database
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<any[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -42,17 +41,15 @@ export default function PaymentsPage() {
       const response = await fetch('/api/payments')
       if (!response.ok) throw new Error('Failed to fetch payments')
       const data = await response.json()
-      
-      // If no real payments, use demo data
-      if (!data.payments || data.payments.length === 0) {
-        setPayments(demoPayments)
-      } else {
-        setPayments(data.payments)
-      }
+      setPayments(data.payments || [])
     } catch (error) {
       console.error('Error fetching payments:', error)
-      // Fallback to demo data on error
-      setPayments(demoPayments)
+      toast({
+        title: "Error loading payments",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+      setPayments([])
     } finally {
       setIsLoading(false)
     }

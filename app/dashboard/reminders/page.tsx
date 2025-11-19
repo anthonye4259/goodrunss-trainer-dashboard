@@ -21,9 +21,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { demoReminders } from "@/lib/demo-data"
 
-// Reminders will be loaded from your database or demo data
+// Reminders will be loaded from your database
 export default function RemindersPage() {
   const [reminders, setReminders] = useState<any[]>([])
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -41,17 +40,15 @@ export default function RemindersPage() {
       const response = await fetch('/api/reminders')
       if (!response.ok) throw new Error('Failed to fetch reminders')
       const data = await response.json()
-      
-      // If no real reminders, use demo data
-      if (!data.reminders || data.reminders.length === 0) {
-        setReminders(demoReminders)
-      } else {
-        setReminders(data.reminders)
-      }
+      setReminders(data.reminders || [])
     } catch (error) {
       console.error('Error fetching reminders:', error)
-      // Fallback to demo data on error
-      setReminders(demoReminders)
+      toast({
+        title: "Error loading reminders",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+      setReminders([])
     } finally {
       setIsLoading(false)
     }

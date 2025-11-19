@@ -6,7 +6,6 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
-import { demoDashboardStats } from '@/lib/demo-data'
 
 const prisma = new PrismaClient()
 
@@ -14,10 +13,8 @@ export async function GET() {
   try {
     const { userId } = await auth()
     
-    // If not authenticated, return demo data (for demo purposes)
     if (!userId) {
-      console.log('[STATS] No userId, returning demo data')
-      return NextResponse.json(demoDashboardStats)
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get trainer from database
@@ -25,29 +22,11 @@ export async function GET() {
       where: { clerkId: userId },
     })
 
-    // If user is authenticated but not in database yet, return demo data
     if (!trainer) {
-      console.log('[STATS] No trainer in DB, returning demo data')
-      return NextResponse.json(demoDashboardStats)
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Check if trainer has any real data
-    const hasClients = await prisma.client.count({ where: { trainerId: trainer.id } })
-    
-    // If no real data exists, return demo data
-    if (hasClients === 0) {
-      return NextResponse.json({
-        ...demoDashboardStats,
-        trainer: {
-          name: trainer.name || 'Kai',
-          email: trainer.email,
-          rating: trainer.rating || 4.9,
-          totalSessions: trainer.totalSessions || 342,
-        },
-      })
-    }
-
-    // Otherwise fetch and return real data from database
+    // Fetch and return real data from database
     // Get date ranges
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -231,8 +210,9 @@ export async function GET() {
     })
   } catch (error: any) {
     console.error('[STATS] Error fetching dashboard stats:', error)
-    // Return demo data instead of error for seamless demo experience
-    console.log('[STATS] Returning demo data due to error')
-    return NextResponse.json(demoDashboardStats)
+    return NextResponse.json(
+      { error: 'Failed to fetch dashboard stats', details: error.message },
+      { status: 500 }
+    )
   }
 }
