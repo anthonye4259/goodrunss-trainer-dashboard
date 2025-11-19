@@ -32,10 +32,10 @@ export async function GET(request: NextRequest) {
           ],
         },
         include: {
-          sender: {
+          users_messages_senderIdTousers: {
             select: { id: true, name: true, image: true },
           },
-          receiver: {
+          users_messages_receiverIdTousers: {
             select: { id: true, name: true, image: true },
           },
         },
@@ -142,10 +142,10 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
       },
       include: {
-        sender: {
+        users_messages_senderIdTousers: {
           select: { id: true, name: true, image: true },
         },
-        receiver: {
+        users_messages_receiverIdTousers: {
           select: { id: true, name: true, image: true },
         },
       },
