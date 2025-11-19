@@ -41,6 +41,7 @@ export function Sidebar() {
     { name: t("dashboard"), href: "/dashboard", icon: Home },
     { name: t("clients"), href: "/dashboard/clients", icon: Users },
     { name: "Services & Pricing", href: "/services", icon: ShoppingBag },
+    { name: "Availability", href: "/availability", icon: Clock },
     { name: t("calendar"), href: "/dashboard/calendar", icon: Calendar },
     { name: t("conflicts"), href: "/dashboard/conflicts", icon: AlertTriangle },
     { name: t("messages"), href: "/dashboard/messages", icon: MessageSquare },

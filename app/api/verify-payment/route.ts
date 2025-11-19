@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { prisma } from "@/lib/prisma"
+import { sendBookingConfirmation } from "@/lib/send-email"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-10-29.clover",
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Create session in database
+    // Create session in database and send confirmation email
     try {
       const metadata = session.metadata
       
@@ -48,6 +49,22 @@ export async function GET(request: NextRequest) {
             updatedAt: new Date(),
           },
         })
+
+        // Send confirmation email
+        try {
+          await sendBookingConfirmation({
+            clientName: metadata.clientName || "Client",
+            clientEmail: metadata.clientEmail,
+            trainerName: "Your Trainer", // TODO: Get actual trainer name
+            serviceName: metadata.serviceName || "Training Session",
+            date: metadata.date,
+            time: metadata.time,
+            price: session.amount_total ? session.amount_total / 100 : 0,
+          })
+        } catch (emailError) {
+          console.error("Error sending email:", emailError)
+          // Don't fail if email fails
+        }
       }
     } catch (dbError) {
       console.error("Error creating session in database:", dbError)
