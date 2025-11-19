@@ -1,12 +1,14 @@
 /**
  * Gia Chatbot API
- * Powered by Google Gemini
+ * Powered by Claude (Anthropic)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Anthropic from '@anthropic-ai/sdk'
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '')
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY || '',
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,25 +22,35 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if API key is configured
-    if (!process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+    if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Gemini API key not configured',
-          message: "Hi! I'm Gia, your AI assistant. To activate me, please add your Google Gemini API key to your Vercel environment variables. Get a free key at https://makersuite.google.com/app/apikey" 
+          error: 'Anthropic API key not configured',
+          message: "Hi! I'm Gia, your AI assistant. Please add your Anthropic API key to enable me." 
         },
         { status: 503 }
       )
     }
 
-    // Initialize Gemini model
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
-
-    // Build conversation history for context
-    const conversationHistory = history
-      ?.slice(0, -1) // Exclude the current message
-      ?.map((msg: any) => `${msg.role === 'user' ? 'User' : 'Gia'}: ${msg.content}`)
-      ?.join('\n') || ''
+    // Build conversation history for Claude
+    const messages: Anthropic.MessageParam[] = []
+    
+    // Add previous messages from history (excluding the welcome message)
+    if (history && history.length > 1) {
+      history.slice(1).forEach((msg: any) => {
+        messages.push({
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.content,
+        })
+      })
+    }
+    
+    // Add current message
+    messages.push({
+      role: 'user',
+      content: message,
+    })
 
     // System prompt
     const systemPrompt = `You are Gia, an AI assistant for sports instructors, coaches, and wellness professionals on the GoodRunss platform. 
@@ -52,17 +64,17 @@ You help sports & wellness professionals:
 
 Be friendly, professional, and encouraging. Keep responses concise but helpful. When instructors ask you to create session plans or help with specific clients, offer to help and guide them through what information you need.
 
-Previous conversation:
-${conversationHistory}
+You have access to their dashboard data including clients, schedules, payments, and session plans.`
 
-User's current message: ${message}
+    // Generate response using Claude
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: messages,
+    })
 
-Respond as Gia:`
-
-    // Generate response
-    const result = await model.generateContent(systemPrompt)
-    const response = await result.response
-    const text = response.text()
+    const text = response.content[0].type === 'text' ? response.content[0].text : ''
 
     return NextResponse.json({
       success: true,

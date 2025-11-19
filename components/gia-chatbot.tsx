@@ -247,7 +247,7 @@ export function GiaChatbot() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-2 text-center">
-              Powered by Google Gemini
+              Powered by Claude (Anthropic)
             </p>
           </div>
         </>
