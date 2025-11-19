@@ -92,15 +92,14 @@ export default function RemindersPage() {
     }
   }
 
-  const handleToggleReminder = async (id: string, currentStatus: string) => {
+  const handleToggleReminder = async (id: string, active: boolean) => {
     try {
-      const newStatus = currentStatus === 'pending' ? 'completed' : 'pending'
       const response = await fetch('/api/reminders', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           reminderId: id,
-          status: newStatus,
+          active: active,
         }),
       })
 
@@ -294,7 +293,7 @@ export default function RemindersPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Switch checked={reminder.active} onCheckedChange={() => handleToggleReminder(reminder.id)} />
+                      <Switch checked={reminder.active} onCheckedChange={(checked) => handleToggleReminder(reminder.id, checked)} />
                       <Button variant="ghost" size="icon" onClick={() => handleDeleteReminder(reminder.id)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
