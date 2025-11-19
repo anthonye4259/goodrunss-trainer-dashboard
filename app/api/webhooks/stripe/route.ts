@@ -94,16 +94,19 @@ export async function POST(request: NextRequest) {
         // ============================================
         const existingUser = await prisma.user.findUnique({
           where: { email: customerEmail },
-          include: { subscriptions: true },
         })
 
         if (existingUser) {
           console.log(`[WEBHOOK] User ${customerEmail} already exists`)
           
           // Check if they already have an active subscription for this payment
-          const existingSubscription = existingUser.subscriptions.find(
-            sub => sub.stripeCustomerId === customerId && sub.status === 'active'
-          )
+          const existingSubscription = await prisma.userSubscription.findFirst({
+            where: {
+              userId: existingUser.id,
+              stripeCustomerId: customerId,
+              status: 'active',
+            },
+          })
 
           if (existingSubscription) {
             console.log(`[WEBHOOK] Subscription already exists, marking as processed`)
