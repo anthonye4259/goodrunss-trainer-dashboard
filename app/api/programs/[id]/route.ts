@@ -5,10 +5,10 @@ import { prisma } from "@/lib/prisma"
 // GET /api/programs/[id] - Get a specific program
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const params = context.params
   try {
+    const { id } = await params
     const { userId } = getAuth(req)
     
     if (!userId) {
@@ -25,7 +25,7 @@ export async function GET(
 
     const program = await prisma.trainingProgram.findFirst({
       where: {
-        id: params.id,
+        id: id,
         trainerId: trainer.id,
       },
       include: {
@@ -54,10 +54,10 @@ export async function GET(
 // PATCH /api/programs/[id] - Update a program
 export async function PATCH(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const params = context.params
   try {
+    const { id } = await params
     const { userId } = getAuth(req)
     
     if (!userId) {
@@ -75,7 +75,7 @@ export async function PATCH(
     // Verify ownership
     const existing = await prisma.trainingProgram.findFirst({
       where: {
-        id: params.id,
+        id: id,
         trainerId: trainer.id,
       },
     })
@@ -97,7 +97,7 @@ export async function PATCH(
         : existing.totalSessions
 
     const program = await prisma.trainingProgram.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...body,
         totalSessions,
@@ -117,10 +117,10 @@ export async function PATCH(
 // DELETE /api/programs/[id] - Delete a program
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const params = context.params
   try {
+    const { id } = await params
     const { userId } = getAuth(req)
     
     if (!userId) {
@@ -138,7 +138,7 @@ export async function DELETE(
     // Verify ownership
     const program = await prisma.trainingProgram.findFirst({
       where: {
-        id: params.id,
+        id: id,
         trainerId: trainer.id,
       },
     })
@@ -148,7 +148,7 @@ export async function DELETE(
     }
 
     await prisma.trainingProgram.delete({
-      where: { id: params.id },
+      where: { id: id },
     })
 
     return NextResponse.json({ success: true })
@@ -160,4 +160,3 @@ export async function DELETE(
     )
   }
 }
-
