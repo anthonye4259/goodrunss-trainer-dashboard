@@ -1,3 +1,5 @@
+'use client'
+
 import { SignIn } from '@clerk/nextjs'
 import { ActivityIcon, Sparkles } from "lucide-react"
 
