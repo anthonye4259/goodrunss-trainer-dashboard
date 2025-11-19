@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 
 // GET /api/gpt/clients - Get extracted client profiles
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
-    if (!userId) {
+    const trainer = await getOrCreateUser()
+    if (!trainer) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

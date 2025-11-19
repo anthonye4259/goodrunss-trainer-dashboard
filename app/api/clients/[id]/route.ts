@@ -15,22 +15,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth()
-    
-    if (!userId) {
+    const trainer = await getOrCreateUser()
+
+    if (!trainer) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = await params
-
-    // Get trainer's database ID
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
-    }
 
     // Fetch client with all details
     const client = await prisma.clients.findFirst({
@@ -81,22 +72,13 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth()
-    
-    if (!userId) {
+    const trainer = await getOrCreateUser()
+
+    if (!trainer) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = await params
-
-    // Get trainer's database ID
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
-    }
 
     // Verify client ownership
     const existingClient = await prisma.clients.findFirst({
@@ -146,22 +128,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth()
-    
-    if (!userId) {
+    const trainer = await getOrCreateUser()
+
+    if (!trainer) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = await params
-
-    // Get trainer's database ID
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
-    }
 
     // Verify client ownership
     const existingClient = await prisma.clients.findFirst({

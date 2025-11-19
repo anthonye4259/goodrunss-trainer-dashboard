@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 
 // GET /api/gia/match-leads - Get lead matches
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const trainer = await getOrCreateUser()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -27,7 +26,7 @@ export async function GET(request: NextRequest) {
 // POST /api/gia/match-leads - Create lead
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const trainer = await getOrCreateUser()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -46,7 +45,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/gia/match-leads - Update match
 export async function PUT(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const trainer = await getOrCreateUser()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

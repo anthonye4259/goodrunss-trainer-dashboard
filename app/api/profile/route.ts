@@ -1,45 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, clerkClient } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from "@/lib/get-or-create-user"
+import { clerkClient } from '@clerk/nextjs/server'
 
 // GET /api/profile - Get trainer profile
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const trainer = await prisma.users.findUnique({
-      where: { clerkId: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        role: true,
-        rating: true,
-        totalSessions: true,
-        bio: true,
-        specialties: true,
-        certifications: true,
-        hourlyRate: true,
-        phone: true,
-        location: true,
-        address: true,
-        city: true,
-        state: true,
-        postalCode: true,
-        country: true,
-        isAvailable: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    })
+    const trainer = await getOrCreateUser()
 
     if (!trainer) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     return NextResponse.json({
@@ -61,7 +31,7 @@ export async function PUT(request: NextRequest) {
     const trainer = await getOrCreateUser()
 
     if (!trainer) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -100,23 +70,29 @@ export async function PUT(request: NextRequest) {
         ...(country !== undefined && { country }),
         ...(image !== undefined && { image }),
         ...(isAvailable !== undefined && { isAvailable }),
+        updatedAt: new Date(),
       },
     })
 
     // Also update Clerk user if name or image changed
     if (name || image) {
-      const clerkUpdate: any = {}
-      if (name) {
-        const [firstName, ...lastNameParts] = name.split(' ')
-        clerkUpdate.firstName = firstName
-        clerkUpdate.lastName = lastNameParts.join(' ') || undefined
+      try {
+        const clerkUpdate: any = {}
+        if (name) {
+          const [firstName, ...lastNameParts] = name.split(' ')
+          clerkUpdate.firstName = firstName
+          clerkUpdate.lastName = lastNameParts.join(' ') || undefined
+        }
+        if (image) {
+          clerkUpdate.profileImageUrl = image
+        }
+        
+        const client = await clerkClient()
+        await client.users.updateUser(trainer.clerkId, clerkUpdate)
+      } catch (clerkError) {
+        console.error('Error updating Clerk user:', clerkError)
+        // Don't fail the whole request if Clerk update fails
       }
-      if (image) {
-        clerkUpdate.profileImageUrl = image
-      }
-      
-      const client = await clerkClient()
-      await client.users.updateUser(userId, clerkUpdate)
     }
 
     return NextResponse.json({
@@ -131,5 +107,3 @@ export async function PUT(request: NextRequest) {
     )
   }
 }
-
-

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 
 // POST /api/gia/process-documents - Process and extract client data from documents
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const trainer = await getOrCreateUser()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -26,7 +25,7 @@ export async function POST(request: NextRequest) {
 // GET /api/gia/process-documents - Get processed profiles
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const trainer = await getOrCreateUser()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
