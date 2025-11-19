@@ -152,10 +152,25 @@ export function SportProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user])
 
-  const setSportType = (type: SportType) => {
+  const setSportType = async (type: SportType) => {
     setSportTypeState(type)
     localStorage.setItem("trainerSportType", type)
-    // TODO: Also save to database/Clerk metadata
+    
+    // Save to database
+    try {
+      if (user?.id) {
+        await fetch(`/api/public/services/${user.id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            services: JSON.parse(localStorage.getItem("trainerServices") || "[]"),
+            sportType: type,
+          }),
+        })
+      }
+    } catch (error) {
+      console.error("Failed to save sport type:", error)
+    }
   }
 
   const getSportDisplayName = () => {

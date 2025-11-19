@@ -35,14 +35,24 @@ export async function POST(
 ) {
   try {
     const { trainerId } = await params
-    const { services } = await request.json()
+    const { services, sportType } = await request.json()
 
-    // Store services in user metadata
+    // Get existing metadata
+    const user = await prisma.users.findUnique({
+      where: { id: trainerId },
+      select: { publicMetadata: true },
+    })
+
+    const existingMetadata = (user?.publicMetadata as any) || {}
+
+    // Store services and sport type in user metadata
     await prisma.users.update({
       where: { id: trainerId },
       data: {
         publicMetadata: {
+          ...existingMetadata,
           services,
+          ...(sportType && { sportType }),
         },
         updatedAt: new Date(),
       },

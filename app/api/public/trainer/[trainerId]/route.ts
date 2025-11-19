@@ -20,6 +20,7 @@ export async function GET(
         image: true,
         location: true,
         isAvailable: true,
+        publicMetadata: true,
       },
     })
 
@@ -64,10 +65,14 @@ export async function GET(
       ]
     }
 
+    // Get sport type from metadata for terminology
+    const sportType = (trainer.publicMetadata as any)?.sportType || "PERSONAL_TRAINING"
+
     return NextResponse.json({
       success: true,
       trainer,
       services,
+      sportType,
     })
   } catch (error) {
     console.error("Error fetching trainer:", error)
