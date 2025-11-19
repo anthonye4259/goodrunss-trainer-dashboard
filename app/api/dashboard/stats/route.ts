@@ -105,11 +105,13 @@ export async function GET() {
     })
 
     // 4. PAYMENT STATS
+    // Get pending payments (created more than 7 days ago as "overdue")
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
     const overduePayments = await prisma.payment.findMany({
       where: {
         trainerId: trainer.id,
         status: 'PENDING',
-        dueDate: { lt: now },
+        createdAt: { lt: sevenDaysAgo },
       },
       include: {
         client: {
@@ -124,15 +126,20 @@ export async function GET() {
 
     const overdueTotal = overduePayments.reduce((sum, p) => sum + p.amount, 0)
 
-    // 5. CHURN RATE (clients who became inactive this month)
-    const inactiveThisMonth = await prisma.client.count({
+    // 5. CHURN RATE (clients with no recent activity)
+    // Count clients with no sessions in the last 60 days as potentially churned
+    const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+    const clientsWithRecentSessions = await prisma.trainerSession.groupBy({
+      by: ['clientId'],
       where: {
         trainerId: trainer.id,
-        status: 'inactive',
-        updatedAt: { gte: startOfMonth },
+        scheduledAt: { gte: sixtyDaysAgo },
+        clientId: { not: null },
       },
     })
-
+    
+    const activeClientCount = clientsWithRecentSessions.length
+    const inactiveThisMonth = Math.max(0, totalClients - activeClientCount)
     const churnRate = totalClients > 0 ? (inactiveThisMonth / totalClients) * 100 : 0
 
     // 6. SUBSCRIPTION STATS (if trainer has subscriptions)
