@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
@@ -49,8 +50,14 @@ export function Header() {
       <div className="flex items-center gap-2 md:gap-3">
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-lg blur-md opacity-50" />
-          <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center">
-            <Zap className="w-5 h-5 md:w-6 md:h-6 text-background" fill="currentColor" />
+          <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center p-1">
+            <Image 
+              src="/goodrunss-logo.svg" 
+              alt="GoodRunss" 
+              width={36} 
+              height={36}
+              className="w-full h-full object-contain"
+            />
           </div>
         </div>
 

@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 import {
   Home,
   Calendar,
@@ -69,8 +70,14 @@ export function Sidebar() {
       <Link href="/dashboard" className="mb-2 group flex-shrink-0">
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-xl blur-lg opacity-0 group-hover:opacity-75 transition-opacity duration-300" />
-          <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/50 transition-all duration-300 group-hover:scale-110">
-            <Zap className="w-7 h-7 text-background" fill="currentColor" />
+          <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/50 transition-all duration-300 group-hover:scale-110 p-1.5">
+            <Image 
+              src="/goodrunss-logo.svg" 
+              alt="GoodRunss" 
+              width={40} 
+              height={40}
+              className="w-full h-full object-contain"
+            />
           </div>
         </div>
       </Link>

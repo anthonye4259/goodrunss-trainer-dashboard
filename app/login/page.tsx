@@ -1,7 +1,8 @@
 'use client'
 
 import { SignIn } from '@clerk/nextjs'
-import { ActivityIcon, Sparkles } from "lucide-react"
+import { Sparkles } from "lucide-react"
+import Image from "next/image"
 
 export default function LoginPage() {
   return (
@@ -17,8 +18,14 @@ export default function LoginPage() {
           <div className="flex justify-center">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent to-primary rounded-2xl blur-xl opacity-50"></div>
-              <div className="relative h-20 w-20 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-2xl">
-                <ActivityIcon className="h-10 w-10 text-black" />
+              <div className="relative h-20 w-20 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-2xl p-3">
+                <Image 
+                  src="/goodrunss-logo.svg" 
+                  alt="GoodRunss" 
+                  width={64} 
+                  height={64}
+                  className="w-full h-full object-contain"
+                />
               </div>
             </div>
           </div>
