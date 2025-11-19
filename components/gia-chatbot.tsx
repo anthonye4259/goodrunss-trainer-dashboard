@@ -41,13 +41,20 @@ export function GiaChatbot() {
   const [isLoading, setIsLoading] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(true)
   
-  // Draggable position state
-  const [position, setPosition] = useState({ x: window.innerWidth - 450, y: 100 })
+  // Draggable position state - initialize safely for SSR
+  const [position, setPosition] = useState({ x: 0, y: 100 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
+
+  // Set initial position after mount (client-side only)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPosition({ x: window.innerWidth - 450, y: 100 })
+    }
+  }, [])
 
   useEffect(() => {
     if (scrollRef.current) {
