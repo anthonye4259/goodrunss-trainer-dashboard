@@ -171,12 +171,6 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Update client's next session
-    await prisma.client.update({
-      where: { id: clientId },
-      data: { nextSession: new Date(scheduledAt) },
-    })
-
     return NextResponse.json({
       success: true,
       session,
