@@ -87,8 +87,9 @@ export async function PUT(request: NextRequest) {
           clerkUpdate.profileImageUrl = image
         }
         
+        const clerkUserId = trainer.clerkId // Type guard: store in const
         const client = await clerkClient()
-        await client.users.updateUser(trainer.clerkId, clerkUpdate)
+        await client.users.updateUser(clerkUserId, clerkUpdate)
       } catch (clerkError) {
         console.error('Error updating Clerk user:', clerkError)
         // Don't fail the whole request if Clerk update fails

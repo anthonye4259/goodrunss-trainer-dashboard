@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
             clientId: null, // Client doesn't have account yet
             title: metadata.serviceName || "Training Session",
             description: `Booked by ${metadata.clientName || metadata.clientEmail}`,
-            type: "ONE_ON_ONE",
+            type: "PERSONAL_TRAINING",
             duration: 60,
             scheduledAt: new Date(`${metadata.date} ${metadata.time}`),
             status: "SCHEDULED",
