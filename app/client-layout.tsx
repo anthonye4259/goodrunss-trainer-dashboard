@@ -8,6 +8,7 @@ import { Sidebar, MobileNav } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { Toaster } from "@/components/ui/toaster"
 import { LanguageProvider } from "@/contexts/language-context"
+import { SportProvider } from "@/contexts/sport-context"
 import { GiaChatbot } from "@/components/gia-chatbot"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -46,16 +47,18 @@ export function ClientLayout({
 
   return (
     <LanguageProvider>
-      <div className={`flex h-screen overflow-hidden ${inter.className}`}>
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden md:pl-20 pb-16 md:pb-0">
-          <Header />
-          <main className="flex-1 overflow-y-auto">{children}</main>
+      <SportProvider>
+        <div className={`flex h-screen overflow-hidden ${inter.className}`}>
+          <Sidebar />
+          <div className="flex-1 flex flex-col overflow-hidden md:pl-20 pb-16 md:pb-0">
+            <Header />
+            <main className="flex-1 overflow-y-auto">{children}</main>
+          </div>
+          <MobileNav />
+          <GiaChatbot />
         </div>
-        <MobileNav />
-        <GiaChatbot />
-      </div>
-      <Toaster />
+        <Toaster />
+      </SportProvider>
     </LanguageProvider>
   )
 }

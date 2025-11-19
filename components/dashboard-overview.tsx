@@ -33,6 +33,8 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { BookingLinkCard } from "@/components/booking-link-card"
+import { SportSelectorModal } from "@/components/sport-selector-modal"
+import { useSport } from "@/contexts/sport-context"
 
 interface DashboardStats {
   trainer: {
@@ -77,6 +79,7 @@ interface DashboardStats {
 }
 
 export function DashboardOverview() {
+  const { terminology, getSportDisplayName } = useSport()
   const [copied, setCopied] = useState(false)
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -182,6 +185,8 @@ export function DashboardOverview() {
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-8 p-6 md:p-8">
+      <SportSelectorModal />
+      
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
@@ -190,7 +195,7 @@ export function DashboardOverview() {
           <div className="mt-3 flex items-center gap-2">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
               <Star className="h-4 w-4 fill-primary text-primary" />
-              <span className="text-sm font-semibold text-primary">{stats.trainer.rating.toFixed(1)} Rating</span>
+              <span className="text-sm font-semibold text-primary">{stats.trainer.rating.toFixed(1)} Rating • {getSportDisplayName()}</span>
             </div>
           </div>
         </div>
@@ -206,7 +211,7 @@ export function DashboardOverview() {
         </Select>
       </div>
 
-      {/* Booking Link Card */}
+      {/* Booking Link Card - PROMINENT */}
       <BookingLinkCard />
 
       <div className="space-y-3">
@@ -222,7 +227,7 @@ export function DashboardOverview() {
                   <XCircle className="h-5 w-5 text-red-400" />
                 </div>
                 <div>
-                  <p className="font-semibold text-white">{stats.clients.atRisk} clients haven't booked in 2+ weeks</p>
+                  <p className="font-semibold text-white">{stats.clients.atRisk} {terminology.clientPlural.toLowerCase()} haven't booked in 2+ weeks</p>
                   <p className="text-sm text-white/60">At risk of churning - reach out today</p>
                 </div>
               </div>
