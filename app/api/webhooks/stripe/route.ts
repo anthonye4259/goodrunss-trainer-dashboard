@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         // ============================================
         // 4. CHECK IF USER ALREADY EXISTS (Idempotency - Database)
         // ============================================
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await prisma.users.findUnique({
           where: { email: customerEmail },
         })
 
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
           // Step 2: Create database user
           console.log(`[WEBHOOK] Creating database user`)
           
-          const dbUser = await prisma.user.create({
+          const dbUser = await prisma.users.create({
             data: {
               clerkId: clerkUserId,
               email: customerEmail,

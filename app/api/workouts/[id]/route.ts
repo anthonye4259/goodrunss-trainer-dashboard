@@ -15,7 +15,7 @@ export async function GET(
 
     const { id } = await params
 
-    const trainer = await prisma.user.findUnique({
+    const trainer = await prisma.users.findUnique({
       where: { clerkId: userId },
     })
 
@@ -66,7 +66,7 @@ export async function PUT(
 
     const { id } = await params
 
-    const trainer = await prisma.user.findUnique({
+    const trainer = await prisma.users.findUnique({
       where: { clerkId: userId },
     })
 
@@ -143,7 +143,7 @@ export async function DELETE(
 
     const { id } = await params
 
-    const trainer = await prisma.user.findUnique({
+    const trainer = await prisma.users.findUnique({
       where: { clerkId: userId },
     })
 

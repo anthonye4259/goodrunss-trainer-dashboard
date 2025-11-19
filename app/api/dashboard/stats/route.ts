@@ -16,7 +16,7 @@ export async function GET() {
     }
 
     // Get trainer from database
-    const trainer = await prisma.user.findUnique({
+    const trainer = await prisma.users.findUnique({
       where: { clerkId: userId },
     })
 

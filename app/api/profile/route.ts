@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const trainer = await prisma.user.findUnique({
+    const trainer = await prisma.users.findUnique({
       where: { clerkId: userId },
       select: {
         id: true,
@@ -62,7 +62,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const trainer = await prisma.user.findUnique({
+    const trainer = await prisma.users.findUnique({
       where: { clerkId: userId },
     })
 
@@ -89,7 +89,7 @@ export async function PUT(request: NextRequest) {
     } = body
 
     // Update Prisma user
-    const updatedTrainer = await prisma.user.update({
+    const updatedTrainer = await prisma.users.update({
       where: { id: trainer.id },
       data: {
         ...(name && { name }),

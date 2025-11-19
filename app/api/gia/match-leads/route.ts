@@ -304,7 +304,7 @@ async function fetchAvailableTrainers(): Promise<TrainerProfile[]> {
   // In production, fetch from your trainers/users table
   // For now, return mock data
   
-  // Example: const trainers = await prisma.user.findMany({ where: { role: 'trainer', isActive: true } })
+  // Example: const trainers = await prisma.users.findMany({ where: { role: 'trainer', isActive: true } })
   
   return [
     {

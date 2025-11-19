@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get trainer's database ID from Clerk ID
-    const trainer = await prisma.user.findUnique({
+    const trainer = await prisma.users.findUnique({
       where: { clerkId: userId },
     })
 
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get trainer's database ID
-    const trainer = await prisma.user.findUnique({
+    const trainer = await prisma.users.findUnique({
       where: { clerkId: userId },
     })
 
