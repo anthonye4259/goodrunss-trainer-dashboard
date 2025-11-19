@@ -151,7 +151,8 @@ export async function POST(request: NextRequest) {
           // Step 1: Create Clerk user
           console.log(`[WEBHOOK] Creating Clerk user for ${customerEmail}`)
           
-          const clerkUser = await clerkClient.users.createUser({
+          const client = await clerkClient()
+          const clerkUser = await client.users.createUser({
             emailAddress: [customerEmail],
             password: password || undefined,
             firstName: customerName?.split(' ')[0] || undefined,
@@ -312,7 +313,8 @@ export async function POST(request: NextRequest) {
           if (clerkUserId && !dbUserId) {
             console.log(`[WEBHOOK] Rolling back Clerk user ${clerkUserId}`)
             try {
-              await clerkClient.users.deleteUser(clerkUserId)
+              const client = await clerkClient()
+              await client.users.deleteUser(clerkUserId)
               console.log(`[WEBHOOK] Clerk user deleted`)
             } catch (deleteError: any) {
               console.error(`[WEBHOOK] Failed to delete Clerk user: ${deleteError.message}`)
