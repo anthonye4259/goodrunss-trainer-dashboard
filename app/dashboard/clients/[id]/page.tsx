@@ -537,7 +537,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
             </CardContent>
           </Card>
 
-          {notes.map((note) => (
+          {notes.map((note: any) => (
             <Card key={note.id} className="glass border-border/50">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
