@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const workoutPlans = await prisma.workout_plans.findMany({
       where,
       include: {
-        workouts: {
+        workout_sessions: {
           take: 5,
           orderBy: { scheduledFor: 'asc' },
         },
