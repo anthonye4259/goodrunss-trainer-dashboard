@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
 
     const workoutPlan = await prisma.workout_plans.create({
       data: {
+        id: crypto.randomUUID(),
         trainerId: trainer.id,
         clientId,
         name,
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
         isTemplate: isTemplate || false,
         autoAdjust: autoAdjust !== undefined ? autoAdjust : true,
         totalSessions,
+        updatedAt: new Date(),
       },
     })
 

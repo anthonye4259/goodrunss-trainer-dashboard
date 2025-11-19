@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
     // Create client
     const client = await prisma.clients.create({
       data: {
+        id: crypto.randomUUID(),
         trainerId: trainer.id,
         name,
         email: email.toLowerCase(),
@@ -150,6 +151,7 @@ export async function POST(request: NextRequest) {
         age: age || null,
         goals: goals || [],
         notes: notes || null,
+        updatedAt: new Date(),
       },
     })
 

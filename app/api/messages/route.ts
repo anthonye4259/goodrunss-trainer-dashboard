@@ -133,11 +133,13 @@ export async function POST(request: NextRequest) {
 
     const message = await prisma.messages.create({
       data: {
+        id: crypto.randomUUID(),
         senderId: trainer.id,
         receiverId,
         content,
         messageType: messageType || 'TEXT',
         sessionId: sessionId || null,
+        updatedAt: new Date(),
       },
       include: {
         sender: {

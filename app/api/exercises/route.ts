@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    const exercises = await prisma.exercise.findMany({
+    const exercises = await prisma.exercises.findMany({
       where,
       orderBy: { popularityScore: 'desc' },
     })
@@ -79,8 +79,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const exercise = await prisma.exercise.create({
+    const exercise = await prisma.exercises.create({
       data: {
+        id: crypto.randomUUID(),
         name,
         description,
         category,
@@ -94,6 +95,7 @@ export async function POST(request: NextRequest) {
         caloriesPerMinute: caloriesPerMinute || null,
         contraindications: contraindications || [],
         substitutes: substitutes || [],
+        updatedAt: new Date(),
       },
     })
 

@@ -148,6 +148,7 @@ export async function POST(request: NextRequest) {
     // Create session
     const session = await prisma.trainer_sessions.create({
       data: {
+        id: crypto.randomUUID(),
         trainerId: trainer.id,
         clientId,
         title,
@@ -159,6 +160,7 @@ export async function POST(request: NextRequest) {
         notes: notes || null,
         status: 'SCHEDULED',
         bookedFrom: 'DASHBOARD',
+        updatedAt: new Date(),
       },
       include: {
         client: {

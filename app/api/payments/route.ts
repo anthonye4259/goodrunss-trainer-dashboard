@@ -141,6 +141,7 @@ export async function POST(request: NextRequest) {
 
     const payment = await prisma.payments.create({
       data: {
+        id: crypto.randomUUID(),
         trainerId: trainer.id,
         clientId,
         sessionId: sessionId || null,
@@ -150,6 +151,8 @@ export async function POST(request: NextRequest) {
         status: 'COMPLETED',
         description: notes || null,
         paidAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       include: {
         client: {

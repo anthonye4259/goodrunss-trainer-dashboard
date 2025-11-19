@@ -126,6 +126,7 @@ export async function POST(request: NextRequest) {
 
           await prisma.user_subscriptions.create({
             data: {
+              id: crypto.randomUUID(),
               userId: existingUser.id,
               userEmail: customerEmail,
               planId: plan,
@@ -136,6 +137,7 @@ export async function POST(request: NextRequest) {
               billingCycle: plan,
               currentPeriodStart: now,
               currentPeriodEnd: endDate,
+              updatedAt: new Date(),
             },
           })
 
@@ -175,12 +177,14 @@ export async function POST(request: NextRequest) {
           
           const dbUser = await prisma.users.create({
             data: {
+              id: crypto.randomUUID(),
               clerkId: clerkUserId,
               email: customerEmail,
               name: customerName || customerEmail.split('@')[0],
               role: 'TRAINER',
               stripeCustomerId: customerId,
               emailVerified: new Date(),
+              updatedAt: new Date(),
             },
           })
 
@@ -195,6 +199,7 @@ export async function POST(request: NextRequest) {
 
           await prisma.user_subscriptions.create({
             data: {
+              id: crypto.randomUUID(),
               userId: dbUserId,
               userEmail: customerEmail,
               planId: plan,
@@ -205,6 +210,7 @@ export async function POST(request: NextRequest) {
               billingCycle: plan,
               currentPeriodStart: now,
               currentPeriodEnd: endDate,
+              updatedAt: new Date(),
             },
           })
 
