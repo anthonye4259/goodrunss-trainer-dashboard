@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+
+// Simple in-memory storage for services (MVP)
+// TODO: Move to database table in production
+const servicesStorage = new Map<string, any>()
+const availabilityStorage = new Map<string, any>()
+const sportTypeStorage = new Map<string, string>()
 
 export async function GET(
   request: NextRequest,
@@ -8,13 +13,8 @@ export async function GET(
   try {
     const { trainerId } = await params
     
-    // Get services from user metadata/profile
-    const user = await prisma.users.findUnique({
-      where: { id: trainerId },
-      select: { publicMetadata: true },
-    })
-
-    const services = (user?.publicMetadata as any)?.services || []
+    // Get services from in-memory storage
+    const services = servicesStorage.get(trainerId) || []
 
     return NextResponse.json({
       success: true,
@@ -35,38 +35,31 @@ export async function POST(
 ) {
   try {
     const { trainerId } = await params
-    const { services, sportType } = await request.json()
+    const { services, sportType, availability } = await request.json()
 
-    // Get existing metadata
-    const user = await prisma.users.findUnique({
-      where: { id: trainerId },
-      select: { publicMetadata: true },
-    })
-
-    const existingMetadata = (user?.publicMetadata as any) || {}
-
-    // Store services and sport type in user metadata
-    await prisma.users.update({
-      where: { id: trainerId },
-      data: {
-        publicMetadata: {
-          ...existingMetadata,
-          services,
-          ...(sportType && { sportType }),
-        },
-        updatedAt: new Date(),
-      },
-    })
+    // Store in memory
+    if (services) {
+      servicesStorage.set(trainerId, services)
+    }
+    if (sportType) {
+      sportTypeStorage.set(trainerId, sportType)
+    }
+    if (availability) {
+      availabilityStorage.set(trainerId, availability)
+    }
 
     return NextResponse.json({
       success: true,
-      message: "Services saved",
+      message: "Data saved (in-memory storage)",
     })
   } catch (error) {
-    console.error("Error saving services:", error)
+    console.error("Error saving data:", error)
     return NextResponse.json(
-      { error: "Failed to save services" },
+      { error: "Failed to save data" },
       { status: 500 }
     )
   }
 }
+
+// Export storage for use by other APIs
+export { servicesStorage, availabilityStorage, sportTypeStorage }

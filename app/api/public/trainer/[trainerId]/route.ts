@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { servicesStorage, sportTypeStorage } from "@/app/api/public/services/[trainerId]/route"
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +21,6 @@ export async function GET(
         image: true,
         location: true,
         isAvailable: true,
-        publicMetadata: true,
       },
     })
 
@@ -31,19 +31,8 @@ export async function GET(
       )
     }
 
-    // Fetch services from our simple storage endpoint
-    let services = []
-    try {
-      const servicesRes = await fetch(
-        `${request.nextUrl.origin}/api/public/services/${trainerId}`
-      )
-      if (servicesRes.ok) {
-        const data = await servicesRes.json()
-        services = data.services || []
-      }
-    } catch (error) {
-      console.error("Error loading services:", error)
-    }
+    // Get services from in-memory storage
+    let services = servicesStorage.get(trainerId) || []
 
     // If no services, provide fallback
     if (services.length === 0) {
@@ -65,8 +54,8 @@ export async function GET(
       ]
     }
 
-    // Get sport type from metadata for terminology
-    const sportType = (trainer.publicMetadata as any)?.sportType || "PERSONAL_TRAINING"
+    // Get sport type from storage
+    const sportType = sportTypeStorage.get(trainerId) || "PERSONAL_TRAINING"
 
     return NextResponse.json({
       success: true,
