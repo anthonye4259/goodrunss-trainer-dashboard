@@ -75,7 +75,7 @@ export async function PUT(request: NextRequest) {
     })
 
     // Also update Clerk user if name or image changed
-    if (name || image) {
+    if ((name || image) && trainer.clerkId) {
       try {
         const clerkUpdate: any = {}
         if (name) {
