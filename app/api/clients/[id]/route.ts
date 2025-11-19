@@ -111,7 +111,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { name, email, phone, sport, level, goals, notes, status } = body
+    const { name, email, phone, age, goals, notes } = body
 
     // Update client
     const updatedClient = await prisma.client.update({
@@ -120,11 +120,9 @@ export async function PUT(
         ...(name && { name }),
         ...(email && { email: email.toLowerCase() }),
         ...(phone !== undefined && { phone }),
-        ...(sport !== undefined && { sport }),
-        ...(level !== undefined && { level }),
+        ...(age !== undefined && { age }),
         ...(goals !== undefined && { goals }),
         ...(notes !== undefined && { notes }),
-        ...(status && { status }),
       },
     })
 

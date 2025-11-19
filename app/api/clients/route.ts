@@ -45,13 +45,8 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    if (status && status !== 'all') {
-      where.status = status
-    }
-
-    if (sport && sport !== 'all') {
-      where.sport = sport
-    }
+    // Note: sport and status filters removed as these fields don't exist in Client model
+    // Client model only has: id, name, email, phone, age, goals, notes
 
     // Fetch clients
     const clients = await prisma.client.findMany({
@@ -62,10 +57,9 @@ export async function GET(request: NextRequest) {
         name: true,
         email: true,
         phone: true,
-        sport: true,
-        status: true,
-        level: true,
-        nextSession: true,
+        age: true,
+        goals: true,
+        notes: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -121,7 +115,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, phone, sport, level, goals, notes } = body
+    const { name, email, phone, age, goals, notes } = body
 
     // Validate required fields
     if (!name || !email) {
@@ -153,11 +147,9 @@ export async function POST(request: NextRequest) {
         name,
         email: email.toLowerCase(),
         phone: phone || null,
-        sport: sport || null,
-        level: level || null,
-        goals: goals || null,
+        age: age || null,
+        goals: goals || [],
         notes: notes || null,
-        status: 'active',
       },
     })
 
