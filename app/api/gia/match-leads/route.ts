@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrCreateUser } from "@/lib/get-or-create-user"
 import { sendEmail } from '@/lib/send-email'
+import { prisma } from '@/lib/prisma'
 
 // In-memory storage for leads (will persist in production with database)
 // This simulates a lead database - in production, this would come from a real lead gen system
