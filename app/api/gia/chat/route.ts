@@ -783,7 +783,7 @@ async function executeTools(functionCalls: any[], trainerId: string, trainerName
             results.push({
               tool: name,
               result: { cancelled: true },
-              summary: `Cancelled session with ${session.clients.name}`
+              summary: `Cancelled session with ${session.clients?.name || 'client'}`
             })
           }
           break
