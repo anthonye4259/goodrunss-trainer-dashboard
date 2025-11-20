@@ -23,15 +23,19 @@ export async function POST(request: NextRequest) {
 
     // Check if API key is configured
     if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('ANTHROPIC_API_KEY not found in environment variables')
       return NextResponse.json(
         { 
           success: false, 
           error: 'Anthropic API key not configured',
-          message: "Hi! I'm Gia, your AI assistant. Please add your Anthropic API key to enable me." 
+          message: "Hi! I'm Gia, your AI assistant. The ANTHROPIC_API_KEY environment variable is missing. Please add it to Vercel." 
         },
         { status: 503 }
       )
     }
+
+    // Log key presence (not the actual key for security)
+    console.log('Anthropic API key found, length:', process.env.ANTHROPIC_API_KEY.length)
 
     // Build conversation history for Claude
     const messages: Anthropic.MessageParam[] = []
@@ -82,24 +86,51 @@ You have access to their dashboard data including clients, schedules, payments, 
     })
   } catch (error: any) {
     console.error('Gia chat error:', error)
+    console.error('Error details:', {
+      message: error?.message,
+      status: error?.status,
+      type: error?.type,
+      error: error?.error,
+    })
     
     // Check for specific Anthropic API errors
-    if (error?.status === 401) {
+    if (error?.status === 401 || error?.message?.includes('authentication')) {
       return NextResponse.json(
         { 
           success: false, 
           error: 'Invalid Anthropic API key',
-          message: "Hi! My AI brain needs to be configured. Please check that your Anthropic API key is valid in Vercel environment variables." 
+          message: "Hi! My AI brain can't authenticate. The Anthropic API key in Vercel might be invalid or expired. Please check it at console.anthropic.com" 
         },
         { status: 503 }
       )
     }
+
+    if (error?.status === 429) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Rate limit exceeded',
+          message: "I'm getting too many requests right now. Please wait a moment and try again!" 
+        },
+        { status: 429 }
+      )
+    }
+    
+    // Return actual error message in development for debugging
+    const errorMsg = process.env.NODE_ENV === 'development' 
+      ? `Error: ${error?.message || 'Unknown error'}` 
+      : "I'm having trouble thinking right now. Please try again in a moment!"
     
     return NextResponse.json(
       { 
         success: false, 
         error: 'Failed to process message',
-        message: "I'm having trouble thinking right now. Please try again in a moment!" 
+        message: errorMsg,
+        debug: process.env.NODE_ENV === 'development' ? {
+          error: error?.message,
+          status: error?.status,
+          type: error?.type,
+        } : undefined
       },
       { status: 500 }
     )
