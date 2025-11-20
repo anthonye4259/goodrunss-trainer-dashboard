@@ -208,16 +208,16 @@ export async function POST(request: NextRequest) {
         html: `
           <h2>Hi ${lead.name}! 👋</h2>
           <p>I'm ${trainer.name}, and I saw you're looking for ${lead.preferredSport} training.</p>
-          <p>${message || 'I'd love to help you achieve your fitness goals! Let me know if you'd like to schedule a session.'}</p>
+          <p>${message || "I'd love to help you achieve your fitness goals! Let me know if you'd like to schedule a session."}</p>
           <p>Best regards,<br>${trainer.name}</p>
           <p><small>Reply to this email to get started!</small></p>
         `,
-        text: `Hi ${lead.name}! I'm ${trainer.name}, and I saw you're looking for ${lead.preferredSport} training. ${message || 'I'd love to help you achieve your fitness goals!'}`
+        text: `Hi ${lead.name}! I'm ${trainer.name}, and I saw you're looking for ${lead.preferredSport} training. ${message || "I'd love to help you achieve your fitness goals!"}`
       })
     } else if (method === 'sms') {
       // SMS would integrate with Twilio or similar
       // For now, log to console
-      console.log(`[SMS to ${lead.phone}] Hi ${lead.name}! I'm ${trainer.name}. ${message || 'Let's train together!'}`)
+      console.log(`[SMS to ${lead.phone}] Hi ${lead.name}! I'm ${trainer.name}. ${message || "Let's train together!"}`)
     }
 
     return NextResponse.json({
@@ -282,10 +282,10 @@ export async function PUT(request: NextRequest) {
         html: `
           <h2>Welcome, ${lead.name}! 🎉</h2>
           <p>I'm excited to work with you on your ${lead.preferredSport} journey!</p>
-          <p>${message || 'Let's schedule your first session soon.'}</p>
+          <p>${message || "Let's schedule your first session soon."}</p>
           <p>Best,<br>${trainer.name}</p>
         `,
-        text: `Welcome, ${lead.name}! I'm excited to work with you. ${message || 'Let's schedule your first session soon.'}`
+        text: `Welcome, ${lead.name}! I'm excited to work with you. ${message || "Let's schedule your first session soon."}`
       })
 
       return NextResponse.json({
