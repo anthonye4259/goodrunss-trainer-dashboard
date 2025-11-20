@@ -27,13 +27,13 @@ export async function POST(request: NextRequest) {
         priceId: process.env.STRIPE_PRICE_6_MONTH || 'price_6month',
         amount: 75,
       },
+      '3-month': {
+        priceId: process.env.STRIPE_PRICE_3_MONTH || 'price_3month',
+        amount: 40,
+      },
       '1-year': {
         priceId: process.env.STRIPE_PRICE_1_YEAR || 'price_1year',
-        amount: 120,
-      },
-      '2-year': {
-        priceId: process.env.STRIPE_PRICE_2_YEAR || 'price_2year',
-        amount: 200,
+        amount: 100,
       },
     }
 
