@@ -25,10 +25,10 @@ export async function GET() {
       keyPrefix: apiKey.substring(0, 10) + '...',
     }
 
-    // Try a simple API call using v1 stable endpoint with gemini-pro
+    // Try a simple API call using v1 stable endpoint with gemini-2.5-flash (newest model)
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: {
@@ -57,7 +57,7 @@ export async function GET() {
         message: 'Google Gemini API is working correctly!',
         ...keyInfo,
         apiResponse: text,
-        model: 'gemini-pro (v1 stable)',
+        model: 'gemini-2.5-flash (2025)',
       })
     } catch (apiError: any) {
       return NextResponse.json({
