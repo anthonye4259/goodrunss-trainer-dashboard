@@ -38,32 +38,21 @@ export function Sidebar() {
   const { t } = useLanguage()
 
   const navigation = [
+    // Essential (5 items)
     { name: t("dashboard"), href: "/dashboard", icon: Home },
     { name: t("clients"), href: "/dashboard/clients", icon: Users },
-    { name: "Services & Pricing", href: "/services", icon: ShoppingBag },
-    { name: "Availability", href: "/availability", icon: Clock },
     { name: t("calendar"), href: "/dashboard/calendar", icon: Calendar },
-    { name: t("conflicts"), href: "/dashboard/conflicts", icon: AlertTriangle },
     { name: t("messages"), href: "/dashboard/messages", icon: MessageSquare },
-    { name: t("workouts"), href: "/dashboard/workouts", icon: ClipboardList },
-    { name: t("exercises"), href: "/dashboard/exercises", icon: Library },
-    { name: t("programs"), href: "/dashboard/programs", icon: Layers },
-    { name: t("trainingPlans"), href: "/dashboard/training-plans", icon: FileText },
-    { name: "Packages", href: "/dashboard/packages", icon: Package },
-    { name: "Waitlist", href: "/dashboard/waitlist", icon: Clock },
-    { name: "Check-ins", href: "/dashboard/check-ins", icon: CheckCircle2 },
-    { name: "Video Library", href: "/dashboard/video-library", icon: Video },
-    { name: "Group Classes", href: "/dashboard/group-classes", icon: UserCheck },
-    { name: "Retention", href: "/dashboard/retention", icon: TrendingDown },
-    { name: t("reminders"), href: "/dashboard/reminders", icon: Bell },
-    { name: t("reports"), href: "/dashboard/reports", icon: FileText },
-    { name: t("payments"), href: "/dashboard/payments", icon: DollarSign },
-    { name: t("analytics"), href: "/dashboard/analytics", icon: BarChart3 },
-    { name: t("aiPersona"), href: "/dashboard/ai-persona", icon: Zap },
-    { name: t("referrals"), href: "/dashboard/referrals", icon: Gift },
-    { name: t("marketing"), href: "/dashboard/marketing", icon: Megaphone },
-    { name: t("social"), href: "/dashboard/social", icon: Share2 },
     { name: t("settings"), href: "/dashboard/settings", icon: Settings },
+    
+    // Business (3 items)
+    { name: "Business", href: "/dashboard/business", icon: DollarSign },
+    { name: "Services", href: "/dashboard/services-hub", icon: ShoppingBag },
+    { name: "Growth", href: "/dashboard/growth", icon: TrendingUp },
+    
+    // Training & Client Tools (2 items)
+    { name: "Training", href: "/dashboard/training", icon: ClipboardList },
+    { name: "Client Tools", href: "/dashboard/client-tools", icon: UserCheck },
   ]
 
   return (
