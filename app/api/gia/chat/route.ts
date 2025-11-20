@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // System prompt
+    // System prompt - prepend to conversation
     const systemPrompt = `You are Gia, an AI assistant for sports instructors, coaches, and wellness professionals on the GoodRunss platform. 
 
 You help sports & wellness professionals:
@@ -59,17 +59,21 @@ Be friendly, professional, and encouraging. Keep responses concise but helpful (
 
 You have access to their dashboard data including clients, schedules, payments, and session plans.`
 
-    // Generate response using Gemini Pro (stable, guaranteed to work)
+    // Generate response using Gemini Pro
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-pro',
-      systemInstruction: systemPrompt,
+      model: 'gemini-1.0-pro',
     })
+
+    // Prepend system prompt to first user message
+    const fullMessage = geminiHistory.length === 0 
+      ? `${systemPrompt}\n\nUser: ${message}`
+      : message
 
     const chat = model.startChat({
       history: geminiHistory,
     })
 
-    const result = await chat.sendMessage(message)
+    const result = await chat.sendMessage(fullMessage)
     const text = result.response.text()
 
     return NextResponse.json({
