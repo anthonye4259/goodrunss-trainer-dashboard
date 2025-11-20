@@ -30,31 +30,20 @@ export async function GET(
       )
     }
 
-    // Get services from database
-    let services = await prisma.trainer_services.findMany({
-      where: {
+    // TODO: Get services from database when trainer_services table exists
+    // For now, use default fallback services
+    const services = [
+      {
+        id: "default-1",
         trainerId,
+        name: "1-on-1 Training Session",
+        duration: 60,
+        price: trainer.hourlyRate || 100,
+        description: "Personalized training session focused on your goals",
         isActive: true,
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-    })
-
-    // If no services, provide fallback
-    if (services.length === 0) {
-      services = [
-        {
-          id: "default-1",
-          trainerId,
-          name: "1-on-1 Training Session",
-          duration: 60,
-          price: trainer.hourlyRate || 100,
-          description: "Personalized training session focused on your goals",
-          isActive: true,
-          currency: "USD",
-          createdAt: new Date(),
-          updatedAt: new Date(),
+        currency: "USD",
+        createdAt: new Date(),
+        updatedAt: new Date(),
         },
         {
           id: "default-2",
@@ -69,7 +58,6 @@ export async function GET(
           updatedAt: new Date(),
         },
       ] as any
-    }
 
     // Use first specialty as sport type, or default
     const sportType = trainer.specialties?.[0] || "PERSONAL_TRAINING"
