@@ -9,6 +9,7 @@ const isPublicRoute = createRouteMatcher([
   '/checkout(.*)',
   '/api/webhooks/stripe(.*)',
   '/api/gpt(.*)', // GPT API routes for ChatGPT integration
+  '/api/gia(.*)', // Gia AI chatbot routes (Google Gemini)
 ])
 
 export default clerkMiddleware(async (auth, request) => {
