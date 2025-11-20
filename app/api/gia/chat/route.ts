@@ -59,9 +59,9 @@ Be friendly, professional, and encouraging. Keep responses concise but helpful (
 
 You have access to their dashboard data including clients, schedules, payments, and session plans.`
 
-    // Generate response using Gemini 1.5 Flash (fast and free!)
+    // Generate response using Gemini Pro (stable, guaranteed to work)
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-pro',
       systemInstruction: systemPrompt,
     })
 
