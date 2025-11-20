@@ -1055,7 +1055,7 @@ async function executeTools(functionCalls: any[], trainerId: string, trainerName
         }
         
         case 'batch_message': {
-          let clients = []
+          let clients: any[] = []
           
           if (args.filter === 'all') {
             clients = await prisma.clients.findMany({ where: { trainerId } })
