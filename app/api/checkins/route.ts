@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
         clientId,
         title: "Progress Check-in",
         description: "Client progress tracking",
-        type: 'CONSULTATION',
+        type: 'PERSONAL_TRAINING',
         duration: 0,
         scheduledAt: new Date(),
         status: 'COMPLETED',
