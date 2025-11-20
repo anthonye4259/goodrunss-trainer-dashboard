@@ -80,8 +80,21 @@ You have access to their dashboard data including clients, schedules, payments, 
       success: true,
       message: text,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Gia chat error:', error)
+    
+    // Check for specific Anthropic API errors
+    if (error?.status === 401) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Invalid Anthropic API key',
+          message: "Hi! My AI brain needs to be configured. Please check that your Anthropic API key is valid in Vercel environment variables." 
+        },
+        { status: 503 }
+      )
+    }
+    
     return NextResponse.json(
       { 
         success: false, 

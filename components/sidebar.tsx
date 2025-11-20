@@ -63,7 +63,6 @@ export function Sidebar() {
     { name: t("referrals"), href: "/dashboard/referrals", icon: Gift },
     { name: t("marketing"), href: "/dashboard/marketing", icon: Megaphone },
     { name: t("social"), href: "/dashboard/social", icon: Share2 },
-    { name: t("billing"), href: "/dashboard/billing", icon: CreditCard },
     { name: t("settings"), href: "/dashboard/settings", icon: Settings },
   ]
 
