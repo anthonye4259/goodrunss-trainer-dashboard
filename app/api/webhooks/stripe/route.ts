@@ -346,7 +346,14 @@ export async function POST(request: NextRequest) {
         // Get customer email from Stripe
         const customerId = subscription.customer as string
         const customer = await stripe.customers.retrieve(customerId)
-        const customerEmail = typeof customer !== 'deleted' ? customer.email : null
+        
+        // Check if customer is deleted
+        if ('deleted' in customer && customer.deleted) {
+          console.error(`[WEBHOOK] Customer ${customerId} is deleted`)
+          return NextResponse.json({ error: 'Customer deleted' }, { status: 404 })
+        }
+
+        const customerEmail = customer.email
 
         if (!customerEmail) {
           console.error(`[WEBHOOK] No email for customer ${customerId}`)
