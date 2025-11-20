@@ -155,34 +155,14 @@ export default function SubscriptionPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
-                {isTrialing && subscription.trialEnd && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Trial Period
-                    </p>
-                    <p className="font-semibold">
-                      {daysLeft > 0 ? `${daysLeft} day${daysLeft === 1 ? "" : "s"} remaining` : "Ends today"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Ends {new Date(subscription.trialEnd).toLocaleDateString()}
-                    </p>
-                  </div>
-                )}
-
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    {isTrialing ? "First Charge" : "Next Billing Date"}
+                    Next Billing Date
                   </p>
                   <p className="font-semibold">
                     {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                   </p>
-                  {isTrialing && (
-                    <p className="text-xs text-muted-foreground">
-                      Card will be charged when trial ends
-                    </p>
-                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -214,14 +194,10 @@ export default function SubscriptionPage() {
                     <AlertDialogTitle>Cancel Subscription?</AlertDialogTitle>
                     <AlertDialogDescription className="space-y-2">
                       <p>
-                        {isTrialing
-                          ? "Your free trial will be canceled and you won't be charged."
-                          : "You'll keep access until the end of your current billing period."}
+                        You'll keep access until the end of your current billing period.
                       </p>
                       <p>
-                        {isTrialing
-                          ? `You'll have access until ${new Date(subscription.trialEnd!).toLocaleDateString()}`
-                          : `Access until ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`}
+                        Access until {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                       </p>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
@@ -240,10 +216,7 @@ export default function SubscriptionPage() {
                   <div>
                     <p className="font-medium">Subscription Canceled</p>
                     <p className="text-sm text-muted-foreground">
-                      You'll have access until{" "}
-                      {isTrialing && subscription.trialEnd
-                        ? new Date(subscription.trialEnd).toLocaleDateString()
-                        : new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                      You'll have access until {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
