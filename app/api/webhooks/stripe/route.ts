@@ -343,15 +343,25 @@ export async function POST(request: NextRequest) {
 
         console.log(`[WEBHOOK] Creating subscription ${subscription.id}`)
 
-        // Find user by Stripe customer ID
+        // Get customer email from Stripe
+        const customerId = subscription.customer as string
+        const customer = await stripe.customers.retrieve(customerId)
+        const customerEmail = typeof customer !== 'deleted' ? customer.email : null
+
+        if (!customerEmail) {
+          console.error(`[WEBHOOK] No email for customer ${customerId}`)
+          return NextResponse.json({ error: 'Customer email not found' }, { status: 404 })
+        }
+
+        // Find user by email
         const user = await prisma.users.findFirst({
           where: {
-            email: subscription.customer as string | (await stripe.customers.retrieve(subscription.customer as string)).email,
+            email: customerEmail,
           },
         })
 
         if (!user) {
-          console.error(`[WEBHOOK] User not found for subscription ${subscription.id}`)
+          console.error(`[WEBHOOK] User not found for email ${customerEmail}`)
           return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 

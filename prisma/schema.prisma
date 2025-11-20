@@ -1516,22 +1516,6 @@ model trainer_sessions {
   users_trainer_sessions_trainerIdTousers   users         @relation("trainer_sessions_trainerIdTousers", fields: [trainerId], references: [id], onDelete: Cascade)
 }
 
-model trainer_services {
-  id          String   @id
-  trainerId   String
-  name        String
-  description String?
-  price       Decimal  @db.Decimal(10, 2)
-  duration    Int
-  isActive    Boolean  @default(true)
-  currency    String   @default("USD")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime
-
-  @@index([trainerId])
-  @@index([isActive])
-}
-
 model trainer_verifications {
   id               String    @id
   trainerId        String    @unique
