@@ -269,7 +269,9 @@ export async function PUT(request: NextRequest) {
           name: lead.name,
           email: lead.email,
           phone: lead.phone,
-          status: 'ACTIVE',
+          age: null,
+          goals: lead.fitnessGoals || [],
+          notes: lead.additionalNotes || null,
           createdAt: new Date(),
           updatedAt: new Date()
         }

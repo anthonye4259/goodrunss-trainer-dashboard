@@ -174,13 +174,15 @@ Be thorough and extract EVERYTHING you see, even if handwritten or in a screensh
               } else {
                 // Create new client
                 const newClient = await prisma.clients.create({
-            data: {
+                  data: {
                     id: crypto.randomUUID(),
                     trainerId: trainer.id,
                     name: profile.name,
                     email: profile.email || null,
                     phone: profile.phone || null,
-                    status: 'ACTIVE',
+                    age: profile.age || null,
+                    goals: [],
+                    notes: null,
                     createdAt: new Date(),
                     updatedAt: new Date()
                   }

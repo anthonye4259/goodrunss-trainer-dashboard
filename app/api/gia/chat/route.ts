@@ -110,7 +110,8 @@ async function executeTools(functionCalls: any[], trainerId: string) {
               name: true,
               email: true,
               phone: true,
-              status: true,
+              age: true,
+              goals: true,
               createdAt: true
             }
           })
