@@ -21,8 +21,7 @@ export default function ClientLeadsPage() {
   const fetchLeads = async () => {
     try {
       setInitialLoading(true)
-      // TODO: Get trainerId from auth
-      const response = await fetch('/api/gia/match-leads?trainerId=trainer-1')
+      const response = await fetch('/api/gia/match-leads')
       const result = await response.json()
 
       if (result.success && result.data.matches) {
@@ -92,21 +91,37 @@ export default function ClientLeadsPage() {
     setLoading(true)
     
     try {
-      // TODO: Implement actual contact logic (send email/SMS)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const lead = leads.find(l => l.id === leadId)
+      if (!lead) throw new Error('Lead not found')
 
-      setLeads(leads.map((lead) =>
-        lead.id === leadId ? { ...lead, status: "contacted" } : lead
+      const response = await fetch('/api/gia/match-leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          leadId: lead.leadId,
+          method: method.toLowerCase(),
+          message: `Hi! I'd love to help you with your ${lead.interest} goals.`
+        })
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to send contact')
+      }
+
+      setLeads(leads.map((l) =>
+        l.id === leadId ? { ...l, status: "contacted" } : l
       ))
 
       toast({
         title: "Contact sent!",
-        description: `${method} sent to the client successfully`,
+        description: `${method} sent to ${lead.name} successfully`,
       })
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Failed to contact",
-        description: "Something went wrong",
+        description: error.message || "Something went wrong",
         variant: "destructive",
       })
     } finally {
@@ -118,35 +133,35 @@ export default function ClientLeadsPage() {
     setLoading(true)
 
     try {
-      if (matchId) {
-        // Call backend to accept the lead
-        const response = await fetch('/api/gia/match-leads', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            leadMatchId: matchId,
-            trainerId: 'trainer-1', // TODO: Get from auth
-            action: 'accept',
-            message: 'Great! Looking forward to working with you.',
-          }),
-        })
+      const lead = leads.find(l => l.id === leadId)
+      if (!lead) throw new Error('Lead not found')
 
-        const result = await response.json()
+      // Call backend to convert the lead
+      const response = await fetch('/api/gia/match-leads', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          leadId: lead.leadId,
+          action: 'convert',
+          message: `Welcome aboard! I'm excited to help you with your ${lead.interest} journey. Let's schedule your first session!`,
+        }),
+      })
 
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to convert lead')
-        }
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to convert lead')
       }
 
-      setLeads(leads.map((lead) =>
-        lead.id === leadId ? { ...lead, status: "converted" } : lead
+      setLeads(leads.map((l) =>
+        l.id === leadId ? { ...l, status: "converted" } : l
       ))
 
       toast({
-        title: "Client converted!",
-        description: "Lead has been added to your client list",
+        title: "Client converted! 🎉",
+        description: `${lead.name} has been added to your client list`,
       })
     } catch (error) {
       toast({

@@ -51,7 +51,6 @@ export default function AutoCRMPage() {
     try {
       // Create FormData for file upload
       const formData = new FormData()
-      formData.append('trainerId', 'current-user-id') // TODO: Get from auth
       
       uploadedFiles.forEach((file) => {
         formData.append('files', file)
