@@ -29,9 +29,9 @@ export async function GET() {
     // Try to initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey)
 
-    // Try a simple API call with gemini-1.0-pro
+    // Try a simple API call with gemini-pro (stable model)
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.0-pro' })
+      const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
       const result = await model.generateContent('Say "OK"')
       const response = result.response.text()
 
@@ -40,7 +40,7 @@ export async function GET() {
         message: 'Google Gemini API is working correctly!',
         ...keyInfo,
         apiResponse: response,
-        model: 'gemini-1.0-pro',
+        model: 'gemini-pro',
       })
     } catch (apiError: any) {
       return NextResponse.json({

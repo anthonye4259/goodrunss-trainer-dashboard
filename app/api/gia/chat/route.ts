@@ -61,7 +61,7 @@ You have access to their dashboard data including clients, schedules, payments, 
 
     // Generate response using Gemini Pro
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.0-pro',
+      model: 'gemini-pro',
     })
 
     // Prepend system prompt to first user message
