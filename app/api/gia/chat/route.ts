@@ -1,22 +1,231 @@
 /**
- * Gia Chatbot API
- * Powered by Google Gemini (using v1 stable REST API)
+ * Gia Agentic Chatbot API
+ * Powered by Google Gemini 2.5 Flash with function calling
+ * Can perform actions: view clients, create sessions, fetch analytics
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getOrCreateUser } from '@/lib/get-or-create-user'
 
-const SYSTEM_PROMPT = `You are Gia, an AI assistant for sports instructors, coaches, and wellness professionals on the GoodRunss platform. 
+const SYSTEM_PROMPT = `You are Gia, an AI-powered assistant for sports instructors, coaches, and wellness professionals on the GoodRunss platform.
 
-You help sports & wellness professionals:
-- Generate session plans for any sport or wellness activity (pickleball, tennis, golf, yoga, pilates, basketball, etc.)
-- Manage their clients and schedules  
-- Answer questions about their business
-- Provide coaching tips and best practices
-- Create marketing content
+You are **agentic** - you can actually DO things, not just chat. You have access to tools to:
+• View the trainer's clients list
+• View their schedule and upcoming sessions
+• Create new training sessions
+• Fetch business analytics
+• Access their dashboard data
 
-Be friendly, professional, and encouraging. Keep responses concise but helpful (2-3 paragraphs max). When instructors ask you to create session plans or help with specific clients, offer to help and guide them through what information you need.
+When a trainer asks you to do something, USE YOUR TOOLS to actually do it, then report back with the results.
 
-You have access to their dashboard data including clients, schedules, payments, and session plans.`
+Be friendly, professional, and proactive. Format your responses with:
+• **Bold** for emphasis
+• • Bullet points for lists
+• Clear structure with line breaks
+
+Always be helpful and encouraging!`
+
+// Define available tools for Gemini
+const tools = [
+  {
+    name: 'get_clients',
+    description: 'Get the list of trainer\'s clients with their details',
+    parameters: {
+      type: 'object',
+      properties: {
+        limit: {
+          type: 'number',
+          description: 'Number of clients to return (default: 10)'
+        }
+      }
+    }
+  },
+  {
+    name: 'get_schedule',
+    description: 'Get the trainer\'s upcoming sessions and schedule',
+    parameters: {
+      type: 'object',
+      properties: {
+        days: {
+          type: 'number',
+          description: 'Number of days to look ahead (default: 7)'
+        }
+      }
+    }
+  },
+  {
+    name: 'get_analytics',
+    description: 'Get business analytics including revenue, sessions count, and trends',
+    parameters: {
+      type: 'object',
+      properties: {}
+    }
+  },
+  {
+    name: 'create_session_plan',
+    description: 'Create a detailed training session plan',
+    parameters: {
+      type: 'object',
+      properties: {
+        clientName: {
+          type: 'string',
+          description: 'Name of the client'
+        },
+        duration: {
+          type: 'number',
+          description: 'Session duration in minutes'
+        },
+        focus: {
+          type: 'string',
+          description: 'Main focus of the session'
+        },
+        level: {
+          type: 'string',
+          description: 'Skill level: beginner, intermediate, advanced'
+        }
+      },
+      required: ['duration', 'focus', 'level']
+    }
+  }
+]
+
+// Tool execution functions
+async function executeTools(functionCalls: any[], trainerId: string) {
+  const results = []
+  
+  for (const call of functionCalls) {
+    const { name, args } = call
+    
+    try {
+      switch (name) {
+        case 'get_clients': {
+          const limit = args?.limit || 10
+          const clients = await prisma.clients.findMany({
+            where: { trainerId },
+            take: limit,
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              status: true,
+              createdAt: true
+            }
+          })
+          results.push({
+            tool: name,
+            result: clients,
+            summary: `Found ${clients.length} clients`
+          })
+          break
+        }
+        
+        case 'get_schedule': {
+          const days = args?.days || 7
+          const startDate = new Date()
+          const endDate = new Date()
+          endDate.setDate(endDate.getDate() + days)
+          
+          const sessions = await prisma.trainer_sessions.findMany({
+            where: {
+              trainerId,
+              scheduledAt: {
+                gte: startDate,
+                lte: endDate
+              }
+            },
+            include: {
+              clients: {
+                select: {
+                  name: true,
+                  email: true
+                }
+              }
+            },
+            orderBy: { scheduledAt: 'asc' }
+          })
+          
+          results.push({
+            tool: name,
+            result: sessions,
+            summary: `Found ${sessions.length} upcoming sessions in the next ${days} days`
+          })
+          break
+        }
+        
+        case 'get_analytics': {
+          const thirtyDaysAgo = new Date()
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+          
+          const [totalClients, completedSessions, totalRevenue] = await Promise.all([
+            prisma.clients.count({ where: { trainerId } }),
+            prisma.trainer_sessions.count({
+              where: {
+                trainerId,
+                status: 'COMPLETED'
+              }
+            }),
+            prisma.payments.aggregate({
+              where: {
+                trainerId,
+                status: 'COMPLETED',
+                createdAt: { gte: thirtyDaysAgo }
+              },
+              _sum: { amount: true }
+            })
+          ])
+          
+          const analytics = {
+            totalClients,
+            completedSessions,
+            revenueLastMonth: totalRevenue._sum.amount || 0
+          }
+          
+          results.push({
+            tool: name,
+            result: analytics,
+            summary: `Retrieved business analytics`
+          })
+          break
+        }
+        
+        case 'create_session_plan': {
+          // Generate session plan (stored in Gia's response, not database yet)
+          const plan = {
+            clientName: args?.clientName || 'Client',
+            duration: args?.duration || 60,
+            focus: args?.focus || 'General training',
+            level: args?.level || 'intermediate',
+            created: new Date().toISOString()
+          }
+          
+          results.push({
+            tool: name,
+            result: plan,
+            summary: `Created ${args?.duration || 60}-minute session plan focused on ${args?.focus || 'training'}`
+          })
+          break
+        }
+        
+        default:
+          results.push({
+            tool: name,
+            error: 'Unknown tool'
+          })
+      }
+    } catch (error: any) {
+      console.error(`Error executing tool ${name}:`, error)
+      results.push({
+        tool: name,
+        error: error.message
+      })
+    }
+  }
+  
+  return results
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,34 +238,42 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if API key is configured
+    // Get trainer data
+    const trainer = await getOrCreateUser()
+    if (!trainer) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check API key
     const apiKey = process.env.GOOGLE_GEMINI_API_KEY
     if (!apiKey) {
-      console.error('GOOGLE_GEMINI_API_KEY not found in environment variables')
+      console.error('GOOGLE_GEMINI_API_KEY not found')
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Google Gemini API key not configured',
-          message: "Hi! I'm Gia, your AI assistant. Please add GOOGLE_GEMINI_API_KEY to Vercel environment variables. Get one free at https://aistudio.google.com/app/apikey" 
+          message: "Hi! I'm Gia. Please add GOOGLE_GEMINI_API_KEY to Vercel environment variables." 
         },
         { status: 503 }
       )
     }
 
-    // Build conversation history for Gemini REST API
+    // Build conversation for Gemini
     const contents: any[] = []
     
-    // Add system prompt as first user message, then a model acknowledgment
+    // Add system prompt
     contents.push({
       role: 'user',
       parts: [{ text: SYSTEM_PROMPT }]
     })
     contents.push({
       role: 'model',
-      parts: [{ text: "Understood! I'm Gia, ready to help sports and wellness professionals with their training business." }]
+      parts: [{ text: "Understood! I'm Gia, ready to help with agentic capabilities!" }]
     })
     
-    // Add previous messages from history (excluding the welcome message)
+    // Add conversation history
     if (history && history.length > 1) {
       history.slice(1).forEach((msg: any) => {
         contents.push({
@@ -66,87 +283,104 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Add current user message
+    // Add current message
     contents.push({
       role: 'user',
       parts: [{ text: message }]
     })
 
-    // Call Gemini API using v1 stable endpoint with gemini-2.5-flash (newest model)
-    const response = await fetch(
+    // Call Gemini with function calling
+    const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: contents
+          contents,
+          tools: [{ function_declarations: tools }]
         })
       }
     )
 
-    if (!response.ok) {
-      const errorData = await response.json()
+    if (!geminiResponse.ok) {
+      const errorData = await geminiResponse.json()
       console.error('Gemini API error:', errorData)
-      throw new Error(`Gemini API Error: ${JSON.stringify(errorData)}`)
+      throw new Error('Gemini API failed')
     }
 
-    const data = await response.json()
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text
-
-    if (!text) {
-      throw new Error('No response text from Gemini API')
+    const geminiData = await geminiResponse.json()
+    const candidate = geminiData.candidates?.[0]
+    
+    if (!candidate) {
+      throw new Error('No response from Gemini')
     }
 
+    // Check if Gemini wants to call functions
+    const functionCalls = candidate.content?.parts?.filter((part: any) => part.functionCall)
+    
+    if (functionCalls && functionCalls.length > 0) {
+      // Execute the requested functions
+      const toolResults = await executeTools(
+        functionCalls.map((fc: any) => ({
+          name: fc.functionCall.name,
+          args: fc.functionCall.args
+        })),
+        trainer.id
+      )
+      
+      // Send results back to Gemini for final response
+      contents.push({
+        role: 'model',
+        parts: functionCalls.map((fc: any) => ({ functionCall: fc.functionCall }))
+      })
+      
+      contents.push({
+        role: 'user',
+        parts: toolResults.map((result: any) => ({
+          functionResponse: {
+            name: result.tool,
+            response: result
+          }
+        }))
+      })
+      
+      // Get final response from Gemini
+      const finalResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents })
+        }
+      )
+      
+      const finalData = await finalResponse.json()
+      const finalText = finalData.candidates?.[0]?.content?.parts?.[0]?.text
+      
+      return NextResponse.json({
+        success: true,
+        message: finalText || 'I executed your request!',
+        toolsUsed: toolResults.map((r: any) => r.tool)
+      })
+    }
+    
+    // No function calls, just return text response
+    const responseText = candidate.content?.parts?.[0]?.text
+    
     return NextResponse.json({
       success: true,
-      message: text,
+      message: responseText || 'I can help you with that!',
     })
+    
   } catch (error: any) {
     console.error('Gia chat error:', error)
-    console.error('Error details:', {
-      message: error?.message,
-      status: error?.status,
-    })
-    
-    // Check for specific Gemini API errors
-    if (error?.message?.includes('API_KEY_INVALID') || error?.message?.includes('API key')) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Invalid Google Gemini API key',
-          message: "Hi! My AI brain can't authenticate. Please get a free API key at https://aistudio.google.com/app/apikey and add it to Vercel as GOOGLE_GEMINI_API_KEY" 
-        },
-        { status: 503 }
-      )
-    }
-
-    if (error?.message?.includes('quota') || error?.message?.includes('rate limit')) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Rate limit exceeded',
-          message: "I'm getting too many requests right now. Please wait a moment and try again!" 
-        },
-        { status: 429 }
-      )
-    }
-    
-    // Return actual error message in development for debugging
-    const errorMsg = process.env.NODE_ENV === 'development' 
-      ? `Error: ${error?.message || 'Unknown error'}` 
-      : "I'm having trouble thinking right now. Please try again in a moment!"
     
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Failed to process message',
-        message: errorMsg,
+        message: "I'm having trouble right now. Please try again!" 
       },
       { status: 500 }
     )
   }
 }
-
-

@@ -4,28 +4,63 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Sparkles, X, Send, Minimize2, Users, Calendar, Dumbbell, TrendingUp, MessageCircle, Zap } from "lucide-react"
+import { 
+  Sparkles, 
+  X, 
+  Send, 
+  Minimize2, 
+  Users, 
+  Calendar, 
+  TrendingUp, 
+  MessageCircle,
+  Loader2,
+  UserPlus,
+  CalendarPlus,
+  BarChart3,
+  BookOpen,
+  CheckCircle2
+} from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
+import ReactMarkdown from 'react-markdown'
 
 interface Message {
   role: "user" | "assistant"
   content: string
+  actions?: Action[]
+}
+
+interface Action {
+  type: "create_client" | "create_session" | "view_schedule" | "view_analytics"
+  label: string
+  data?: any
 }
 
 const quickActions = [
-  { icon: Calendar, label: "Create session plan", prompt: "Help me create a session plan for a beginner" },
-  { icon: Users, label: "Client management tips", prompt: "Give me tips for managing clients better" },
-  { icon: TrendingUp, label: "Grow my business", prompt: "How can I grow my sports coaching business?" },
-  { icon: MessageCircle, label: "Marketing ideas", prompt: "Give me marketing content ideas for social media" },
-]
-
-const integrations = [
-  { name: "Your Dashboard", icon: "📊" },
-  { name: "Client Manager", icon: "👥" },
-  { name: "Calendar", icon: "📅" },
-  { name: "Session Planner", icon: "🎯" },
-  { name: "Marketing Tools", icon: "📱" },
+  { 
+    icon: CalendarPlus, 
+    label: "Create session plan", 
+    prompt: "Create a detailed 60-minute training session plan for an intermediate athlete",
+    color: "text-blue-400"
+  },
+  { 
+    icon: UserPlus, 
+    label: "Client onboarding", 
+    prompt: "What should I include in my client onboarding process?",
+    color: "text-green-400"
+  },
+  { 
+    icon: TrendingUp, 
+    label: "Grow my business", 
+    prompt: "Give me 5 actionable strategies to grow my sports coaching business this month",
+    color: "text-purple-400"
+  },
+  { 
+    icon: MessageCircle, 
+    label: "Social media content", 
+    prompt: "Create 3 engaging social media posts for this week",
+    color: "text-pink-400"
+  },
 ]
 
 export function GiaChatbot() {
@@ -34,14 +69,12 @@ export function GiaChatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm Gia, your AI assistant for sports & wellness professionals. 🎾⚽🏀\n\nI can help you with:\n• Creating custom session plans\n• Managing clients & schedules\n• Growing your business\n• Marketing content ideas\n• Coaching tips & best practices\n\nWhat would you like help with today?",
+      content: "👋 **Hey there!** I'm Gia, your AI-powered assistant.\n\nI can help you:\n• ✨ Create custom session plans\n• 👥 Manage clients & schedules\n• 📈 Grow your business\n• 📱 Generate marketing content\n• 🎯 Optimize your coaching\n\n**What would you like to work on today?**",
     },
   ])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(true)
-  
-  // Draggable position state - initialize safely for SSR
   const [position, setPosition] = useState({ x: 0, y: 100 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
@@ -49,10 +82,9 @@ export function GiaChatbot() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
 
-  // Set initial position after mount (client-side only)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setPosition({ x: window.innerWidth - 470, y: 100 })
+      setPosition({ x: window.innerWidth - 500, y: 100 })
     }
   }, [])
 
@@ -62,7 +94,6 @@ export function GiaChatbot() {
     }
   }, [messages])
 
-  // Drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     if (cardRef.current) {
       setIsDragging(true)
@@ -100,7 +131,6 @@ export function GiaChatbot() {
 
   const handleQuickAction = (prompt: string) => {
     setShowSuggestions(false)
-    setInput(prompt)
     handleSendMessage(prompt)
   }
 
@@ -128,15 +158,18 @@ export function GiaChatbot() {
       if (data.success) {
         setMessages((prev) => [
           ...prev,
-          { role: "assistant", content: data.message },
+          { 
+            role: "assistant", 
+            content: data.message,
+            actions: data.actions 
+          },
         ])
       } else {
-        // Show the actual error message from the API (helpful for debugging)
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: data.message || data.error || "Sorry, I encountered an error. Please try again.",
+            content: data.message || "Sorry, I encountered an error. Please try again.",
           },
         ])
       }
@@ -146,7 +179,7 @@ export function GiaChatbot() {
         ...prev,
         {
           role: "assistant",
-          content: "Sorry, I'm having trouble connecting right now. Please try again later.",
+          content: "🔌 I'm having trouble connecting right now. Please check your connection and try again.",
         },
       ])
     } finally {
@@ -161,43 +194,69 @@ export function GiaChatbot() {
     }
   }
 
+  const handleAction = (action: Action) => {
+    // Handle action execution
+    console.log("Executing action:", action)
+    // TODO: Implement action handlers
+  }
+
   if (!isOpen) {
     return (
-      <Button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl bg-gradient-to-r from-primary via-accent to-primary hover:shadow-primary/50 transition-all z-50 p-0"
-        aria-label="Open Gia chat"
-      >
-        <Sparkles className="h-6 w-6 text-black" />
-      </Button>
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        {/* Pulsing indicator */}
+        <div className="relative">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-accent to-primary blur-lg opacity-50 animate-pulse"></div>
+          <Button
+            onClick={() => setIsOpen(true)}
+            className="relative h-16 w-16 rounded-full shadow-2xl bg-gradient-to-r from-primary via-accent to-primary hover:shadow-primary/50 transition-all p-0 hover:scale-110"
+            aria-label="Open Gia chat"
+          >
+            <Sparkles className="h-7 w-7 text-black" />
+          </Button>
+        </div>
+        
+        {/* Tooltip */}
+        <div className="bg-black/90 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg animate-fade-in">
+          💬 Ask Gia anything!
+        </div>
+      </div>
     )
   }
 
   return (
     <Card 
       ref={cardRef}
-      className="fixed w-[420px] h-[600px] shadow-2xl z-50 flex flex-col bg-[#1a1f2e] border-primary/20"
+      className="fixed w-[450px] h-[650px] shadow-2xl z-50 flex flex-col bg-gradient-to-b from-[#1a1f2e] to-[#0f1419] border border-primary/30 backdrop-blur-xl"
       style={{ 
         left: `${position.x}px`, 
         top: `${position.y}px`,
         cursor: isDragging ? 'grabbing' : 'default'
       }}
     >
+      {/* Animated gradient border */}
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary via-accent to-primary opacity-20 blur-sm"></div>
+      
       {/* Header - Draggable */}
       <div 
-        className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-primary/20 to-accent/20 cursor-grab active:cursor-grabbing"
+        className="relative flex items-center justify-between p-4 border-b border-border/30 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 cursor-grab active:cursor-grabbing backdrop-blur-sm"
         onMouseDown={handleMouseDown}
       >
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary via-accent to-primary flex items-center justify-center">
-            <Sparkles className="h-5 w-5 text-black" />
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-accent to-primary blur-md opacity-70 animate-pulse"></div>
+            <div className="relative h-11 w-11 rounded-full bg-gradient-to-r from-primary via-accent to-primary flex items-center justify-center shadow-lg">
+              <Sparkles className="h-6 w-6 text-black" />
+            </div>
           </div>
           <div>
-            <h3 className="font-bold text-white">Gia</h3>
-            <p className="text-xs text-muted-foreground">AI Sports & Wellness Assistant</p>
+            <h3 className="font-bold text-white text-lg">Gia</h3>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
+              <p className="text-xs text-green-400 font-medium">Online</p>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
@@ -206,9 +265,9 @@ export function GiaChatbot() {
               setIsMinimized(!isMinimized)
             }}
             onMouseDown={(e) => e.stopPropagation()}
-            className="h-8 w-8"
+            className="h-9 w-9 hover:bg-white/10"
           >
-            <Minimize2 className="h-4 w-4" />
+            <Minimize2 className="h-4 w-4 text-white" />
           </Button>
           <Button
             variant="ghost"
@@ -218,9 +277,9 @@ export function GiaChatbot() {
               setIsOpen(false)
             }}
             onMouseDown={(e) => e.stopPropagation()}
-            className="h-8 w-8"
+            className="h-9 w-9 hover:bg-white/10"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 text-white" />
           </Button>
         </div>
       </div>
@@ -228,66 +287,86 @@ export function GiaChatbot() {
       {!isMinimized && (
         <>
           {/* Messages */}
-          <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+          <ScrollArea className="flex-1 p-4 bg-[#0f1419]" ref={scrollRef}>
             <div className="space-y-4">
               {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                >
+                <div key={index}>
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                      message.role === "user"
-                        ? "bg-primary text-black"
-                        : "bg-[#2a2f3e] text-foreground"
-                    }`}
+                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
-                    <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
+                    <div
+                      className={`max-w-[90%] rounded-2xl px-4 py-3 ${
+                        message.role === "user"
+                          ? "bg-gradient-to-r from-primary via-accent to-primary text-black shadow-lg"
+                          : "bg-[#1a1f2e] text-white border border-primary/20"
+                      }`}
+                    >
+                      {message.role === "assistant" ? (
+                        <div className="prose prose-sm prose-invert max-w-none">
+                          <ReactMarkdown
+                            components={{
+                              p: ({children}) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
+                              strong: ({children}) => <strong className="font-bold text-primary">{children}</strong>,
+                              ul: ({children}) => <ul className="space-y-1 my-2">{children}</ul>,
+                              li: ({children}) => <li className="leading-relaxed">{children}</li>,
+                              code: ({children}) => <code className="bg-black/50 px-1.5 py-0.5 rounded text-primary">{children}</code>,
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-sm leading-relaxed">{message.content}</p>
+                      )}
+                    </div>
                   </div>
+                  
+                  {/* Action buttons */}
+                  {message.actions && message.actions.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2 justify-start ml-2">
+                      {message.actions.map((action, idx) => (
+                        <Button
+                          key={idx}
+                          size="sm"
+                          onClick={() => handleAction(action)}
+                          className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30"
+                        >
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          {action.label}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               
-              {/* Quick Actions - Show on first open */}
+              {/* Quick Actions */}
               {showSuggestions && messages.length === 1 && (
                 <div className="space-y-3 mt-4">
-                  <p className="text-xs text-muted-foreground font-semibold">Quick Actions:</p>
+                  <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Suggested Actions</p>
                   <div className="grid grid-cols-2 gap-2">
                     {quickActions.map((action, idx) => (
                       <Button
                         key={idx}
                         variant="outline"
-                        size="sm"
                         onClick={() => handleQuickAction(action.prompt)}
-                        className="h-auto py-3 flex flex-col items-start gap-1 bg-[#2a2f3e] hover:bg-[#3a3f4e] border-border/50"
+                        className="h-auto py-4 flex flex-col items-start gap-2 bg-[#1a1f2e] hover:bg-[#252b3b] border-primary/20 hover:border-primary/40 transition-all group"
                       >
-                        <action.icon className="h-4 w-4 text-primary" />
-                        <span className="text-xs text-left">{action.label}</span>
+                        <action.icon className={`h-5 w-5 ${action.color} group-hover:scale-110 transition-transform`} />
+                        <span className="text-xs text-left font-medium text-white">{action.label}</span>
                       </Button>
                     ))}
-                  </div>
-                  
-                  {/* Integrations Display */}
-                  <div className="mt-4 pt-4 border-t border-border/50">
-                    <p className="text-xs text-muted-foreground font-semibold mb-2">Integrated with:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {integrations.map((int, idx) => (
-                        <Badge key={idx} variant="secondary" className="bg-[#2a2f3e] text-xs">
-                          <span className="mr-1">{int.icon}</span>
-                          {int.name}
-                        </Badge>
-                      ))}
-                    </div>
                   </div>
                 </div>
               )}
               
+              {/* Loading indicator */}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-[#2a2f3e] rounded-2xl px-4 py-2">
-                    <div className="flex gap-1">
-                      <div className="h-2 w-2 bg-primary rounded-full animate-bounce" />
-                      <div className="h-2 w-2 bg-primary rounded-full animate-bounce delay-100" />
-                      <div className="h-2 w-2 bg-primary rounded-full animate-bounce delay-200" />
+                  <div className="bg-[#1a1f2e] border border-primary/20 rounded-2xl px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                      <span className="text-sm text-muted-foreground">Gia is thinking...</span>
                     </div>
                   </div>
                 </div>
@@ -296,7 +375,7 @@ export function GiaChatbot() {
           </ScrollArea>
 
           {/* Input */}
-          <div className="p-4 border-t border-border/50">
+          <div className="relative p-4 border-t border-border/30 bg-[#1a1f2e]">
             <div className="flex gap-2">
               <Input
                 value={input}
@@ -304,19 +383,20 @@ export function GiaChatbot() {
                 onKeyPress={handleKeyPress}
                 placeholder="Ask Gia anything..."
                 disabled={isLoading}
-                className="flex-1"
+                className="flex-1 bg-[#0f1419] border-primary/20 focus:border-primary/50 text-white placeholder:text-muted-foreground"
               />
               <Button
                 onClick={() => handleSendMessage()}
                 disabled={isLoading || !input.trim()}
                 size="icon"
-                className="bg-primary hover:bg-primary/90"
+                className="bg-gradient-to-r from-primary via-accent to-primary hover:opacity-90 transition-opacity shadow-lg"
               >
                 <Send className="h-4 w-4 text-black" />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              Powered by Google Gemini
+            <p className="text-[10px] text-muted-foreground mt-2 text-center flex items-center justify-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              Powered by Google Gemini 2.5 Flash
             </p>
           </div>
         </>
@@ -324,5 +404,3 @@ export function GiaChatbot() {
     </Card>
   )
 }
-
-
