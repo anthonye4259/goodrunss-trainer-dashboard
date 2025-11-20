@@ -52,7 +52,7 @@ export function GiaChatbot() {
   // Set initial position after mount (client-side only)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setPosition({ x: window.innerWidth - 450, y: 100 })
+      setPosition({ x: window.innerWidth - 470, y: 100 })
     }
   }, [])
 
@@ -176,7 +176,7 @@ export function GiaChatbot() {
   return (
     <Card 
       ref={cardRef}
-      className="fixed w-[400px] h-[600px] shadow-2xl z-50 flex flex-col bg-[#1a1f2e] border-primary/20"
+      className="fixed w-[420px] h-[600px] shadow-2xl z-50 flex flex-col bg-[#1a1f2e] border-primary/20"
       style={{ 
         left: `${position.x}px`, 
         top: `${position.y}px`,
@@ -236,13 +236,13 @@ export function GiaChatbot() {
                   className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${
                       message.role === "user"
                         ? "bg-primary text-black"
                         : "bg-[#2a2f3e] text-foreground"
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
                   </div>
                 </div>
               ))}
@@ -316,7 +316,7 @@ export function GiaChatbot() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-2 text-center">
-              Powered by Claude (Anthropic)
+              Powered by Google Gemini
             </p>
           </div>
         </>
