@@ -1,10 +1,9 @@
 /**
  * Test endpoint to verify Google Gemini API configuration
- * DELETE THIS FILE AFTER TESTING
+ * Using direct REST API (v1 stable endpoint)
  */
 
 import { NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export async function GET() {
   try {
@@ -26,21 +25,39 @@ export async function GET() {
       keyPrefix: apiKey.substring(0, 10) + '...',
     }
 
-    // Try to initialize Gemini
-    const genAI = new GoogleGenerativeAI(apiKey)
-
-    // Try a simple API call with gemini-pro (stable model)
+    // Try a simple API call using v1 stable endpoint with gemini-pro
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
-      const result = await model.generateContent('Say "OK"')
-      const response = result.response.text()
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: 'Say "OK"'
+              }]
+            }]
+          })
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`API Error: ${JSON.stringify(errorData)}`)
+      }
+
+      const data = await response.json()
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response'
 
       return NextResponse.json({
         status: 'success',
         message: 'Google Gemini API is working correctly!',
         ...keyInfo,
-        apiResponse: response,
-        model: 'gemini-pro',
+        apiResponse: text,
+        model: 'gemini-pro (v1 stable)',
       })
     } catch (apiError: any) {
       return NextResponse.json({
