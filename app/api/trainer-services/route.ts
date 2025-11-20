@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getOrCreateUser } from "@/lib/get-or-create-user"
-import { getServicesForTrainer, setServicesForTrainer } from "@/lib/storage"
+import { getTrainerServices, setTrainerServices } from "@/lib/storage"
 
 // GET /api/trainer-services - Get trainer's services
 export async function GET(request: NextRequest) {
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     // Get services from in-memory storage
     // NOTE: This resets on server restart - needs database table for persistence
-    const services = getServicesForTrainer(trainer.id)
+    const services = getTrainerServices(trainer.id)
 
     return NextResponse.json({
       success: true,
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Store in in-memory storage for now
     // NOTE: This resets on server restart - needs database table for persistence
-    setServicesForTrainer(trainer.id, services)
+    setTrainerServices(trainer.id, services)
 
     return NextResponse.json({
       success: true,
