@@ -17,6 +17,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
   const [businessName, setBusinessName] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
   const handleAccountCreation = (e: React.FormEvent) => {
@@ -26,13 +27,40 @@ export default function SignupPage() {
     }
   }
 
-  const handlePlanSelection = (planId: string) => {
-    localStorage.setItem("trainer_email", email)
-    localStorage.setItem("trainer_password", password) // Store temporarily for Clerk creation
-    localStorage.setItem("trainer_name", name)
-    localStorage.setItem("trainer_business", businessName)
-    localStorage.setItem("selected_plan", planId)
-    router.push("/checkout")
+  const handlePlanSelection = async (planId: string) => {
+    setIsLoading(true)
+    try {
+      // Store user data temporarily
+      localStorage.setItem("trainer_email", email)
+      localStorage.setItem("trainer_password", password)
+      localStorage.setItem("trainer_name", name)
+      localStorage.setItem("trainer_business", businessName)
+      localStorage.setItem("selected_plan", planId)
+
+      // Create Stripe Checkout session with 7-day trial
+      const response = await fetch("/api/create-trial-subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          name: `${name} (${businessName})`,
+          planId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url
+      } else {
+        throw new Error(data.error || "Failed to create checkout session")
+      }
+    } catch (error: any) {
+      console.error("Plan selection error:", error)
+      alert("Failed to start trial. Please try again.")
+      setIsLoading(false)
+    }
   }
 
   if (step === "plan") {
@@ -55,11 +83,15 @@ export default function SignupPage() {
             </div>
 
             <div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/20 border border-green-500/30 mb-4">
+                <Sparkles className="h-4 w-4 text-green-400" />
+                <span className="text-sm font-bold text-green-400">7-Day Free Trial • No Charge Until Trial Ends</span>
+              </div>
               <h1 className="text-4xl font-bold tracking-tight mb-2">
-                Choose Your <span className="gradient-text">Billing Period</span>
+                Start Your <span className="gradient-text">Free Trial</span>
               </h1>
               <p className="text-muted-foreground text-lg">
-                Save more when you commit longer • All plans include full access
+                Enter your card • Cancel anytime before trial ends • Full access immediately
               </p>
             </div>
             
@@ -113,8 +145,13 @@ export default function SignupPage() {
                   Priority support
                 </li>
               </ul>
-              <Button onClick={() => handlePlanSelection("6-month")} variant="outline" className="w-full h-12">
-                Get Started
+              <Button 
+                onClick={() => handlePlanSelection("6-month")} 
+                variant="outline" 
+                className="w-full h-12"
+                disabled={isLoading}
+              >
+                {isLoading ? "Loading..." : "Start 7-Day Free Trial →"}
               </Button>
             </Card>
 
@@ -163,8 +200,9 @@ export default function SignupPage() {
               <Button
                 onClick={() => handlePlanSelection("3-month")}
                 className="w-full h-12 bg-gradient-to-r from-primary via-accent to-primary text-black font-semibold"
+                disabled={isLoading}
               >
-                Get Started
+                {isLoading ? "Loading..." : "Start 7-Day Free Trial →"}
               </Button>
             </Card>
 
@@ -204,8 +242,13 @@ export default function SignupPage() {
                   Priority support
                 </li>
               </ul>
-              <Button onClick={() => handlePlanSelection("1-year")} variant="outline" className="w-full h-12">
-                Get Started
+              <Button 
+                onClick={() => handlePlanSelection("1-year")} 
+                variant="outline" 
+                className="w-full h-12"
+                disabled={isLoading}
+              >
+                {isLoading ? "Loading..." : "Start 7-Day Free Trial →"}
               </Button>
             </Card>
           </div>

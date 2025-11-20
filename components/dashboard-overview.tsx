@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils"
 import { BookingLinkCard } from "@/components/booking-link-card"
 import { SportSelectorModal } from "@/components/sport-selector-modal"
 import { useSport } from "@/contexts/sport-context"
+import { TrialBanner } from "@/components/trial-banner"
 
 interface DashboardStats {
   trainer: {
@@ -84,6 +85,10 @@ export function DashboardOverview() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [subscription, setSubscription] = useState<{
+    trialEnd: Date | null
+    status: string
+  } | null>(null)
 
   useEffect(() => {
     async function fetchStats() {
@@ -106,6 +111,25 @@ export function DashboardOverview() {
     }
 
     fetchStats()
+  }, [])
+
+  useEffect(() => {
+    async function fetchSubscription() {
+      try {
+        const response = await fetch('/api/subscription')
+        const data = await response.json()
+        if (data.success && data.subscription) {
+          setSubscription({
+            trialEnd: data.subscription.trialEnd ? new Date(data.subscription.trialEnd) : null,
+            status: data.subscription.status,
+          })
+        }
+      } catch (err) {
+        console.error('Error fetching subscription:', err)
+      }
+    }
+
+    fetchSubscription()
   }, [])
 
   // Use stats or default values
@@ -186,6 +210,14 @@ export function DashboardOverview() {
   return (
     <div className="max-w-[1600px] mx-auto space-y-8 p-6 md:p-8">
       <SportSelectorModal />
+      
+      {/* Trial Banner */}
+      {subscription && subscription.trialEnd && (
+        <TrialBanner
+          trialEnd={subscription.trialEnd}
+          subscriptionStatus={subscription.status}
+        />
+      )}
       
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>

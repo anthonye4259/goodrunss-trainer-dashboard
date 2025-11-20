@@ -338,6 +338,53 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      case 'customer.subscription.created': {
+        const subscription = event.data.object as Stripe.Subscription
+
+        console.log(`[WEBHOOK] Creating subscription ${subscription.id}`)
+
+        // Find user by Stripe customer ID
+        const user = await prisma.users.findFirst({
+          where: {
+            email: subscription.customer as string | (await stripe.customers.retrieve(subscription.customer as string)).email,
+          },
+        })
+
+        if (!user) {
+          console.error(`[WEBHOOK] User not found for subscription ${subscription.id}`)
+          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
+        // Get plan details from metadata or items
+        const planId = subscription.metadata?.planId || '6-month'
+        const planName = subscription.metadata?.planName || 'Trainer Plan'
+
+        // Create subscription record
+        await prisma.user_subscriptions.create({
+          data: {
+            id: crypto.randomUUID(),
+            userId: user.id,
+            userEmail: user.email,
+            planId: planId,
+            planName: planName,
+            stripeCustomerId: subscription.customer as string,
+            stripeSubscriptionId: subscription.id,
+            stripePriceId: subscription.items.data[0]?.price.id,
+            status: subscription.status,
+            billingCycle: subscription.items.data[0]?.price.recurring?.interval || 'month',
+            currentPeriodStart: new Date(subscription.current_period_start * 1000),
+            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+            trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
+            trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+            updatedAt: new Date(),
+          },
+        })
+
+        processedEvents.set(eventId, Date.now())
+        console.log(`[WEBHOOK] Created subscription for user ${user.id}`)
+        return NextResponse.json({ success: true })
+      }
+
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription
@@ -350,8 +397,11 @@ export async function POST(request: NextRequest) {
             status: subscription.status,
             currentPeriodStart: new Date((subscription as any).currentPeriodStart * 1000),
             currentPeriodEnd: new Date((subscription as any).currentPeriodEnd * 1000),
+            trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : undefined,
+            trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : undefined,
             cancelAtPeriodEnd: (subscription as any).cancelAtPeriodEnd || false,
             canceledAt: (subscription as any).canceledAt ? new Date((subscription as any).canceledAt * 1000) : null,
+            updatedAt: new Date(),
           },
         })
 
