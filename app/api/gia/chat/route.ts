@@ -70,9 +70,9 @@ Be friendly, professional, and encouraging. Keep responses concise but helpful. 
 
 You have access to their dashboard data including clients, schedules, payments, and session plans.`
 
-    // Generate response using Claude (using Opus - most capable model)
+    // Generate response using Claude Haiku (fast, accessible model)
     const response = await anthropic.messages.create({
-      model: 'claude-3-opus-20240229',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 1024,
       system: systemPrompt,
       messages: messages,
