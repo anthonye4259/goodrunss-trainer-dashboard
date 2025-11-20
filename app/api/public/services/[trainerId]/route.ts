@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import {
-  getTrainerServices,
-  setTrainerServices,
-  setTrainerAvailability,
-  setTrainerSportType,
-} from "@/lib/storage"
+import { prisma } from "@/lib/prisma"
 
 export async function GET(
   request: NextRequest,
@@ -13,8 +8,16 @@ export async function GET(
   try {
     const { trainerId } = await params
     
-    // Get services from storage
-    const services = getTrainerServices(trainerId)
+    // Get services from database
+    const services = await prisma.trainer_services.findMany({
+      where: {
+        trainerId,
+        isActive: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    })
 
     return NextResponse.json({
       success: true,
@@ -35,22 +38,38 @@ export async function POST(
 ) {
   try {
     const { trainerId } = await params
-    const { services, sportType, availability } = await request.json()
+    const { services } = await request.json()
 
-    // Store in memory
-    if (services) {
-      setTrainerServices(trainerId, services)
+    if (!services || !Array.isArray(services)) {
+      return NextResponse.json(
+        { error: "Invalid services data" },
+        { status: 400 }
+      )
     }
-    if (sportType) {
-      setTrainerSportType(trainerId, sportType)
-    }
-    if (availability) {
-      setTrainerAvailability(trainerId, availability)
-    }
+
+    // Delete existing services and create new ones (upsert)
+    await prisma.trainer_services.deleteMany({
+      where: { trainerId },
+    })
+
+    await prisma.trainer_services.createMany({
+      data: services.map((service: any) => ({
+        id: service.id || crypto.randomUUID(),
+        trainerId,
+        name: service.name,
+        description: service.description || null,
+        price: service.price,
+        duration: service.duration,
+        isActive: service.isActive ?? true,
+        currency: service.currency || "USD",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })),
+    })
 
     return NextResponse.json({
       success: true,
-      message: "Data saved (in-memory storage)",
+      message: "Services saved to database",
     })
   } catch (error) {
     console.error("Error saving data:", error)
