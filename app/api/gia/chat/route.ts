@@ -1,14 +1,12 @@
 /**
  * Gia Chatbot API
- * Powered by Claude (Anthropic)
+ * Powered by Google Gemini
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-})
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '')
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,39 +20,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if API key is configured
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.error('ANTHROPIC_API_KEY not found in environment variables')
+    if (!process.env.GOOGLE_GEMINI_API_KEY) {
+      console.error('GOOGLE_GEMINI_API_KEY not found in environment variables')
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Anthropic API key not configured',
-          message: "Hi! I'm Gia, your AI assistant. The ANTHROPIC_API_KEY environment variable is missing. Please add it to Vercel." 
+          error: 'Google Gemini API key not configured',
+          message: "Hi! I'm Gia, your AI assistant. Please add GOOGLE_GEMINI_API_KEY to Vercel environment variables. Get one free at https://aistudio.google.com/app/apikey" 
         },
         { status: 503 }
       )
     }
 
-    // Log key presence (not the actual key for security)
-    console.log('Anthropic API key found, length:', process.env.ANTHROPIC_API_KEY.length)
-
-    // Build conversation history for Claude
-    const messages: Anthropic.MessageParam[] = []
+    // Build conversation history for Gemini
+    const geminiHistory: any[] = []
     
     // Add previous messages from history (excluding the welcome message)
     if (history && history.length > 1) {
       history.slice(1).forEach((msg: any) => {
-        messages.push({
-          role: msg.role === 'user' ? 'user' : 'assistant',
-          content: msg.content,
+        geminiHistory.push({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.content }],
         })
       })
     }
-    
-    // Add current message
-    messages.push({
-      role: 'user',
-      content: message,
-    })
 
     // System prompt
     const systemPrompt = `You are Gia, an AI assistant for sports instructors, coaches, and wellness professionals on the GoodRunss platform. 
@@ -66,19 +55,22 @@ You help sports & wellness professionals:
 - Provide coaching tips and best practices
 - Create marketing content
 
-Be friendly, professional, and encouraging. Keep responses concise but helpful. When instructors ask you to create session plans or help with specific clients, offer to help and guide them through what information you need.
+Be friendly, professional, and encouraging. Keep responses concise but helpful (2-3 paragraphs max). When instructors ask you to create session plans or help with specific clients, offer to help and guide them through what information you need.
 
 You have access to their dashboard data including clients, schedules, payments, and session plans.`
 
-    // Generate response using Claude Haiku (fast, accessible model)
-    const response = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: messages,
+    // Generate response using Gemini 1.5 Flash (fast and free!)
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      systemInstruction: systemPrompt,
     })
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : ''
+    const chat = model.startChat({
+      history: geminiHistory,
+    })
+
+    const result = await chat.sendMessage(message)
+    const text = result.response.text()
 
     return NextResponse.json({
       success: true,
@@ -89,23 +81,21 @@ You have access to their dashboard data including clients, schedules, payments, 
     console.error('Error details:', {
       message: error?.message,
       status: error?.status,
-      type: error?.type,
-      error: error?.error,
     })
     
-    // Check for specific Anthropic API errors
-    if (error?.status === 401 || error?.message?.includes('authentication')) {
+    // Check for specific Gemini API errors
+    if (error?.message?.includes('API_KEY_INVALID') || error?.message?.includes('API key')) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Invalid Anthropic API key',
-          message: "Hi! My AI brain can't authenticate. The Anthropic API key in Vercel might be invalid or expired. Please check it at console.anthropic.com" 
+          error: 'Invalid Google Gemini API key',
+          message: "Hi! My AI brain can't authenticate. Please get a free API key at https://aistudio.google.com/app/apikey and add it to Vercel as GOOGLE_GEMINI_API_KEY" 
         },
         { status: 503 }
       )
     }
 
-    if (error?.status === 429) {
+    if (error?.message?.includes('quota') || error?.message?.includes('rate limit')) {
       return NextResponse.json(
         { 
           success: false, 
@@ -126,11 +116,6 @@ You have access to their dashboard data including clients, schedules, payments, 
         success: false, 
         error: 'Failed to process message',
         message: errorMsg,
-        debug: process.env.NODE_ENV === 'development' ? {
-          error: error?.message,
-          status: error?.status,
-          type: error?.type,
-        } : undefined
       },
       { status: 500 }
     )

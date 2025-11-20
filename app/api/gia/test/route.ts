@@ -1,20 +1,21 @@
 /**
- * Test endpoint to verify Anthropic API configuration
+ * Test endpoint to verify Google Gemini API configuration
  * DELETE THIS FILE AFTER TESTING
  */
 
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export async function GET() {
   try {
-    const apiKey = process.env.ANTHROPIC_API_KEY
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY
 
     if (!apiKey) {
       return NextResponse.json({
         status: 'error',
-        message: 'ANTHROPIC_API_KEY not found in environment variables',
+        message: 'GOOGLE_GEMINI_API_KEY not found in environment variables',
         keyPresent: false,
+        instructions: 'Get a free API key at https://aistudio.google.com/app/apikey',
       })
     }
 
@@ -23,25 +24,23 @@ export async function GET() {
       keyPresent: true,
       keyLength: apiKey.length,
       keyPrefix: apiKey.substring(0, 10) + '...',
-      startsWithSkAnt: apiKey.startsWith('sk-ant-'),
     }
 
-    // Try to initialize Anthropic client
-    const anthropic = new Anthropic({ apiKey })
+    // Try to initialize Gemini
+    const genAI = new GoogleGenerativeAI(apiKey)
 
     // Try a simple API call
     try {
-      const response = await anthropic.messages.create({
-        model: 'claude-3-haiku-20240307',
-        max_tokens: 10,
-        messages: [{ role: 'user', content: 'Say "OK"' }],
-      })
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+      const result = await model.generateContent('Say "OK"')
+      const response = result.response.text()
 
       return NextResponse.json({
         status: 'success',
-        message: 'Anthropic API is working correctly!',
+        message: 'Google Gemini API is working correctly!',
         ...keyInfo,
-        apiResponse: response.content[0].type === 'text' ? response.content[0].text : 'OK',
+        apiResponse: response,
+        model: 'gemini-1.5-flash',
       })
     } catch (apiError: any) {
       return NextResponse.json({
@@ -49,14 +48,13 @@ export async function GET() {
         message: 'API key is present but API call failed',
         ...keyInfo,
         error: apiError.message,
-        errorStatus: apiError.status,
-        errorType: apiError.type,
+        instructions: 'Get a new API key at https://aistudio.google.com/app/apikey',
       })
     }
   } catch (error: any) {
     return NextResponse.json({
       status: 'error',
-      message: 'Failed to test Anthropic API',
+      message: 'Failed to test Google Gemini API',
       error: error.message,
     })
   }
