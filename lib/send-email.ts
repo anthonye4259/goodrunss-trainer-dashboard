@@ -1,12 +1,8 @@
 /**
  * Email Notification Service
  * 
- * TODO: Integrate with a real email service:
- * - Resend (https://resend.com) - Recommended, easy setup
- * - SendGrid (https://sendgrid.com)
- * - AWS SES (https://aws.amazon.com/ses/)
- * 
- * For now, logs to console and stores in database for testing
+ * Uses Resend if RESEND_API_KEY is configured, otherwise logs to console
+ * Setup: https://resend.com → Get API key → Add to .env
  */
 
 interface EmailData {
@@ -16,28 +12,77 @@ interface EmailData {
   html?: string
 }
 
+const RESEND_ENABLED = !!process.env.RESEND_API_KEY
+
+// Lazy load Resend only if configured
+let Resend: any = null
+let resend: any = null
+
+if (RESEND_ENABLED) {
+  try {
+    Resend = require("resend").Resend
+    resend = new Resend(process.env.RESEND_API_KEY)
+  } catch (error) {
+    console.warn("⚠️ Resend not installed. Run: npm install resend")
+  }
+}
+
 export async function sendEmail(data: EmailData) {
-  // Log to console for now
-  console.log("📧 EMAIL NOTIFICATION:")
+  // If Resend is configured, send real email
+  if (resend) {
+    try {
+      const { data: emailData, error } = await resend.emails.send({
+        from: "GoodRunss <bookings@goodrunss.com>",
+        to: data.to,
+        subject: data.subject,
+        text: data.text,
+        html: data.html,
+      })
+
+      if (error) {
+        console.error("❌ Resend error:", error)
+        return {
+          success: false,
+          message: "Failed to send email",
+          error,
+        }
+      }
+
+      console.log("✅ Email sent via Resend:", emailData?.id)
+      return {
+        success: true,
+        message: "Email sent successfully",
+        id: emailData?.id,
+      }
+    } catch (error) {
+      console.error("❌ Failed to send email:", error)
+      return {
+        success: false,
+        message: "Failed to send email",
+        error,
+      }
+    }
+  }
+
+  // Fallback: Log to console
+  console.log("📧 EMAIL NOTIFICATION (Console Mode - Add RESEND_API_KEY to .env for real emails):")
   console.log("To:", data.to)
   console.log("Subject:", data.subject)
   console.log("Message:", data.text)
-
-  // TODO: Replace with real email service
-  // Example with Resend:
-  // const resend = new Resend(process.env.RESEND_API_KEY)
-  // await resend.emails.send({
-  //   from: 'GoodRunss <bookings@goodrunss.com>',
-  //   to: data.to,
-  //   subject: data.subject,
-  //   text: data.text,
-  //   html: data.html,
-  // })
+  console.log("---")
 
   return {
     success: true,
-    message: "Email queued (console only - configure email service to send real emails)",
+    message: "Email logged to console (add RESEND_API_KEY for real emails)",
+    mode: "console",
   }
+}
+
+/**
+ * Check if email service is configured
+ */
+export function isEmailEnabled(): boolean {
+  return RESEND_ENABLED && resend !== null
 }
 
 export async function sendBookingConfirmation({
