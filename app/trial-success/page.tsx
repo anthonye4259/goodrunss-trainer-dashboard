@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { SignUp } from "@clerk/nextjs"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Sparkles, CheckCircle, Zap } from "lucide-react"
 
-export default function TrialSuccessPage() {
+function TrialSuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const sessionId = searchParams.get("session_id")
@@ -100,6 +100,18 @@ export default function TrialSuccessPage() {
         />
       </div>
     </div>
+  )
+}
+
+export default function TrialSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <TrialSuccessContent />
+    </Suspense>
   )
 }
 
