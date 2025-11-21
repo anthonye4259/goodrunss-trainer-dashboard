@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
@@ -16,64 +16,62 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Users, Clock, Calendar, Edit, Trash2, AlertCircle } from "lucide-react"
+import { Plus, Users, Clock, Loader2, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { Spinner } from "@/components/ui/spinner"
 
 interface GroupClass {
   id: string
-  name: string
-  instructor: string
-  date: string
-  time: string
+  title: string
+  scheduledAt: string
   duration: number
   capacity: number
   enrolled: number
-  status: "open" | "full" | "cancelled"
-  type: string
+  status: string
 }
 
 export default function GroupClassesPage() {
   const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [classes, setClasses] = useState<GroupClass[]>([])
   const [open, setOpen] = useState(false)
-  const [classes, setClasses] = useState<GroupClass[]>([
-    {
-      id: "1",
-      name: "Morning Yoga Flow",
-      instructor: "Sarah Johnson",
-      date: "2025-01-15",
-      time: "07:00 AM",
-      duration: 60,
-      capacity: 15,
-      enrolled: 12,
-      status: "open",
-      type: "Yoga",
-    },
-    {
-      id: "2",
-      name: "HIIT Bootcamp",
-      instructor: "Mike Chen",
-      date: "2025-01-15",
-      time: "06:00 PM",
-      duration: 45,
-      capacity: 20,
-      enrolled: 20,
-      status: "full",
-      type: "HIIT",
-    },
-  ])
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const [name, setName] = useState("")
-  const [date, setDate] = useState("")
-  const [time, setTime] = useState("")
-  const [duration, setDuration] = useState("")
-  const [capacity, setCapacity] = useState("")
-  const [type, setType] = useState("")
+  const [formData, setFormData] = useState({
+    name: "",
+    date: "",
+    time: "",
+    duration: "60",
+    capacity: "20"
+  })
+
+  useEffect(() => {
+    fetchClasses()
+  }, [])
+
+  const fetchClasses = async () => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const response = await fetch('/api/group-classes')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch group classes')
+      }
+      
+      const data = await response.json()
+      setClasses(data.classes || [])
+    } catch (err: any) {
+      console.error('Fetch classes error:', err)
+      setError(err.message || 'Failed to load group classes')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleCreate = async () => {
-    if (!name || !date || !time || !capacity) {
+    if (!formData.name || !formData.date || !formData.time || !formData.capacity) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
@@ -82,239 +80,269 @@ export default function GroupClassesPage() {
       return
     }
 
-    setLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    setIsSaving(true)
 
-    const newClass: GroupClass = {
-      id: Date.now().toString(),
-      name,
-      instructor: "You",
-      date,
-      time,
-      duration: Number.parseInt(duration) || 60,
-      capacity: Number.parseInt(capacity),
-      enrolled: 0,
-      status: "open",
-      type,
+    try {
+      const scheduledAt = new Date(`${formData.date}T${formData.time}`)
+      
+      const response = await fetch('/api/group-classes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          scheduledAt: scheduledAt.toISOString(),
+          duration: parseInt(formData.duration),
+          capacity: parseInt(formData.capacity)
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create class')
+      }
+
+      const data = await response.json()
+      
+      toast({ 
+        title: "✅ Class created successfully",
+        description: `${formData.name} has been scheduled`
+      })
+      
+      await fetchClasses()
+      setOpen(false)
+      setFormData({
+        name: "",
+        date: "",
+        time: "",
+        duration: "60",
+        capacity: "20"
+      })
+    } catch (err: any) {
+      console.error('Create class error:', err)
+      toast({
+        title: "Error",
+        description: err.message || "Failed to create class",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSaving(false)
     }
-
-    setClasses([newClass, ...classes])
-    toast({ title: "Class created successfully" })
-    setLoading(false)
-    setOpen(false)
-    setName("")
-    setDate("")
-    setTime("")
-    setDuration("")
-    setCapacity("")
-    setType("")
   }
 
-  const totalCapacity = classes.reduce((sum, c) => sum + c.capacity, 0)
-  const totalEnrolled = classes.reduce((sum, c) => sum + c.enrolled, 0)
+  const totalCapacity = classes.reduce((sum, c) => sum + (c.capacity || 0), 0)
+  const totalEnrolled = classes.reduce((sum, c) => sum + (c.enrolled || 0), 0)
   const utilizationRate = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0
 
-  return (
-    <div className="min-h-screen bg-background p-6 md:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Group Class Management</h1>
-            <p className="text-muted-foreground mt-1">Schedule and manage group training sessions</p>
-          </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 text-black">
-                <Plus className="mr-2 h-4 w-4" /> Create Class
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create Group Class</DialogTitle>
-                <DialogDescription>Schedule a new group training session</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div>
-                  <Label htmlFor="name">Class Name *</Label>
-                  <Input
-                    id="name"
-                    placeholder="e.g., Morning Yoga Flow"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="type">Class Type *</Label>
-                  <Select value={type} onValueChange={setType}>
-                    <SelectTrigger id="type">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yoga">Yoga</SelectItem>
-                      <SelectItem value="Pilates">Pilates</SelectItem>
-                      <SelectItem value="HIIT">HIIT</SelectItem>
-                      <SelectItem value="Strength">Strength Training</SelectItem>
-                      <SelectItem value="Cardio">Cardio</SelectItem>
-                      <SelectItem value="Dance">Dance</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="date">Date *</Label>
-                    <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="time">Time *</Label>
-                    <Input id="time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="duration">Duration (min)</Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      placeholder="60"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="capacity">Capacity *</Label>
-                    <Input
-                      id="capacity"
-                      type="number"
-                      placeholder="15"
-                      value={capacity}
-                      onChange={(e) => setCapacity(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleCreate} disabled={loading} className="bg-primary hover:bg-primary/90 text-black">
-                  {loading ? <Spinner className="h-4 w-4" /> : "Create Class"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold">Group Class Management</h1>
+          <p className="text-muted-foreground mt-1">Schedule and manage group training sessions</p>
         </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Classes</p>
-                <p className="text-2xl font-bold text-white">{classes.length}</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Enrolled</p>
-                <p className="text-2xl font-bold text-white">
-                  {totalEnrolled}/{totalCapacity}
-                </p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Clock className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Utilization Rate</p>
-                <p className="text-2xl font-bold text-white">{utilizationRate}%</p>
-              </div>
-            </div>
-          </Card>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
+      </div>
+    )
+  }
 
-        <Card className="border-2 border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Class Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Date & Time</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Capacity</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {classes.map((classItem) => (
-                <TableRow key={classItem.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-semibold text-white">{classItem.name}</p>
-                      <p className="text-sm text-muted-foreground">{classItem.instructor}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{classItem.type}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium text-white">{classItem.date}</p>
-                      <p className="text-sm text-muted-foreground">{classItem.time}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{classItem.duration} min</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-semibold text-white">
-                          {classItem.enrolled}/{classItem.capacity}
-                        </span>
-                      </div>
-                      {classItem.enrolled >= classItem.capacity && <AlertCircle className="h-4 w-4 text-yellow-500" />}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        classItem.status === "full"
-                          ? "destructive"
-                          : classItem.status === "open"
-                            ? "default"
-                            : "secondary"
-                      }
-                      className="capitalize"
-                    >
-                      {classItem.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button size="sm" variant="ghost">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost">
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold">Group Class Management</h1>
+          <p className="text-muted-foreground mt-1">Schedule and manage group training sessions</p>
+        </div>
+        <Card className="glass border-border/50">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              <div>
+                <p className="font-semibold">Failed to load group classes</p>
+                <p className="text-sm text-muted-foreground">{error}</p>
+              </div>
+            </div>
+            <Button onClick={fetchClasses} className="mt-4">
+              Try Again
+            </Button>
+          </CardContent>
         </Card>
       </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Group Class Management</h1>
+          <p className="text-muted-foreground mt-1">Schedule and manage group training sessions</p>
+        </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" /> Create Class
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Group Class</DialogTitle>
+              <DialogDescription>Schedule a new group training session</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Class Name *</Label>
+                <Input
+                  id="name"
+                  placeholder="e.g., Morning HIIT Class"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date">Date *</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="time">Time *</Label>
+                  <Input
+                    id="time"
+                    type="time"
+                    value={formData.time}
+                    onChange={(e) => setFormData({...formData, time: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="duration">Duration (min)</Label>
+                  <Input
+                    id="duration"
+                    type="number"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="capacity">Max Capacity *</Label>
+                  <Input
+                    id="capacity"
+                    type="number"
+                    value={formData.capacity}
+                    onChange={(e) => setFormData({...formData, capacity: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpen(false)} disabled={isSaving}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreate} disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Class'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="glass border-border/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Total Classes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{classes.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Active group sessions</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="glass border-border/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Total Enrolled
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{totalEnrolled}</div>
+            <p className="text-xs text-muted-foreground mt-1">Out of {totalCapacity} capacity</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="glass border-border/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Utilization Rate
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{utilizationRate}%</div>
+            <p className="text-xs text-muted-foreground mt-1">Average class fill rate</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Classes List */}
+      <Card className="glass border-border/50">
+        <CardHeader>
+          <CardTitle>Scheduled Classes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {classes.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-lg font-semibold">No group classes scheduled</p>
+              <p className="text-sm text-muted-foreground mt-2">Create your first group class to get started</p>
+              <Button onClick={() => setOpen(true)} className="mt-4">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Class
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {classes.map((cls) => (
+                <div key={cls.id} className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{cls.title}</h3>
+                    <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(cls.scheduledAt).toLocaleString()}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        {cls.enrolled || 0} / {cls.capacity}
+                      </span>
+                    </div>
+                  </div>
+                  <Badge variant={cls.enrolled >= cls.capacity ? "destructive" : "secondary"}>
+                    {cls.enrolled >= cls.capacity ? "Full" : "Open"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
