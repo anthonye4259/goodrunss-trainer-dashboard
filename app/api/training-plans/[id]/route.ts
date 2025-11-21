@@ -202,19 +202,23 @@ export async function POST(
             completionRate: 100,
             completedSessions: plan.totalSessions,
             updatedAt: new Date()
-          },
-          include: {
-            clients: {
-              select: { id: true, name: true, email: true }
-            }
           }
+        })
+
+        // Fetch client separately
+        const completedClient = await prisma.clients.findUnique({
+          where: { id: completedPlan.clientId },
+          select: { id: true, name: true, email: true }
         })
 
         console.log('✅ Training plan completed:', id)
 
         return NextResponse.json({
           success: true,
-          plan: completedPlan,
+          plan: {
+            ...completedPlan,
+            clients: completedClient
+          },
           message: 'Training plan marked as completed'
         })
 
@@ -250,19 +254,23 @@ export async function POST(
             currentWeek: newWeek,
             status: newCompletionRate >= 100 ? 'completed' : plan.status,
             updatedAt: new Date()
-          },
-          include: {
-            clients: {
-              select: { id: true, name: true, email: true }
-            }
           }
+        })
+
+        // Fetch client separately
+        const updatedClient = await prisma.clients.findUnique({
+          where: { id: updatedPlan.clientId },
+          select: { id: true, name: true, email: true }
         })
 
         console.log('✅ Training plan progress updated:', id)
 
         return NextResponse.json({
           success: true,
-          plan: updatedPlan,
+          plan: {
+            ...updatedPlan,
+            clients: updatedClient
+          },
           message: 'Progress updated'
         })
 
