@@ -54,11 +54,14 @@ export default function SignupPage() {
         // Redirect to Stripe Checkout
         window.location.href = data.url
       } else {
-        throw new Error(data.error || "Failed to create checkout session")
+        const errorMsg = data.error || "Failed to create checkout session"
+        console.error("Checkout error:", errorMsg, data)
+        throw new Error(errorMsg)
       }
     } catch (error: any) {
       console.error("Plan selection error:", error)
-      alert("Failed to start trial. Please try again.")
+      const errorMessage = error.message || "Failed to start trial"
+      alert(`⚠️ ERROR: ${errorMessage}\n\nPlease try again or contact support if the issue persists.`)
       setIsLoading(false)
     }
   }

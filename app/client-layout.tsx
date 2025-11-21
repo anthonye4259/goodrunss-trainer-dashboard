@@ -52,7 +52,7 @@ export function ClientLayout({
           <Sidebar />
           <div className="flex-1 flex flex-col overflow-hidden md:pl-20 pb-16 md:pb-0">
             <Header />
-            <main className="flex-1 overflow-y-auto">{children}</main>
+            <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8">{children}</main>
           </div>
           <MobileNav />
           <GiaChatbot />

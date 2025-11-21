@@ -21,6 +21,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Ensure APP_URL has https:// scheme
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://goodrunss-trainer-dashboard.vercel.app'
+    const baseUrl = appUrl.startsWith('http') ? appUrl : `https://${appUrl}`
+
     // Map plan IDs to Stripe Price IDs
     const planPriceMapping: Record<string, { priceId: string; amount: number }> = {
       '6-month': {
@@ -89,8 +93,8 @@ export async function POST(request: NextRequest) {
       allow_promotion_codes: true,
       
       // Redirect URLs
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/trial-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/signup?step=plan`,
+      success_url: `${baseUrl}/trial-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/signup?step=plan`,
       
       // Collect payment method (card) but don't charge until trial ends
       payment_method_collection: 'always',
