@@ -1,88 +1,140 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, Users, Calendar, DollarSign, Award, Target, Download } from "lucide-react"
-import {
-  Line,
-  LineChart,
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Pie,
-  PieChart,
-  Cell,
-} from "recharts"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-} from "@/components/ui/chart"
+import { TrendingUp, TrendingDown, Users, Calendar, DollarSign, Target, Download, Loader2, AlertCircle } from "lucide-react"
 
-// Mock analytics data
-const revenueData = [
-  { month: "Jul", revenue: 4200, sessions: 28 },
-  { month: "Aug", revenue: 5100, sessions: 34 },
-  { month: "Sep", revenue: 4800, sessions: 32 },
-  { month: "Oct", revenue: 6200, sessions: 41 },
-  { month: "Nov", revenue: 7100, sessions: 47 },
-  { month: "Dec", revenue: 8400, sessions: 56 },
-  { month: "Jan", revenue: 9850, sessions: 67 },
-]
-
-const sessionCompletionData = [
-  { week: "Week 1", completed: 12, cancelled: 2 },
-  { week: "Week 2", completed: 15, cancelled: 1 },
-  { week: "Week 3", completed: 18, cancelled: 3 },
-  { week: "Week 4", completed: 22, cancelled: 1 },
-]
-
-const clientGrowthData = [
-  { month: "Jul", clients: 18 },
-  { month: "Aug", clients: 22 },
-  { month: "Sep", clients: 25 },
-  { month: "Oct", clients: 31 },
-  { month: "Nov", clients: 38 },
-  { month: "Dec", clients: 45 },
-  { month: "Jan", clients: 52 },
-]
-
-const popularProgramsData = [
-  { name: "Strength Training", sessions: 145, color: "hsl(var(--primary))" },
-  { name: "Cardio Blast", sessions: 98, color: "hsl(var(--chart-2))" },
-  { name: "HIIT Workout", sessions: 87, color: "hsl(var(--chart-3))" },
-  { name: "Flexibility", sessions: 56, color: "hsl(var(--chart-4))" },
-  { name: "Sports Specific", sessions: 42, color: "hsl(var(--chart-5))" },
-]
-
-const retentionData = [
-  { month: "Jul", retained: 95, churned: 5 },
-  { month: "Aug", retained: 93, churned: 7 },
-  { month: "Sep", retained: 96, churned: 4 },
-  { month: "Oct", retained: 94, churned: 6 },
-  { month: "Nov", retained: 97, churned: 3 },
-  { month: "Dec", retained: 95, churned: 5 },
-  { month: "Jan", retained: 98, churned: 2 },
-]
+interface AnalyticsData {
+  summary: {
+    totalRevenue: number
+    activeClients: number
+    totalSessions: number
+    completionRate: number
+  }
+  growth: {
+    revenueGrowth: number
+    sessionGrowth: number
+  }
+  financial: {
+    avgRevenuePerSession: number
+    avgRevenuePerClient: number
+  }
+}
 
 export default function AnalyticsPage() {
-  const [timePeriod, setTimePeriod] = useState("6months")
+  const [timePeriod, setTimePeriod] = useState("30")
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleExport = () => {
-    console.log("[v0] Exporting analytics data...")
+  const fetchAnalytics = async (range: string) => {
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      const response = await fetch(`/api/analytics?range=${range}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics')
+      }
+      
+      const data = await response.json()
+      setAnalytics(data.analytics)
+    } catch (err: any) {
+      console.error('Analytics fetch error:', err)
+      setError(err.message || 'Failed to load analytics')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchAnalytics(timePeriod)
+  }, [timePeriod])
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch(`/api/reports?type=summary&range=${timePeriod}&format=csv`)
+      
+      if (!response.ok) {
+        throw new Error('Export failed')
+      }
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `analytics_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Export error:', error)
+      alert('Failed to export analytics')
+    }
+  }
+
+  const getTimePeriodLabel = (period: string) => {
+    const labels: Record<string, string> = {
+      '7': 'Last 7 Days',
+      '30': 'Last 30 Days',
+      '90': 'Last 3 Months',
+      '180': 'Last 6 Months',
+      '365': 'Last Year'
+    }
+    return labels[period] || `Last ${period} days`
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">Analytics</h1>
+            <p className="mt-2 text-muted-foreground">Track your performance and growth</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !analytics) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">Analytics</h1>
+            <p className="mt-2 text-muted-foreground">Track your performance and growth</p>
+          </div>
+        </div>
+        <Card className="glass border-border/50">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              <div>
+                <p className="font-semibold">Failed to load analytics</p>
+                <p className="text-sm text-muted-foreground">{error || 'Unknown error'}</p>
+              </div>
+            </div>
+            <Button onClick={() => fetchAnalytics(timePeriod)} className="mt-4">
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-8 p-8">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Analytics</h1>
           <p className="mt-2 text-muted-foreground">Track your performance and growth</p>
@@ -90,13 +142,14 @@ export default function AnalyticsPage() {
         <div className="flex items-center gap-3">
           <Select value={timePeriod} onValueChange={setTimePeriod}>
             <SelectTrigger className="w-[180px] bg-card">
-              <SelectValue />
+              <SelectValue>{getTimePeriodLabel(timePeriod)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="30days">Last 30 Days</SelectItem>
-              <SelectItem value="3months">Last 3 Months</SelectItem>
-              <SelectItem value="6months">Last 6 Months</SelectItem>
-              <SelectItem value="1year">Last Year</SelectItem>
+              <SelectItem value="7">Last 7 Days</SelectItem>
+              <SelectItem value="30">Last 30 Days</SelectItem>
+              <SelectItem value="90">Last 3 Months</SelectItem>
+              <SelectItem value="180">Last 6 Months</SelectItem>
+              <SelectItem value="365">Last Year</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" className="gap-2 bg-transparent" onClick={handleExport}>
@@ -107,7 +160,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid gap-6 md:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="glass border-border/50">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -116,13 +169,22 @@ export default function AnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-primary">$45,650</div>
-            <p className="text-xs text-primary mt-1 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              +24% from last period
-            </p>
+            <div className="text-3xl font-bold text-primary">
+              ${analytics.summary.totalRevenue.toLocaleString()}
+            </div>
+            {analytics.growth.revenueGrowth !== 0 && (
+              <p className={`text-xs mt-1 flex items-center gap-1 ${analytics.growth.revenueGrowth > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {analytics.growth.revenueGrowth > 0 ? (
+                  <TrendingUp className="h-3 w-3" />
+                ) : (
+                  <TrendingDown className="h-3 w-3" />
+                )}
+                {analytics.growth.revenueGrowth > 0 ? '+' : ''}{analytics.growth.revenueGrowth}% from last period
+              </p>
+            )}
           </CardContent>
         </Card>
+        
         <Card className="glass border-border/50">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -131,13 +193,15 @@ export default function AnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">52</div>
-            <p className="text-xs text-primary mt-1 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              +15% from last period
+            <div className="text-3xl font-bold">
+              {analytics.summary.activeClients}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Clients with sessions
             </p>
           </CardContent>
         </Card>
+        
         <Card className="glass border-border/50">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -146,217 +210,166 @@ export default function AnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">305</div>
-            <p className="text-xs text-primary mt-1 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              +18% from last period
-            </p>
+            <div className="text-3xl font-bold">
+              {analytics.summary.totalSessions}
+            </div>
+            {analytics.growth.sessionGrowth !== 0 && (
+              <p className={`text-xs mt-1 flex items-center gap-1 ${analytics.growth.sessionGrowth > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {analytics.growth.sessionGrowth > 0 ? (
+                  <TrendingUp className="h-3 w-3" />
+                ) : (
+                  <TrendingDown className="h-3 w-3" />
+                )}
+                {analytics.growth.sessionGrowth > 0 ? '+' : ''}{analytics.growth.sessionGrowth}% from last period
+              </p>
+            )}
           </CardContent>
         </Card>
+        
         <Card className="glass border-border/50">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Target className="h-4 w-4" />
-              Avg Session Value
+              Completion Rate
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">$149</div>
-            <p className="text-xs text-primary mt-1 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              +8% from last period
+            <div className="text-3xl font-bold">
+              {analytics.summary.completionRate}%
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Sessions completed
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Revenue Trend */}
+      {/* Additional Metrics */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="glass border-border/50">
+          <CardHeader>
+            <CardTitle>Financial Metrics</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center p-4 rounded-lg bg-secondary/50">
+              <div>
+                <p className="text-sm text-muted-foreground">Avg Revenue per Session</p>
+                <p className="text-2xl font-bold text-primary">
+                  ${analytics.financial.avgRevenuePerSession.toFixed(2)}
+                </p>
+              </div>
+              <DollarSign className="h-8 w-8 text-primary/50" />
+            </div>
+            <div className="flex justify-between items-center p-4 rounded-lg bg-secondary/50">
+              <div>
+                <p className="text-sm text-muted-foreground">Avg Revenue per Client</p>
+                <p className="text-2xl font-bold text-primary">
+                  ${analytics.financial.avgRevenuePerClient.toFixed(2)}
+                </p>
+              </div>
+              <Users className="h-8 w-8 text-primary/50" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass border-border/50">
+          <CardHeader>
+            <CardTitle>Performance Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Revenue Growth</span>
+                <span className={`font-semibold ${analytics.growth.revenueGrowth > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {analytics.growth.revenueGrowth > 0 ? '+' : ''}{analytics.growth.revenueGrowth}%
+                </span>
+              </div>
+              <div className="w-full bg-secondary rounded-full h-2">
+                <div 
+                  className="bg-primary rounded-full h-2 transition-all"
+                  style={{ width: `${Math.min(Math.abs(analytics.growth.revenueGrowth), 100)}%` }}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Session Growth</span>
+                <span className={`font-semibold ${analytics.growth.sessionGrowth > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {analytics.growth.sessionGrowth > 0 ? '+' : ''}{analytics.growth.sessionGrowth}%
+                </span>
+              </div>
+              <div className="w-full bg-secondary rounded-full h-2">
+                <div 
+                  className="bg-primary rounded-full h-2 transition-all"
+                  style={{ width: `${Math.min(Math.abs(analytics.growth.sessionGrowth), 100)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Completion Rate</span>
+                <span className="font-semibold text-primary">
+                  {analytics.summary.completionRate}%
+                </span>
+              </div>
+              <div className="w-full bg-secondary rounded-full h-2">
+                <div 
+                  className="bg-primary rounded-full h-2 transition-all"
+                  style={{ width: `${analytics.summary.completionRate}%` }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
       <Card className="glass border-border/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-primary" />
-            Revenue Trend
-          </CardTitle>
+          <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <ChartContainer
-            config={{
-              revenue: {
-                label: "Revenue",
-                color: "hsl(var(--primary))",
-              },
-            }}
-            className="h-[300px]"
-          >
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--primary))", r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start gap-3 h-auto py-4"
+              onClick={() => window.location.href = '/dashboard/reports'}
+            >
+              <Download className="h-5 w-5" />
+              <div className="text-left">
+                <p className="font-semibold">Generate Report</p>
+                <p className="text-xs text-muted-foreground">Create detailed report</p>
+              </div>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="w-full justify-start gap-3 h-auto py-4"
+              onClick={() => window.location.href = '/dashboard/clients'}
+            >
+              <Users className="h-5 w-5" />
+              <div className="text-left">
+                <p className="font-semibold">View Clients</p>
+                <p className="text-xs text-muted-foreground">Manage your clients</p>
+              </div>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="w-full justify-start gap-3 h-auto py-4"
+              onClick={() => window.location.href = '/dashboard/sessions'}
+            >
+              <Calendar className="h-5 w-5" />
+              <div className="text-left">
+                <p className="font-semibold">Schedule Session</p>
+                <p className="text-xs text-muted-foreground">Book a new session</p>
+              </div>
+            </Button>
+          </div>
         </CardContent>
       </Card>
-
-      {/* Session Completion & Client Growth */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="glass border-border/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              Session Completion
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                completed: {
-                  label: "Completed",
-                  color: "hsl(var(--primary))",
-                },
-                cancelled: {
-                  label: "Cancelled",
-                  color: "hsl(var(--destructive))",
-                },
-              }}
-              className="h-[250px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={sessionCompletionData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="week" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="completed" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="cancelled" fill="hsl(var(--destructive))" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="glass border-border/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              Client Growth
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                clients: {
-                  label: "Clients",
-                  color: "hsl(var(--chart-2))",
-                },
-              }}
-              className="h-[250px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={clientGrowthData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line
-                    type="monotone"
-                    dataKey="clients"
-                    stroke="hsl(var(--chart-2))"
-                    strokeWidth={3}
-                    dot={{ fill: "hsl(var(--chart-2))", r: 5 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="glass border-border/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-primary" />
-              Popular Programs
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                sessions: {
-                  label: "Sessions",
-                },
-              }}
-              className="h-[250px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={popularProgramsData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="sessions"
-                  >
-                    {popularProgramsData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="glass border-border/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              Client Retention
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                retained: {
-                  label: "Retained",
-                  color: "hsl(var(--primary))",
-                },
-                churned: {
-                  label: "Churned",
-                  color: "hsl(var(--destructive))",
-                },
-              }}
-              className="h-[250px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={retentionData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={(props: any) => <ChartLegendContent {...props} />} />
-                  <Bar dataKey="retained" stackId="a" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="churned" stackId="a" fill="hsl(var(--destructive))" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   )
 }
