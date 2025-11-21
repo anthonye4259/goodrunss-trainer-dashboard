@@ -12,13 +12,13 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url)
-    const status = searchParams.get('status') || 'WAITING'
+    const statusFilter = searchParams.get('status') || 'WAITING'
 
-    // Get waitlist entries (we'll store in trainer_sessions with status WAITLIST)
+    // Get waitlist entries (we'll store in trainer_sessions with title starting with "Waitlist:")
     const waitlistEntries = await prisma.trainer_sessions.findMany({
       where: {
         trainerId: trainer.id,
-        status: status === 'ALL' ? { in: ['WAITLIST', 'NOTIFIED', 'EXPIRED'] } : status as any
+        title: { startsWith: 'Waitlist:' }
       },
       include: {
         clients: {
@@ -35,25 +35,43 @@ export async function GET(req: NextRequest) {
       }
     })
 
+    // Filter by status from notes
+    const filteredEntries = statusFilter === 'ALL' ? waitlistEntries : waitlistEntries.filter(e => {
+      try {
+        const notes = e.notes ? JSON.parse(e.notes) : {}
+        return notes.waitlistStatus === statusFilter
+      } catch (err) {
+        return false
+      }
+    })
+
     // Organize by requested date/time
-    const organized = waitlistEntries.map(entry => ({
-      id: entry.id,
-      client: entry.clients,
-      requestedDate: entry.scheduledAt,
-      duration: entry.duration,
-      notes: entry.notes,
-      priority: entry.createdAt, // Earlier = higher priority
-      status: entry.status,
-      createdAt: entry.createdAt
-    }))
+    const organized = filteredEntries.map(entry => {
+      let waitlistStatus = 'WAITING'
+      try {
+        const notes = entry.notes ? JSON.parse(entry.notes) : {}
+        waitlistStatus = notes.waitlistStatus || 'WAITING'
+      } catch (e) {}
+
+      return {
+        id: entry.id,
+        client: entry.clients,
+        requestedDate: entry.scheduledAt,
+        duration: entry.duration,
+        notes: entry.notes,
+        priority: entry.createdAt, // Earlier = higher priority
+        status: waitlistStatus,
+        createdAt: entry.createdAt
+      }
+    })
 
     return NextResponse.json({
       success: true,
       waitlist: organized,
       total: organized.length,
       byStatus: {
-        waiting: waitlistEntries.filter(e => e.status === 'WAITLIST').length,
-        notified: waitlistEntries.filter(e => e.status === 'NOTIFIED').length
+        waiting: organized.filter(e => e.status === 'WAITING').length,
+        notified: organized.filter(e => e.status === 'NOTIFIED').length
       }
     })
   } catch (error) {
@@ -92,7 +110,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Client not found" }, { status: 404 })
     }
 
-    // Create waitlist entry as a session with status WAITLIST
+    // Create waitlist entry as a session with "Waitlist:" prefix
     const scheduledAt = requestedTime 
       ? new Date(`${requestedDate}T${requestedTime}:00`) 
       : new Date(requestedDate)
@@ -102,14 +120,17 @@ export async function POST(req: NextRequest) {
         id: crypto.randomUUID(),
         trainerId: trainer.id,
         clientId,
-        title: `Waitlist - ${client.name}`,
+        title: `Waitlist: ${client.name}`,
         description: notes || 'Waitlist entry',
         type: 'PERSONAL_TRAINING',
         duration: duration || 60,
         scheduledAt,
-        status: 'WAITLIST',
+        status: 'SCHEDULED',
         location: null,
-        notes,
+        notes: JSON.stringify({
+          waitlistStatus: 'WAITING',
+          originalNotes: notes || ''
+        }),
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -154,7 +175,7 @@ export async function PATCH(req: NextRequest) {
       where: {
         id: waitlistId,
         trainerId: trainer.id,
-        status: 'WAITLIST'
+        title: { startsWith: 'Waitlist:' }
       },
       include: {
         clients: true
@@ -166,10 +187,14 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (action === 'notify') {
-      // Mark as notified
+      // Mark as notified in notes
+      const currentNotes = entry.notes ? JSON.parse(entry.notes) : {}
       await prisma.trainer_sessions.update({
         where: { id: waitlistId },
-        data: { status: 'NOTIFIED', updatedAt: new Date() }
+        data: { 
+          notes: JSON.stringify({ ...currentNotes, waitlistStatus: 'NOTIFIED' }), 
+          updatedAt: new Date() 
+        }
       })
 
       // Send notification email
@@ -188,10 +213,16 @@ export async function PATCH(req: NextRequest) {
         action: 'notified'
       })
     } else if (action === 'convert') {
-      // Convert to actual booked session
+      // Convert to actual booked session by removing "Waitlist:" prefix
+      const newTitle = entry.title.replace('Waitlist: ', '')
       await prisma.trainer_sessions.update({
         where: { id: waitlistId },
-        data: { status: 'SCHEDULED', updatedAt: new Date() }
+        data: { 
+          title: newTitle,
+          status: 'SCHEDULED', 
+          notes: null, // Clear waitlist metadata
+          updatedAt: new Date() 
+        }
       })
 
       // Send confirmation
