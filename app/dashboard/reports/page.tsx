@@ -2,10 +2,10 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Download, Send, Calendar, TrendingUp, Users, DollarSign } from "lucide-react"
+import { FileText, Download, Send, Calendar, TrendingUp, Users, DollarSign, Loader2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -18,95 +18,198 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
+
+type ReportType = 'summary' | 'financial' | 'clients' | 'sessions'
+
+interface GeneratedReport {
+  id: string
+  name: string
+  type: ReportType
+  generatedDate: string
+  data: any
+}
 
 const reportTemplates = [
   {
-    id: "monthly-summary",
-    name: "Monthly Summary Report",
-    description: "Comprehensive overview of all activities, revenue, and client progress for the month",
+    id: "summary",
+    name: "Business Summary Report",
+    description: "Comprehensive overview of all activities, revenue, and client progress",
     icon: Calendar,
-    sections: ["Revenue", "Sessions", "Client Stats", "Goals Progress"],
+    apiType: "summary" as ReportType
   },
   {
-    id: "client-progress",
-    name: "Client Progress Report",
-    description: "Detailed progress report for individual clients including measurements and achievements",
-    icon: TrendingUp,
-    sections: ["Weight/Body Fat", "Measurements", "Goals", "Session History"],
-  },
-  {
-    id: "revenue-report",
-    name: "Revenue Report",
-    description: "Financial summary including payments received, pending, and revenue trends",
+    id: "financial",
+    name: "Financial Report",
+    description: "Revenue summary, payments received, pending, and trends",
     icon: DollarSign,
-    sections: ["Total Revenue", "Payment Breakdown", "Trends", "Forecasts"],
+    apiType: "financial" as ReportType
   },
   {
-    id: "client-roster",
+    id: "clients",
     name: "Client Roster Report",
     description: "Complete list of all clients with contact info, status, and session counts",
     icon: Users,
-    sections: ["Active Clients", "Inactive Clients", "Contact Info", "Session Counts"],
-  },
-]
-
-const recentReports = [
-  {
-    id: "1",
-    name: "January 2024 Monthly Summary",
-    type: "Monthly Summary",
-    generatedDate: "2024-02-01",
-    status: "completed",
+    apiType: "clients" as ReportType
   },
   {
-    id: "2",
-    name: "Sarah Johnson Progress Report",
-    type: "Client Progress",
-    generatedDate: "2024-01-28",
-    status: "completed",
-  },
-  {
-    id: "3",
-    name: "Q4 2023 Revenue Report",
-    type: "Revenue Report",
-    generatedDate: "2024-01-15",
-    status: "completed",
+    id: "sessions",
+    name: "Session Analytics Report",
+    description: "Detailed session statistics, completion rates, and peak hours",
+    icon: TrendingUp,
+    apiType: "sessions" as ReportType
   },
 ]
 
 export default function ReportsPage() {
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("")
-  const [selectedSections, setSelectedSections] = useState<string[]>([])
+  const [selectedTemplate, setSelectedTemplate] = useState<ReportType | "">("")
+  const [selectedRange, setSelectedRange] = useState<string>("30")
+  const [recentReports, setRecentReports] = useState<GeneratedReport[]>([])
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [stats, setStats] = useState({
+    generated: 0,
+    popular: "Business Summary",
+    sent: 0
+  })
   const { toast } = useToast()
 
-  const handleGenerateReport = (e: React.FormEvent) => {
+  // Load recent reports from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('recentReports')
+    if (saved) {
+      try {
+        setRecentReports(JSON.parse(saved))
+      } catch (e) {
+        console.error('Failed to parse saved reports:', e)
+      }
+    }
+  }, [])
+
+  const handleGenerateReport = async (e: React.FormEvent) => {
     e.preventDefault()
-    toast({
-      title: "Report Generated",
-      description: "Your report has been generated successfully.",
-    })
-    setIsGenerateDialogOpen(false)
-    setSelectedTemplate("")
-    setSelectedSections([])
+    
+    if (!selectedTemplate) {
+      toast({
+        title: "Error",
+        description: "Please select a report template",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setIsGenerating(true)
+
+    try {
+      const response = await fetch(
+        `/api/reports?type=${selectedTemplate}&range=${selectedRange}&format=json`
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to generate report')
+      }
+
+      const data = await response.json()
+      
+      const templateInfo = reportTemplates.find(t => t.apiType === selectedTemplate)!
+      const newReport: GeneratedReport = {
+        id: Date.now().toString(),
+        name: `${templateInfo.name} - ${new Date().toLocaleDateString()}`,
+        type: selectedTemplate,
+        generatedDate: new Date().toISOString(),
+        data: data.report
+      }
+
+      const updated = [newReport, ...recentReports].slice(0, 10) // Keep last 10
+      setRecentReports(updated)
+      localStorage.setItem('recentReports', JSON.stringify(updated))
+
+      setStats(prev => ({ ...prev, generated: prev.generated + 1 }))
+
+      toast({
+        title: "Report Generated",
+        description: `Your ${templateInfo.name.toLowerCase()} has been generated successfully.`,
+      })
+
+      setIsGenerateDialogOpen(false)
+      setSelectedTemplate("")
+      setSelectedRange("30")
+    } catch (error) {
+      console.error('Generate report error:', error)
+      toast({
+        title: "Error",
+        description: "Failed to generate report. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
-  const handleDownloadReport = (reportId: string) => {
+  const handleDownloadReport = async (report: GeneratedReport) => {
+    try {
+      const response = await fetch(
+        `/api/reports?type=${report.type}&range=${selectedRange}&format=csv`
+      )
+
+      if (!response.ok) {
+        throw new Error('Download failed')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${report.type}_report_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+
+      toast({
+        title: "Downloading Report",
+        description: "Your report is being downloaded as CSV.",
+      })
+    } catch (error) {
+      console.error('Download error:', error)
+      toast({
+        title: "Error",
+        description: "Failed to download report. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleEmailReport = (report: GeneratedReport) => {
+    // TODO: Implement email functionality
     toast({
-      title: "Downloading Report",
-      description: "Your report is being downloaded as PDF.",
+      title: "Coming Soon",
+      description: "Email reports feature will be available soon.",
     })
   }
 
-  const handleEmailReport = (reportId: string) => {
+  const handleViewReport = (report: GeneratedReport) => {
+    // Display report data in a modal or new page
     toast({
-      title: "Report Sent",
-      description: "Report has been sent via email.",
+      title: "Report Details",
+      description: "Viewing report data...",
     })
+    console.log('Report data:', report.data)
   }
 
-  const currentTemplate = reportTemplates.find((t) => t.id === selectedTemplate)
+  const getRangeLabel = (range: string) => {
+    const rangeMap: Record<string, string> = {
+      '7': 'This Week',
+      '14': 'Last 2 Weeks',
+      '30': 'This Month',
+      '60': 'Last 2 Months',
+      '90': 'This Quarter',
+      '180': 'Last 6 Months',
+      '365': 'This Year'
+    }
+    return rangeMap[range] || `Last ${range} days`
+  }
+
+  const currentTemplate = reportTemplates.find((t) => t.apiType === selectedTemplate)
 
   return (
     <div className="space-y-6">
@@ -125,18 +228,18 @@ export default function ReportsPage() {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Generate New Report</DialogTitle>
-              <DialogDescription>Select a report template and customize the sections</DialogDescription>
+              <DialogDescription>Select a report template and time period</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleGenerateReport} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="template">Report Template</Label>
-                <Select value={selectedTemplate} onValueChange={setSelectedTemplate} required>
+                <Select value={selectedTemplate} onValueChange={(val) => setSelectedTemplate(val as ReportType)} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a report template" />
                   </SelectTrigger>
                   <SelectContent>
                     {reportTemplates.map((template) => (
-                      <SelectItem key={template.id} value={template.id}>
+                      <SelectItem key={template.id} value={template.apiType}>
                         {template.name}
                       </SelectItem>
                     ))}
@@ -150,71 +253,35 @@ export default function ReportsPage() {
                     <p className="text-sm text-muted-foreground">{currentTemplate.description}</p>
                   </div>
 
-                  <div className="space-y-3">
-                    <Label>Include Sections</Label>
-                    {currentTemplate.sections.map((section) => (
-                      <div key={section} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={section}
-                          checked={selectedSections.includes(section)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedSections([...selectedSections, section])
-                            } else {
-                              setSelectedSections(selectedSections.filter((s) => s !== section))
-                            }
-                          }}
-                        />
-                        <label
-                          htmlFor={section}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {section}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="period">Time Period</Label>
-                    <Select required>
+                    <Select value={selectedRange} onValueChange={setSelectedRange} required>
                       <SelectTrigger>
                         <SelectValue placeholder="Select time period" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="this-week">This Week</SelectItem>
-                        <SelectItem value="last-week">Last Week</SelectItem>
-                        <SelectItem value="this-month">This Month</SelectItem>
-                        <SelectItem value="last-month">Last Month</SelectItem>
-                        <SelectItem value="this-quarter">This Quarter</SelectItem>
-                        <SelectItem value="last-quarter">Last Quarter</SelectItem>
-                        <SelectItem value="this-year">This Year</SelectItem>
-                        <SelectItem value="custom">Custom Range</SelectItem>
+                        <SelectItem value="7">Last 7 Days</SelectItem>
+                        <SelectItem value="14">Last 14 Days</SelectItem>
+                        <SelectItem value="30">Last 30 Days (Month)</SelectItem>
+                        <SelectItem value="60">Last 60 Days</SelectItem>
+                        <SelectItem value="90">Last 90 Days (Quarter)</SelectItem>
+                        <SelectItem value="180">Last 6 Months</SelectItem>
+                        <SelectItem value="365">Last Year</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-
-                  {selectedTemplate === "client-progress" && (
-                    <div className="space-y-2">
-                      <Label htmlFor="client">Select Client</Label>
-                      <Select required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a client" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">Sarah Johnson</SelectItem>
-                          <SelectItem value="2">Mike Chen</SelectItem>
-                          <SelectItem value="3">Emily Davis</SelectItem>
-                          <SelectItem value="4">James Wilson</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
                 </>
               )}
 
-              <Button type="submit" className="w-full" disabled={!selectedTemplate}>
-                Generate Report
+              <Button type="submit" className="w-full" disabled={!selectedTemplate || isGenerating}>
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  'Generate Report'
+                )}
               </Button>
             </form>
           </DialogContent>
@@ -241,7 +308,7 @@ export default function ReportsPage() {
                   size="sm"
                   className="w-full bg-transparent"
                   onClick={() => {
-                    setSelectedTemplate(template.id)
+                    setSelectedTemplate(template.apiType)
                     setIsGenerateDialogOpen(true)
                   }}
                 >
@@ -253,47 +320,68 @@ export default function ReportsPage() {
         })}
       </div>
 
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle className="text-foreground">Recent Reports</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {recentReports.map((report) => (
-              <Card key={report.id} className="glass-card">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20">
-                        <FileText className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">{report.name}</h3>
-                        <div className="flex items-center gap-3 mt-1">
-                          <Badge className="bg-primary/20 text-primary">{report.type}</Badge>
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(report.generatedDate).toLocaleDateString()}
-                          </span>
+      {recentReports.length > 0 && (
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle className="text-foreground">Recent Reports ({recentReports.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {recentReports.map((report) => {
+                const templateInfo = reportTemplates.find(t => t.apiType === report.type)
+                return (
+                  <Card key={report.id} className="glass-card">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20">
+                            <FileText className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground">{report.name}</h3>
+                            <div className="flex items-center gap-3 mt-1">
+                              <Badge className="bg-primary/20 text-primary">{templateInfo?.name || report.type}</Badge>
+                              <span className="text-sm text-muted-foreground">
+                                {new Date(report.generatedDate).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleViewReport(report)}
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            View
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleDownloadReport(report)}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            CSV
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleEmailReport(report)}
+                          >
+                            <Send className="w-4 h-4 mr-2" />
+                            Email
+                          </Button>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleDownloadReport(report.id)}>
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleEmailReport(report.id)}>
-                        <Send className="w-4 h-4 mr-2" />
-                        Email
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="glass-card">
         <CardHeader>
@@ -302,16 +390,16 @@ export default function ReportsPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-4 rounded-lg bg-secondary/50">
-              <div className="text-2xl font-bold text-foreground mb-1">12</div>
-              <div className="text-sm text-muted-foreground">Reports Generated This Month</div>
+              <div className="text-2xl font-bold text-foreground mb-1">{stats.generated}</div>
+              <div className="text-sm text-muted-foreground">Reports Generated This Session</div>
             </div>
             <div className="p-4 rounded-lg bg-secondary/50">
-              <div className="text-2xl font-bold text-foreground mb-1">3</div>
-              <div className="text-sm text-muted-foreground">Most Popular: Monthly Summary</div>
+              <div className="text-2xl font-bold text-foreground mb-1">{recentReports.length}</div>
+              <div className="text-sm text-muted-foreground">Total Reports Saved</div>
             </div>
             <div className="p-4 rounded-lg bg-secondary/50">
-              <div className="text-2xl font-bold text-foreground mb-1">8</div>
-              <div className="text-sm text-muted-foreground">Reports Sent to Clients</div>
+              <div className="text-2xl font-bold text-foreground mb-1">CSV</div>
+              <div className="text-sm text-muted-foreground">Download Format Available</div>
             </div>
           </div>
         </CardContent>
