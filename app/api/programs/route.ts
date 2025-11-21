@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
             trainerId: trainer.id,
             clientId: program.clientId || undefined,
             scheduledAt: {
-              gte: program.startDate,
+              gte: program.startDate || new Date(),
               lte: program.endDate || new Date()
             }
           }
