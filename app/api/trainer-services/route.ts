@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getOrCreateUser } from "@/lib/get-or-create-user"
+import { prisma } from "@/lib/prisma"
 
 // GET /api/trainer-services - Get trainer's services
 export async function GET(request: NextRequest) {
@@ -10,9 +11,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // TODO: Get services from database when trainer_services table exists
-    // For now, return empty services
-    const services: any[] = []
+    // Fetch trainer's services from database
+    const services = await prisma.trainer_services.findMany({
+      where: {
+        trainerId: trainer.id,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
 
     return NextResponse.json({
       success: true,
@@ -45,12 +52,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // TODO: Save to database when trainer_services table exists
-    // For now, just return success
+    // Delete existing services
+    await prisma.trainer_services.deleteMany({
+      where: { trainerId: trainer.id },
+    })
+
+    // Create new services
+    if (services.length > 0) {
+      await prisma.trainer_services.createMany({
+        data: services.map((service: any) => ({
+          id: crypto.randomUUID(),
+          trainerId: trainer.id,
+          name: service.name,
+          description: service.description || '',
+          duration: service.duration || 60,
+          price: service.price,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })),
+      })
+    }
+
+    // Fetch and return the updated services
+    const updatedServices = await prisma.trainer_services.findMany({
+      where: { trainerId: trainer.id },
+      orderBy: { createdAt: 'desc' },
+    })
+
     return NextResponse.json({
       success: true,
-      message: "Services saved (temporarily disabled - database table pending)",
-      services,
+      message: "Services saved successfully",
+      services: updatedServices,
     })
   } catch (error) {
     console.error("Error saving services:", error)
@@ -60,4 +93,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

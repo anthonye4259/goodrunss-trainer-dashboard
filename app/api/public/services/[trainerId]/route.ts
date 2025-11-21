@@ -8,9 +8,23 @@ export async function GET(
   try {
     const { trainerId } = await params
     
-    // TODO: Create trainer_services table in database
-    // For now, return empty services to allow deployment
-    const services: any[] = []
+    // Fetch trainer's services from database
+    const services = await prisma.trainer_services.findMany({
+      where: {
+        trainerId,
+        isActive: true,
+      },
+      orderBy: {
+        price: 'asc',
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        duration: true,
+        price: true,
+      },
+    })
 
     return NextResponse.json({
       success: true,
@@ -40,16 +54,36 @@ export async function POST(
       )
     }
 
-    // TODO: Create trainer_services table in database
-    // For now, return success to allow deployment
+    // Delete existing services
+    await prisma.trainer_services.deleteMany({
+      where: { trainerId },
+    })
+
+    // Create new services
+    if (services.length > 0) {
+      await prisma.trainer_services.createMany({
+        data: services.map((service: any) => ({
+          id: crypto.randomUUID(),
+          trainerId,
+          name: service.name,
+          description: service.description || '',
+          duration: service.duration || 60,
+          price: service.price,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })),
+      })
+    }
+
     return NextResponse.json({
       success: true,
-      message: "Services saved (temporarily disabled - database table pending)",
+      message: "Services saved successfully",
     })
   } catch (error) {
-    console.error("Error saving data:", error)
+    console.error("Error saving services:", error)
     return NextResponse.json(
-      { error: "Failed to save data" },
+      { error: "Failed to save services" },
       { status: 500 }
     )
   }

@@ -20,6 +20,7 @@ export async function GET(
         image: true,
         location: true,
         isAvailable: true,
+        sportType: true,
       },
     })
 
@@ -30,43 +31,54 @@ export async function GET(
       )
     }
 
-    // TODO: Get services from database when trainer_services table exists
-    // For now, use default fallback services
-    const services = [
-      {
-        id: "default-1",
+    // Fetch real services from database
+    let services = await prisma.trainer_services.findMany({
+      where: {
         trainerId,
-        name: "1-on-1 Training Session",
-        duration: 60,
-        price: trainer.hourlyRate || 100,
-        description: "Personalized training session focused on your goals",
         isActive: true,
-        currency: "USD",
-        createdAt: new Date(),
-        updatedAt: new Date(),
+      },
+      orderBy: {
+        price: 'asc',
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        duration: true,
+        price: true,
+      },
+    })
+
+    // If no services exist, provide default fallback
+    if (services.length === 0) {
+      services = [
+        {
+          id: "default-1",
+          name: "1-on-1 Training Session",
+          duration: 60,
+          price: trainer.hourlyRate || 100,
+          description: "Personalized training session focused on your goals",
         },
         {
           id: "default-2",
-          trainerId,
           name: "30-Min Consultation",
           duration: 30,
           price: (trainer.hourlyRate || 100) / 2,
           description: "Quick consultation to discuss your fitness goals",
-          isActive: true,
-          currency: "USD",
-          createdAt: new Date(),
-          updatedAt: new Date(),
         },
       ] as any
+    }
 
-    // Use first specialty as sport type, or default
-    const sportType = trainer.specialties?.[0] || "PERSONAL_TRAINING"
+    // Use sportType from database, or first specialty, or default
+    const sportType = trainer.sportType || trainer.specialties?.[0] || "PERSONAL_TRAINING"
 
     return NextResponse.json({
       success: true,
-      trainer,
+      trainer: {
+        ...trainer,
+        sportType,
+      },
       services,
-      sportType,
     })
   } catch (error) {
     console.error("Error fetching trainer:", error)
@@ -76,4 +88,3 @@ export async function GET(
     )
   }
 }
-

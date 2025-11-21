@@ -1556,6 +1556,21 @@ model trainers {
   @@index([user_id], map: "idx_trainers_user_id")
 }
 
+model trainer_services {
+  id          String   @id @default(uuid())
+  trainerId   String
+  name        String
+  description String?
+  duration    Int      @default(60)
+  price       Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([trainerId])
+  @@index([isActive])
+}
+
 model translations {
   id                 String    @id
   contentType        String

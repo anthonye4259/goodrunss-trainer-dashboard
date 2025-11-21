@@ -6,7 +6,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar } from "@/components/ui/avatar"
-import { Check, Clock, DollarSign, MapPin } from "lucide-react"
+import { Check, Clock, DollarSign, MapPin, Loader2 } from "lucide-react"
 
 interface Trainer {
   id: string
@@ -17,6 +17,7 @@ interface Trainer {
   hourlyRate: number
   image: string
   location: string
+  sportType?: string
 }
 
 interface Service {
@@ -33,11 +34,15 @@ export default function PublicBookingPage() {
   
   const [trainer, setTrainer] = useState<Trainer | null>(null)
   const [services, setServices] = useState<Service[]>([])
+  const [availability, setAvailability] = useState<{[key: string]: string[]}>({})
+  const [availableTimes, setAvailableTimes] = useState<string[]>([])
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [selectedTime, setSelectedTime] = useState<string>()
   const [selectedService, setSelectedService] = useState<string>()
   const [loading, setLoading] = useState(true)
+  const [loadingTimes, setLoadingTimes] = useState(false)
 
+  // Fetch trainer data on mount
   useEffect(() => {
     async function fetchTrainer() {
       try {
@@ -56,11 +61,38 @@ export default function PublicBookingPage() {
     fetchTrainer()
   }, [trainerId])
 
-  const availableTimes = [
-    "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
-    "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM",
-    "05:00 PM", "06:00 PM", "07:00 PM", "08:00 PM"
-  ]
+  // Fetch availability on mount
+  useEffect(() => {
+    async function fetchAvailability() {
+      try {
+        const res = await fetch(`/api/public/availability/${trainerId}`)
+        if (res.ok) {
+          const data = await res.json()
+          setAvailability(data.availability || {})
+        }
+      } catch (error) {
+        console.error("Error fetching availability:", error)
+      }
+    }
+    fetchAvailability()
+  }, [trainerId])
+
+  // Update available times when date changes
+  useEffect(() => {
+    if (selectedDate) {
+      setLoadingTimes(true)
+      setSelectedTime(undefined)
+      
+      // Get day of week (Sunday = 0, Monday = 1, etc.)
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+      const dayName = dayNames[selectedDate.getDay()]
+      
+      // Get times for this day
+      const timesForDay = availability[dayName] || []
+      setAvailableTimes(timesForDay)
+      setLoadingTimes(false)
+    }
+  }, [selectedDate, availability])
 
   const handleBooking = () => {
     if (!selectedDate || !selectedTime || !selectedService) {
@@ -72,6 +104,23 @@ export default function PublicBookingPage() {
     const checkoutUrl = `/book/${trainerId}/checkout?service=${selectedService}&date=${selectedDate.toISOString()}&time=${encodeURIComponent(selectedTime)}`
     window.location.href = checkoutUrl
   }
+
+  // Get sport-specific terminology
+  const getTerminology = () => {
+    const sportType = trainer?.sportType?.toLowerCase() || ''
+    
+    if (sportType.includes('pickleball')) {
+      return { session: 'Lesson', sessions: 'Lessons', book: 'Book a Lesson' }
+    } else if (sportType.includes('yoga') || sportType.includes('pilates') || sportType.includes('barre')) {
+      return { session: 'Class', sessions: 'Classes', book: 'Book a Class' }
+    } else if (sportType.includes('basketball') || sportType.includes('tennis') || sportType.includes('golf')) {
+      return { session: 'Training Session', sessions: 'Training', book: 'Book Training' }
+    } else {
+      return { session: 'Session', sessions: 'Sessions', book: 'Book Session' }
+    }
+  }
+
+  const terms = getTerminology()
 
   if (loading) {
     return (
@@ -111,7 +160,7 @@ export default function PublicBookingPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
-                  ${trainer.hourlyRate}/hour
+                  ${trainer.hourlyRate}/{terms.session.toLowerCase()}
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 mt-4">
@@ -128,11 +177,11 @@ export default function PublicBookingPage() {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Services */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Select a Service</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Select a {terms.session}</h2>
             <div className="space-y-4">
               {services.length === 0 ? (
                 <Card className="p-6 text-center text-gray-500">
-                  <p>No services available yet.</p>
+                  <p>No {terms.sessions.toLowerCase()} available yet.</p>
                   <p className="text-sm mt-2">Contact {trainer.name} directly to book.</p>
                 </Card>
               ) : (
@@ -183,18 +232,29 @@ export default function PublicBookingPage() {
             {selectedDate && (
               <div>
                 <h3 className="text-lg font-semibold mb-3">Available Times</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {availableTimes.map((time) => (
-                    <Button
-                      key={time}
-                      variant={selectedTime === time ? "default" : "outline"}
-                      className={selectedTime === time ? "bg-green-600 hover:bg-green-700" : ""}
-                      onClick={() => setSelectedTime(time)}
-                    >
-                      {time}
-                    </Button>
-                  ))}
-                </div>
+                {loadingTimes ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+                  </div>
+                ) : availableTimes.length === 0 ? (
+                  <Card className="p-6 text-center text-gray-500">
+                    <p>No times available on this day.</p>
+                    <p className="text-sm mt-2">Please select another date.</p>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {availableTimes.map((time) => (
+                      <Button
+                        key={time}
+                        variant={selectedTime === time ? "default" : "outline"}
+                        className={selectedTime === time ? "bg-green-600 hover:bg-green-700" : ""}
+                        onClick={() => setSelectedTime(time)}
+                      >
+                        {time}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -203,7 +263,7 @@ export default function PublicBookingPage() {
                 className="w-full mt-6 bg-green-600 hover:bg-green-700 text-lg py-6"
                 onClick={handleBooking}
               >
-                Continue to Payment
+                {terms.book}
               </Button>
             )}
           </div>
@@ -212,4 +272,3 @@ export default function PublicBookingPage() {
     </div>
   )
 }
-
