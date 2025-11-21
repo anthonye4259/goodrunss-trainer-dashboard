@@ -50,15 +50,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { 
       name,
+      tagline,
+      bio,
+      teachingStyle,
       personality,
-      tone,
-      expertise,
-      communicationStyle,
-      greetingMessage,
-      signaturePhrase,
-      responseLength,
-      useEmojis,
-      customInstructions,
+      specialties,
+      certifications,
       isActive
     } = body
 
@@ -75,15 +72,12 @@ export async function POST(req: NextRequest) {
         where: { id: existingPersona.id },
         data: {
           name: name || existingPersona.name,
+          tagline: tagline !== undefined ? tagline : existingPersona.tagline,
+          bio: bio !== undefined ? bio : existingPersona.bio,
+          teachingStyle: teachingStyle || existingPersona.teachingStyle,
           personality: personality || existingPersona.personality,
-          tone: tone || existingPersona.tone,
-          expertise: expertise || existingPersona.expertise,
-          communicationStyle: communicationStyle || existingPersona.communicationStyle,
-          greetingMessage: greetingMessage || existingPersona.greetingMessage,
-          signaturePhrase: signaturePhrase || existingPersona.signaturePhrase,
-          responseLength: responseLength || existingPersona.responseLength,
-          useEmojis: useEmojis !== undefined ? useEmojis : existingPersona.useEmojis,
-          customInstructions: customInstructions || existingPersona.customInstructions,
+          specialties: specialties || existingPersona.specialties,
+          certifications: certifications || existingPersona.certifications,
           isActive: isActive !== undefined ? isActive : existingPersona.isActive,
           updatedAt: new Date()
         }
@@ -103,15 +97,17 @@ export async function POST(req: NextRequest) {
           id: crypto.randomUUID(),
           trainerId: trainer.id,
           name: name || `${trainer.name}'s AI Assistant`,
-          personality: personality || 'professional',
-          tone: tone || 'friendly',
-          expertise: expertise || [],
-          communicationStyle: communicationStyle || 'concise',
-          greetingMessage: greetingMessage || `Hi! I'm ${trainer.name}'s AI assistant. How can I help you today?`,
-          signaturePhrase: signaturePhrase || `- ${trainer.name}'s Team`,
-          responseLength: responseLength || 'medium',
-          useEmojis: useEmojis !== undefined ? useEmojis : true,
-          customInstructions: customInstructions || null,
+          tagline: tagline || `Your AI-powered training companion`,
+          bio: bio || `I'm an AI assistant helping ${trainer.name} provide exceptional training experiences.`,
+          teachingStyle: teachingStyle || 'motivational',
+          personality: personality || {
+            tone: 'friendly',
+            communication: 'concise',
+            useEmojis: true,
+            responseLength: 'medium'
+          },
+          specialties: specialties || [],
+          certifications: certifications || [],
           isActive: isActive !== undefined ? isActive : true,
           createdAt: new Date(),
           updatedAt: new Date()
@@ -169,44 +165,17 @@ export async function DELETE(req: NextRequest) {
 function getDefaultPersona(trainer: any) {
   return {
     name: `${trainer.name}'s AI Assistant (Gia)`,
-    personality: 'professional',
-    tone: 'friendly',
-    expertise: ['fitness', 'training', 'scheduling', 'client management'],
-    communicationStyle: 'concise',
-    greetingMessage: `Hi! I'm Gia, ${trainer.name}'s AI assistant. I can help you with scheduling, client management, analytics, and more. What would you like to do?`,
-    signaturePhrase: `- Powered by GoodRunss AI`,
-    responseLength: 'medium',
-    useEmojis: true,
-    customInstructions: null,
+    tagline: 'Your AI-powered training companion',
+    bio: `I'm Gia, an AI assistant helping ${trainer.name} manage training, clients, and business operations.`,
+    teachingStyle: 'motivational',
+    personality: {
+      tone: 'friendly',
+      communication: 'concise',
+      useEmojis: true,
+      responseLength: 'medium'
+    },
+    specialties: ['fitness', 'training', 'scheduling', 'client management'],
+    certifications: [],
     isActive: true
   }
-}
-
-// Helper: Generate AI system prompt based on persona (not exported from route)
-function generatePersonaSystemPrompt(persona: any, trainerName: string) {
-  let prompt = `You are ${persona.name}, an AI assistant helping ${trainerName} manage their training business.
-
-PERSONALITY: ${persona.personality}
-TONE: ${persona.tone}
-COMMUNICATION STYLE: ${persona.communicationStyle}
-RESPONSE LENGTH: ${persona.responseLength}
-USE EMOJIS: ${persona.useEmojis ? 'Yes' : 'No'}
-
-EXPERTISE AREAS:
-${persona.expertise?.join(', ') || 'General fitness and training'}
-
-GREETING MESSAGE:
-"${persona.greetingMessage}"
-
-SIGNATURE:
-${persona.signaturePhrase}
-`
-
-  if (persona.customInstructions) {
-    prompt += `\n\nCUSTOM INSTRUCTIONS FROM TRAINER:\n${persona.customInstructions}`
-  }
-
-  prompt += `\n\nYou have access to tools to help manage clients, sessions, payments, analytics, and content generation. Be helpful, accurate, and always prioritize the trainer's needs.`
-
-  return prompt
 }
