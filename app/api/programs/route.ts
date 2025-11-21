@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
     // Auto-create sessions if requested
     if (createSessions && sessionsPerWeek) {
       const totalSessions = weeks * sessionsPerWeek
-      const sessions = []
+      const sessions: any[] = []
 
       for (let i = 0; i < totalSessions; i++) {
         const sessionDate = new Date(start)
@@ -154,10 +154,10 @@ export async function POST(req: NextRequest) {
           clientId: clientId || null,
           title: `${name} - Session ${i + 1}`,
           description: `Week ${Math.floor(i / sessionsPerWeek) + 1}`,
-          type: 'PERSONAL_TRAINING',
+          type: 'PERSONAL_TRAINING' as const,
           duration: 60,
           scheduledAt: sessionDate,
-          status: 'SCHEDULED',
+          status: 'SCHEDULED' as const,
           location: null,
           notes: `Part of program: ${name}`,
           createdAt: new Date(),
