@@ -20,8 +20,18 @@ export async function GET(request: NextRequest) {
     // Get subscriptions for each trainer
     const trainersWithSubscriptions = await Promise.all(
       trainers.map(async (trainer) => {
+        if (!trainer.clerkId) {
+          return {
+            ...trainer,
+            subscription: null,
+          }
+        }
+
+        // Store clerkId in a variable for TypeScript type narrowing
+        const clerkId = trainer.clerkId
+
         const subscription = await prisma.user_subscriptions.findFirst({
-          where: { userId: trainer.clerkId },
+          where: { userId: clerkId },
           orderBy: { createdAt: 'desc' },
         })
 
