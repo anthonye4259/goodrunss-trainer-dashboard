@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
         clientId,
         amount: price,
         currency: 'usd',
-        method: 'package', // Package purchase method
+        method: 'card', // Default payment method
         status: 'PENDING',
         description: JSON.stringify({
           type: 'PACKAGE',
