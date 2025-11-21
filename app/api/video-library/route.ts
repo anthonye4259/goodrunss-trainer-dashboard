@@ -12,11 +12,11 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url)
-    const category = searchParams.get('category') // all, workouts, exercises, tutorials
+    const category = searchParams.get('category')
     const search = searchParams.get('search')
 
-    // Get videos from workout_videos table (filtered by trainer)
-    const where: any = { trainerId: trainer.id }
+    // Get videos from exercise_videos table (filtered by trainer)
+    const where: any = { trainer_id: trainer.id }
 
     if (search) {
       where.OR = [
@@ -25,10 +25,14 @@ export async function GET(req: NextRequest) {
       ]
     }
 
+    if (category && category !== 'all') {
+      where.category = category
+    }
+
     // Get videos
-    const videos = await prisma.workout_videos.findMany({
+    const videos = await prisma.exercise_videos.findMany({
       where,
-      orderBy: { createdAt: 'desc' }
+      orderBy: { created_at: 'desc' }
     })
 
     // Group by category
@@ -75,9 +79,10 @@ export async function POST(req: NextRequest) {
       duration,
       category,
       tags,
-      isPublic,
-      targetMuscles,
-      difficulty
+      specialty,
+      difficulty,
+      equipment,
+      isPublic
     } = body
 
     if (!title || !videoUrl) {
@@ -88,23 +93,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Create video record
-    const video = await prisma.workout_videos.create({
+    const video = await prisma.exercise_videos.create({
       data: {
-        id: crypto.randomUUID(),
-        trainerId: trainer.id,
+        trainer_id: trainer.id,
         title,
         description: description || null,
-        url: videoUrl,
-        thumbnailUrl: thumbnailUrl || null,
-        duration: duration || 0,
-        category: category || 'general',
+        video_url: videoUrl,
+        thumbnail_url: thumbnailUrl || null,
+        duration: duration || null,
+        category: category || null,
         tags: tags || [],
-        targetMuscles: targetMuscles || [],
-        difficulty: difficulty || 'intermediate',
-        viewCount: 0,
-        isPublic: isPublic || false,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        specialty: specialty || null,
+        difficulty: difficulty || null,
+        equipment: equipment || [],
+        is_public: isPublic || false,
+        view_count: 0
       }
     })
 
@@ -144,10 +147,10 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Verify ownership
-    const existingVideo = await prisma.workout_videos.findFirst({
+    const existingVideo = await prisma.exercise_videos.findFirst({
       where: {
         id: videoId,
-        trainerId: trainer.id
+        trainer_id: trainer.id
       }
     })
 
@@ -158,12 +161,26 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
+    // Map camelCase to snake_case for database fields
+    const dbUpdates: any = {}
+    if (updates.title) dbUpdates.title = updates.title
+    if (updates.description !== undefined) dbUpdates.description = updates.description
+    if (updates.videoUrl) dbUpdates.video_url = updates.videoUrl
+    if (updates.thumbnailUrl !== undefined) dbUpdates.thumbnail_url = updates.thumbnailUrl
+    if (updates.duration !== undefined) dbUpdates.duration = updates.duration
+    if (updates.category !== undefined) dbUpdates.category = updates.category
+    if (updates.tags) dbUpdates.tags = updates.tags
+    if (updates.specialty !== undefined) dbUpdates.specialty = updates.specialty
+    if (updates.difficulty !== undefined) dbUpdates.difficulty = updates.difficulty
+    if (updates.equipment) dbUpdates.equipment = updates.equipment
+    if (updates.isPublic !== undefined) dbUpdates.is_public = updates.isPublic
+
     // Update video
-    const video = await prisma.workout_videos.update({
+    const video = await prisma.exercise_videos.update({
       where: { id: videoId },
       data: {
-        ...updates,
-        updatedAt: new Date()
+        ...dbUpdates,
+        updated_at: new Date()
       }
     })
 
@@ -203,10 +220,10 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Verify ownership
-    const existingVideo = await prisma.workout_videos.findFirst({
+    const existingVideo = await prisma.exercise_videos.findFirst({
       where: {
         id: videoId,
-        trainerId: trainer.id
+        trainer_id: trainer.id
       }
     })
 
@@ -218,7 +235,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete video
-    await prisma.workout_videos.delete({
+    await prisma.exercise_videos.delete({
       where: { id: videoId }
     })
 
