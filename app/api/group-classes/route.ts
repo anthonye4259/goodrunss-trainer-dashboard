@@ -11,11 +11,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Group classes are sessions with type GROUP_CLASS
+    // Group classes are sessions with type PERSONAL_TRAINING and title starting with "Group:"
     const classes = await prisma.trainer_sessions.findMany({
       where: {
         trainerId: trainer.id,
-        type: 'GROUP_CLASS'
+        title: { startsWith: 'Group:' }
       },
       orderBy: {
         scheduledAt: 'desc'
@@ -97,9 +97,9 @@ export async function POST(req: NextRequest) {
         id: crypto.randomUUID(),
         trainerId: trainer.id,
         clientId: null, // Group class has no single client
-        title,
+        title: `Group: ${title}`,
         description: description || null,
-        type: 'GROUP_CLASS',
+        type: 'PERSONAL_TRAINING',
         duration: duration || 60,
         scheduledAt: new Date(scheduledAt),
         status: 'SCHEDULED',
@@ -156,7 +156,7 @@ export async function PATCH(req: NextRequest) {
       where: {
         id: classId,
         trainerId: trainer.id,
-        type: 'GROUP_CLASS'
+        title: { startsWith: 'Group:' }
       }
     })
 
