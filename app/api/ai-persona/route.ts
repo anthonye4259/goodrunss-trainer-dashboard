@@ -182,8 +182,8 @@ function getDefaultPersona(trainer: any) {
   }
 }
 
-// Helper: Generate AI system prompt based on persona
-export function generatePersonaSystemPrompt(persona: any, trainerName: string) {
+// Helper: Generate AI system prompt based on persona (not exported from route)
+function generatePersonaSystemPrompt(persona: any, trainerName: string) {
   let prompt = `You are ${persona.name}, an AI assistant helping ${trainerName} manage their training business.
 
 PERSONALITY: ${persona.personality}
