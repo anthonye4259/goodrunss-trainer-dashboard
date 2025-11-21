@@ -126,6 +126,12 @@ export async function POST(req: NextRequest) {
         duration: weeks * 7,
         goal: goal || null,
         status: 'ACTIVE',
+        difficulty: 'INTERMEDIATE', // Default difficulty
+        clientGoals: goal ? [goal] : [],
+        fitnessLevel: 'INTERMEDIATE', // Default fitness level
+        availableTime: 60, // Default available time per session
+        trainingFrequency: sessionsPerWeek || 3,
+        workoutFocus: goal || 'GENERAL',
         createdAt: new Date(),
         updatedAt: new Date()
       }
