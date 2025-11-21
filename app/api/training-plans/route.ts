@@ -31,39 +31,44 @@ export async function GET(req: NextRequest) {
       where.isTemplate = isTemplate
     }
 
-    // Get workout plans with client info
+    // Get workout plans
     const plans = await prisma.workout_plans.findMany({
       where,
-      include: {
-        clients: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
-      },
       orderBy: [
         { status: 'asc' }, // Active first
         { startDate: 'desc' }
       ]
     })
 
+    // Fetch client info separately
+    const clientIds = [...new Set(plans.map(p => p.clientId))]
+    const clients = await prisma.clients.findMany({
+      where: { id: { in: clientIds } },
+      select: { id: true, name: true, email: true }
+    })
+    const clientMap = new Map(clients.map(c => [c.id, { id: c.id, name: c.name, email: c.email }]))
+    
+    // Attach client info to plans
+    const plansWithClients = plans.map(plan => ({
+      ...plan,
+      clients: clientMap.get(plan.clientId) || null
+    }))
+
     // Calculate stats
     const stats = {
-      total: plans.length,
-      active: plans.filter(p => p.status === 'active').length,
-      draft: plans.filter(p => p.status === 'draft').length,
-      completed: plans.filter(p => p.status === 'completed').length,
-      templates: plans.filter(p => p.isTemplate).length,
-      averageCompletion: plans.length > 0 
-        ? Math.round(plans.reduce((sum, p) => sum + p.completionRate, 0) / plans.length)
+      total: plansWithClients.length,
+      active: plansWithClients.filter(p => p.status === 'active').length,
+      draft: plansWithClients.filter(p => p.status === 'draft').length,
+      completed: plansWithClients.filter(p => p.status === 'completed').length,
+      templates: plansWithClients.filter(p => p.isTemplate).length,
+      averageCompletion: plansWithClients.length > 0 
+        ? Math.round(plansWithClients.reduce((sum, p) => sum + p.completionRate, 0) / plansWithClients.length)
         : 0
     }
 
     return NextResponse.json({
       success: true,
-      plans,
+      plans: plansWithClients,
       stats
     })
   } catch (error) {
@@ -156,23 +161,25 @@ export async function POST(req: NextRequest) {
         completionRate: 0,
         createdAt: new Date(),
         updatedAt: new Date()
-      },
-      include: {
-        clients: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
       }
     })
+
+    // Fetch client info separately
+    const client = await prisma.clients.findUnique({
+      where: { id: plan.clientId },
+      select: { id: true, name: true, email: true }
+    })
+    
+    const planWithClient = {
+      ...plan,
+      clients: client
+    }
 
     console.log('✅ Training plan created:', plan.id)
 
     return NextResponse.json({
       success: true,
-      plan,
+      plan: planWithClient,
       message: `Training plan "${name}" created successfully`
     })
   } catch (error: any) {
@@ -237,23 +244,25 @@ export async function PATCH(req: NextRequest) {
 
     const plan = await prisma.workout_plans.update({
       where: { id: planId },
-      data: updateData,
-      include: {
-        clients: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
-      }
+      data: updateData
     })
+
+    // Fetch client info separately
+    const client = await prisma.clients.findUnique({
+      where: { id: plan.clientId },
+      select: { id: true, name: true, email: true }
+    })
+    
+    const planWithClient = {
+      ...plan,
+      clients: client
+    }
 
     console.log('✅ Training plan updated:', plan.id)
 
     return NextResponse.json({
       success: true,
-      plan,
+      plan: planWithClient,
       message: 'Training plan updated'
     })
   } catch (error: any) {

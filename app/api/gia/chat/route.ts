@@ -1325,18 +1325,23 @@ async function executeTools(functionCalls: any[], trainerId: string, trainerName
           
           const plans = await prisma.workout_plans.findMany({
             where,
-            include: {
-              clients: { select: { name: true } }
-            },
             orderBy: { startDate: 'desc' },
             take: 10
           })
+          
+          // Fetch client names separately
+          const clientIds = [...new Set(plans.map(p => p.clientId))]
+          const clients = await prisma.clients.findMany({
+            where: { id: { in: clientIds } },
+            select: { id: true, name: true }
+          })
+          const clientMap = new Map(clients.map(c => [c.id, c.name]))
           
           results.push({
             tool: name,
             result: plans.map(p => ({
               name: p.name,
-              client: p.clients?.name,
+              client: clientMap.get(p.clientId) || 'Unknown',
               status: p.status,
               progress: `${p.completedSessions}/${p.totalSessions} sessions (${Math.round(p.completionRate)}%)`,
               week: `Week ${p.currentWeek}/${p.duration}`
