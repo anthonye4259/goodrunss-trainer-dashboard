@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
         }
       })
 
-      const activeClientIds = new Set(recentSessions.map(s => s.clientId))
+      const activeClientIds = new Set(recentSessions.map(s => s.clientId).filter((id): id is string => id !== null))
 
       clients = await prisma.clients.findMany({
         where: {
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
         }
       })
 
-      const activeClientIds = new Set(recentSessions.map(s => s.clientId))
+      const activeClientIds = new Set(recentSessions.map(s => s.clientId).filter((id): id is string => id !== null))
       clients = allClients.filter(c => !activeClientIds.has(c.id))
     }
 

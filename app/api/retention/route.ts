@@ -36,6 +36,8 @@ export async function GET(req: NextRequest) {
     const clientActivity = new Map<string, { lastSession: Date; sessionCount: number }>()
     
     for (const session of recentSessions) {
+      if (!session.clientId) continue // Skip sessions without client
+      
       const existing = clientActivity.get(session.clientId)
       if (!existing || session.scheduledAt > existing.lastSession) {
         clientActivity.set(session.clientId, {

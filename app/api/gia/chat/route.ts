@@ -644,7 +644,7 @@ async function executeTools(functionCalls: any[], trainerId: string, trainerName
             }
           })
           
-          const activeClientIds = new Set(recentSessions.map(s => s.clientId))
+          const activeClientIds = new Set(recentSessions.map(s => s.clientId).filter((id): id is string => id !== null))
           const atRisk = allClients.filter(c => !activeClientIds.has(c.id))
           
           results.push({
@@ -1182,7 +1182,7 @@ async function executeTools(functionCalls: any[], trainerId: string, trainerName
             })
           }
           
-          const activeClientIds = new Set(sessions.map(s => s.clientId))
+          const activeClientIds = new Set(sessions.map(s => s.clientId).filter((id): id is string => id !== null))
           const inactive = clients.filter(c => !activeClientIds.has(c.id))
           
           if (inactive.length > 0) {
