@@ -20,7 +20,6 @@ export async function GET(
         image: true,
         location: true,
         isAvailable: true,
-        sportType: true,
       },
     })
 
@@ -69,8 +68,8 @@ export async function GET(
       ] as any
     }
 
-    // Use sportType from database, or first specialty, or default
-    const sportType = trainer.sportType || trainer.specialties?.[0] || "PERSONAL_TRAINING"
+    // Use first specialty as sport type, or default
+    const sportType = trainer.specialties?.[0] || "PERSONAL_TRAINING"
 
     return NextResponse.json({
       success: true,
