@@ -14,18 +14,12 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const clientId = searchParams.get('clientId')
 
-    // Packages stored as payments with type PACKAGE
-    const where: any = {
-      trainerId: trainer.id,
-      paymentType: 'PACKAGE'
-    }
-
-    if (clientId) {
-      where.clientId = clientId
-    }
-
-    const packages = await prisma.payments.findMany({
-      where,
+    // Packages stored as payments with description containing package data
+    const allPayments = await prisma.payments.findMany({
+      where: {
+        trainerId: trainer.id,
+        clientId: clientId || undefined
+      },
       include: {
         clients: {
           select: {
@@ -36,6 +30,17 @@ export async function GET(req: NextRequest) {
         }
       },
       orderBy: { createdAt: 'desc' }
+    })
+
+    // Filter for packages (description contains sessions data)
+    const packages = allPayments.filter(p => {
+      try {
+        if (p.description) {
+          const data = JSON.parse(p.description)
+          return data.sessions !== undefined
+        }
+      } catch (e) {}
+      return false
     })
 
     // Parse package details from description
@@ -123,8 +128,8 @@ export async function POST(req: NextRequest) {
         amount: price,
         currency: 'usd',
         status: 'PENDING',
-        paymentType: 'PACKAGE',
         description: JSON.stringify({
+          type: 'PACKAGE',
           sessions,
           used: 0,
           remaining: sessions,
@@ -183,10 +188,21 @@ export async function PATCH(req: NextRequest) {
     const packageRecord = await prisma.payments.findFirst({
       where: {
         id: packageId,
-        trainerId: trainer.id,
-        paymentType: 'PACKAGE'
+        trainerId: trainer.id
       }
     })
+
+    // Verify it's a package
+    if (packageRecord) {
+      try {
+        const data = JSON.parse(packageRecord.description || '{}')
+        if (!data.sessions) {
+          return NextResponse.json({ error: "Not a package payment" }, { status: 400 })
+        }
+      } catch (e) {
+        return NextResponse.json({ error: "Invalid package data" }, { status: 400 })
+      }
+    }
 
     if (!packageRecord) {
       return NextResponse.json({ error: "Package not found" }, { status: 404 })
