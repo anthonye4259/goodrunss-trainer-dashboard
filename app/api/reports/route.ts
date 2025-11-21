@@ -104,8 +104,12 @@ async function generateFinancialReport(trainerId: string, startDate: Date, endDa
     .filter(p => p.status === 'PENDING')
     .reduce((sum, p) => sum + Number(p.amount), 0)
 
+  // Overdue = PENDING for more than 30 days
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  
   const overdueRevenue = payments
-    .filter(p => p.status === 'PENDING' && p.dueDate && p.dueDate < new Date())
+    .filter(p => p.status === 'PENDING' && p.createdAt < thirtyDaysAgo)
     .reduce((sum, p) => sum + Number(p.amount), 0)
 
   // Revenue by method
@@ -159,7 +163,7 @@ async function generateFinancialReport(trainerId: string, startDate: Date, endDa
       method: p.method,
       status: p.status,
       description: p.description,
-      dueDate: p.dueDate
+      paidAt: p.paidAt
     }))
   }
 }
