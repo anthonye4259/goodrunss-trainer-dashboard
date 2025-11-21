@@ -130,6 +130,8 @@ export async function POST(req: NextRequest) {
         clientGoals: goal ? [goal] : [],
         fitnessLevel: 'INTERMEDIATE', // Default fitness level
         availableTime: 60, // Default available time per session
+        sessionsPerWeek: sessionsPerWeek || 3, // Required field
+        totalSessions: weeks * (sessionsPerWeek || 3), // Required field
         createdAt: new Date(),
         updatedAt: new Date()
       }
