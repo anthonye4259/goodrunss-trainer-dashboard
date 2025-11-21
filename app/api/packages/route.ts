@@ -40,10 +40,11 @@ export async function GET(req: NextRequest) {
 
     // Parse package details from description
     const packagesWithDetails = packages.map(pkg => {
-      let details = {
+      let details: any = {
         sessions: 10,
         used: 0,
-        remaining: 10
+        remaining: 10,
+        expiryDate: null
       }
 
       try {
@@ -68,7 +69,7 @@ export async function GET(req: NextRequest) {
         price: pkg.amount,
         status: pkg.status,
         purchasedAt: pkg.createdAt,
-        expiresAt: pkg.dueDate
+        expiresAt: details.expiryDate ? new Date(details.expiryDate) : null
       }
     })
 
@@ -126,9 +127,9 @@ export async function POST(req: NextRequest) {
         description: JSON.stringify({
           sessions,
           used: 0,
-          remaining: sessions
+          remaining: sessions,
+          expiryDate: expiryDate?.toISOString() || null
         }),
-        dueDate: expiryDate,
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -136,11 +137,12 @@ export async function POST(req: NextRequest) {
 
     // Send package details to client
     if (client.email) {
+      const expiryText = expiryDate ? `<br><strong>Expires:</strong> ${expiryDate.toLocaleDateString()}` : ''
       await sendEmail({
         to: client.email,
         subject: `Session Package: ${sessions} Sessions 🎁`,
-        html: `<h2>Session Package Purchased!</h2><p>Hi ${client.name}!</p><p>You've purchased a <strong>${sessions}-session package</strong>.</p><p><strong>Price:</strong> $${price}<br><strong>Sessions:</strong> ${sessions}<br>${expiryDate ? `<strong>Expires:</strong> ${expiryDate.toLocaleDateString()}` : ''}</p><p>Book your sessions anytime!</p>`,
-        text: `${sessions}-session package purchased for $${price}. Book anytime!`
+        html: `<h2>Session Package Purchased!</h2><p>Hi ${client.name}!</p><p>You've purchased a <strong>${sessions}-session package</strong>.</p><p><strong>Price:</strong> $${price}<br><strong>Sessions:</strong> ${sessions}${expiryText}</p><p>Book your sessions anytime!</p>`,
+        text: `${sessions}-session package purchased for $${price}. ${expiryDate ? `Expires: ${expiryDate.toLocaleDateString()}. ` : ''}Book anytime!`
       })
     }
 
