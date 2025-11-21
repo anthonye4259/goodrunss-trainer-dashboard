@@ -48,7 +48,29 @@ export default function SignupPage() {
         }),
       })
 
-      const data = await response.json()
+      // Check if response is ok first
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("API Error:", response.status, errorText)
+        throw new Error(`Server error (${response.status}): ${errorText || 'Unknown error'}`)
+      }
+
+      // Get response text first to handle empty responses
+      const responseText = await response.text()
+      
+      if (!responseText) {
+        console.error("Empty response from API")
+        throw new Error("Server returned empty response. Please try again.")
+      }
+
+      // Parse JSON safely
+      let data
+      try {
+        data = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error("JSON parse error:", parseError, "Response:", responseText)
+        throw new Error("Invalid response from server. Please try again.")
+      }
 
       if (data.success && data.url) {
         // Redirect to Stripe Checkout

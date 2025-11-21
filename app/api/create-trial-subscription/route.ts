@@ -12,18 +12,34 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
+    // Log incoming request
+    console.log('[TRIAL SIGNUP] Request received')
+    
     const { email, name, planId } = await request.json()
 
+    console.log('[TRIAL SIGNUP] Parsed data:', { email, name: name?.substring(0, 10) + '...', planId })
+
     if (!email || !planId) {
+      console.error('[TRIAL SIGNUP] Missing required fields')
       return NextResponse.json(
         { error: 'Email and plan ID are required' },
         { status: 400 }
       )
     }
 
+    // Check Stripe key
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('[TRIAL SIGNUP] STRIPE_SECRET_KEY not configured')
+      return NextResponse.json(
+        { error: 'Payment system not configured. Please contact support.' },
+        { status: 500 }
+      )
+    }
+
     // Ensure APP_URL has https:// scheme
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://goodrunss-trainer-dashboard.vercel.app'
     const baseUrl = appUrl.startsWith('http') ? appUrl : `https://${appUrl}`
+    console.log('[TRIAL SIGNUP] Base URL:', baseUrl)
 
     // Map plan IDs to Stripe Price IDs
     const planPriceMapping: Record<string, { priceId: string; amount: number }> = {
@@ -107,15 +123,27 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    console.log('[TRIAL SIGNUP] ✅ Stripe session created:', session.id)
+
     return NextResponse.json({
       success: true,
       sessionId: session.id,
       url: session.url,
     })
   } catch (error: any) {
-    console.error('Create trial subscription error:', error)
+    console.error('[TRIAL SIGNUP] ❌ Error:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      statusCode: error.statusCode,
+      stack: error.stack?.split('\n').slice(0, 3)
+    })
+    
     return NextResponse.json(
-      { error: error.message || 'Failed to create subscription' },
+      { 
+        error: error.message || 'Failed to create subscription',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     )
   }
