@@ -11,7 +11,7 @@ import { sendEmail } from '@/lib/send-email'
 
 const SYSTEM_PROMPT = `You are Gia, the most powerful AI assistant for sports instructors, coaches, and wellness professionals.
 
-You have 38 AGENTIC TOOLS at your disposal. You don't just chat - you actually DO things!
+You have 43 AGENTIC TOOLS at your disposal. You don't just chat - you actually DO things!
 
 🎯 **YOUR CAPABILITIES:**
 
@@ -27,6 +27,13 @@ You have 38 AGENTIC TOOLS at your disposal. You don't just chat - you actually D
 • Check availability
 • Recurring sessions
 • Auto-fill schedule
+
+**Training Plans** (5 tools):
+• Create & manage workout plans
+• Track progress & completion
+• Clone plans for new clients
+• Activate & archive plans
+• Multi-week program tracking
 
 **Payments** (6 tools):
 • Track payments
@@ -456,6 +463,69 @@ const tools = [
       properties: {
         aspect: { type: 'string', description: 'pricing, services, or social_media' }
       }
+    }
+  },
+  // TRAINING PLANS (5)
+  {
+    name: 'get_training_plans',
+    description: 'Get all training plans for a trainer',
+    parameters: {
+      type: 'object',
+      properties: {
+        clientName: { type: 'string', description: 'Filter by client name (optional)' },
+        status: { type: 'string', description: 'Filter by status: draft, active, completed, archived (optional)' }
+      }
+    }
+  },
+  {
+    name: 'create_training_plan',
+    description: 'Create a new training plan for a client',
+    parameters: {
+      type: 'object',
+      properties: {
+        clientName: { type: 'string', description: 'Client to create plan for' },
+        name: { type: 'string', description: 'Plan name (e.g., "8-Week Strength Building")' },
+        goal: { type: 'string', description: 'Main goal (e.g., "Build muscle, lose fat")' },
+        duration: { type: 'number', description: 'Duration in weeks' },
+        sessionsPerWeek: { type: 'number', description: 'Sessions per week' },
+        difficulty: { type: 'string', description: 'Difficulty: beginner, intermediate, advanced' }
+      },
+      required: ['clientName', 'name', 'goal', 'duration', 'sessionsPerWeek']
+    }
+  },
+  {
+    name: 'activate_training_plan',
+    description: 'Activate a draft training plan to start it',
+    parameters: {
+      type: 'object',
+      properties: {
+        planName: { type: 'string', description: 'Plan name to activate' }
+      },
+      required: ['planName']
+    }
+  },
+  {
+    name: 'update_plan_progress',
+    description: 'Mark a session as completed in a training plan',
+    parameters: {
+      type: 'object',
+      properties: {
+        planName: { type: 'string', description: 'Plan name' },
+        sessionsCompleted: { type: 'number', description: 'Total sessions completed' }
+      },
+      required: ['planName']
+    }
+  },
+  {
+    name: 'clone_training_plan',
+    description: 'Clone an existing plan for a new client or as a template',
+    parameters: {
+      type: 'object',
+      properties: {
+        planName: { type: 'string', description: 'Plan to clone' },
+        newClientName: { type: 'string', description: 'New client name (optional, creates template if omitted)' }
+      },
+      required: ['planName']
     }
   }
 ]
@@ -1234,6 +1304,237 @@ async function executeTools(functionCalls: any[], trainerId: string, trainerName
             tool: name,
             result: { aspect: args.aspect, note: 'Analysis framework ready' },
             summary: `Competitive ${args.aspect} analysis completed`
+          })
+          break
+        }
+        
+        // TRAINING PLANS (5)
+        case 'get_training_plans': {
+          let where: any = { trainerId }
+          
+          if (args.clientName) {
+            const client = await prisma.clients.findFirst({
+              where: { trainerId, name: { contains: args.clientName, mode: 'insensitive' } }
+            })
+            if (client) where.clientId = client.id
+          }
+          
+          if (args.status) {
+            where.status = args.status
+          }
+          
+          const plans = await prisma.workout_plans.findMany({
+            where,
+            include: {
+              clients: { select: { name: true } }
+            },
+            orderBy: { startDate: 'desc' },
+            take: 10
+          })
+          
+          results.push({
+            tool: name,
+            result: plans.map(p => ({
+              name: p.name,
+              client: p.clients?.name,
+              status: p.status,
+              progress: `${p.completedSessions}/${p.totalSessions} sessions (${Math.round(p.completionRate)}%)`,
+              week: `Week ${p.currentWeek}/${p.duration}`
+            })),
+            summary: `Found ${plans.length} training plan(s)`
+          })
+          break
+        }
+        
+        case 'create_training_plan': {
+          const client = await prisma.clients.findFirst({
+            where: { trainerId, name: { contains: args.clientName, mode: 'insensitive' } }
+          })
+          
+          if (!client) {
+            results.push({
+              tool: name,
+              error: `Client "${args.clientName}" not found`,
+              summary: 'Client not found'
+            })
+            break
+          }
+          
+          const plan = await prisma.workout_plans.create({
+            data: {
+              id: crypto.randomUUID(),
+              trainerId,
+              clientId: client.id,
+              name: args.name,
+              description: args.description || null,
+              goal: args.goal,
+              duration: args.duration,
+              difficulty: args.difficulty || 'intermediate',
+              clientGoals: args.goals || {},
+              fitnessLevel: args.fitnessLevel || 'intermediate',
+              availableTime: args.availableTime || 60,
+              sessionsPerWeek: args.sessionsPerWeek,
+              equipment: args.equipment || [],
+              injuries: args.injuries || [],
+              totalSessions: args.sessionsPerWeek * args.duration,
+              generatedBy: 'ai',
+              aiModel: 'gemini-2.5-flash',
+              status: 'draft',
+              currentWeek: 1,
+              completedSessions: 0,
+              completionRate: 0,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          })
+          
+          results.push({
+            tool: name,
+            result: { id: plan.id, name: plan.name, status: plan.status },
+            summary: `Created training plan "${args.name}" for ${client.name}`
+          })
+          break
+        }
+        
+        case 'activate_training_plan': {
+          const plan = await prisma.workout_plans.findFirst({
+            where: {
+              trainerId,
+              name: { contains: args.planName, mode: 'insensitive' },
+              status: 'draft'
+            }
+          })
+          
+          if (!plan) {
+            results.push({
+              tool: name,
+              error: 'Draft plan not found',
+              summary: 'Plan not found or already active'
+            })
+            break
+          }
+          
+          const activated = await prisma.workout_plans.update({
+            where: { id: plan.id },
+            data: {
+              status: 'active',
+              startDate: new Date(),
+              updatedAt: new Date()
+            }
+          })
+          
+          results.push({
+            tool: name,
+            result: { name: activated.name, status: 'active' },
+            summary: `Activated training plan "${plan.name}"`
+          })
+          break
+        }
+        
+        case 'update_plan_progress': {
+          const plan = await prisma.workout_plans.findFirst({
+            where: {
+              trainerId,
+              name: { contains: args.planName, mode: 'insensitive' }
+            }
+          })
+          
+          if (!plan) {
+            results.push({
+              tool: name,
+              error: 'Plan not found',
+              summary: 'Plan not found'
+            })
+            break
+          }
+          
+          const sessionsCompleted = args.sessionsCompleted || plan.completedSessions + 1
+          const completionRate = (sessionsCompleted / plan.totalSessions) * 100
+          const currentWeek = Math.floor(sessionsCompleted / plan.sessionsPerWeek) + 1
+          
+          const updated = await prisma.workout_plans.update({
+            where: { id: plan.id },
+            data: {
+              completedSessions: sessionsCompleted,
+              completionRate,
+              currentWeek,
+              status: completionRate >= 100 ? 'completed' : plan.status,
+              updatedAt: new Date()
+            }
+          })
+          
+          results.push({
+            tool: name,
+            result: {
+              progress: `${sessionsCompleted}/${plan.totalSessions} sessions`,
+              completion: `${Math.round(completionRate)}%`,
+              week: `Week ${currentWeek}/${plan.duration}`
+            },
+            summary: `Updated progress for "${plan.name}"`
+          })
+          break
+        }
+        
+        case 'clone_training_plan': {
+          const plan = await prisma.workout_plans.findFirst({
+            where: {
+              trainerId,
+              name: { contains: args.planName, mode: 'insensitive' }
+            }
+          })
+          
+          if (!plan) {
+            results.push({
+              tool: name,
+              error: 'Plan not found',
+              summary: 'Original plan not found'
+            })
+            break
+          }
+          
+          let newClientId = plan.clientId
+          if (args.newClientName) {
+            const newClient = await prisma.clients.findFirst({
+              where: {
+                trainerId,
+                name: { contains: args.newClientName, mode: 'insensitive' }
+              }
+            })
+            if (newClient) newClientId = newClient.id
+          }
+          
+          const cloned = await prisma.workout_plans.create({
+            data: {
+              id: crypto.randomUUID(),
+              trainerId,
+              clientId: newClientId,
+              name: `${plan.name} (Copy)`,
+              description: plan.description,
+              goal: plan.goal,
+              duration: plan.duration,
+              difficulty: plan.difficulty,
+              clientGoals: plan.clientGoals,
+              fitnessLevel: plan.fitnessLevel,
+              availableTime: plan.availableTime,
+              sessionsPerWeek: plan.sessionsPerWeek,
+              equipment: plan.equipment,
+              injuries: plan.injuries,
+              totalSessions: plan.totalSessions,
+              generatedBy: 'cloned',
+              status: 'draft',
+              isTemplate: !args.newClientName,
+              currentWeek: 1,
+              completedSessions: 0,
+              completionRate: 0,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          })
+          
+          results.push({
+            tool: name,
+            result: { id: cloned.id, name: cloned.name },
+            summary: `Cloned "${plan.name}" ${args.newClientName ? `for ${args.newClientName}` : 'as template'}`
           })
           break
         }
