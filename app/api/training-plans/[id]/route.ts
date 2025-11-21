@@ -20,16 +20,6 @@ export async function GET(
       where: {
         id,
         trainerId: trainer.id
-      },
-      include: {
-        clients: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true
-          }
-        }
       }
     })
 
@@ -38,6 +28,23 @@ export async function GET(
         { error: "Training plan not found" },
         { status: 404 }
       )
+    }
+
+    // Fetch client info separately
+    const client = await prisma.clients.findUnique({
+      where: { id: plan.clientId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true
+      }
+    })
+
+    // Attach client to plan
+    const planWithClient = {
+      ...plan,
+      clients: client
     }
 
     // Calculate progress metrics
@@ -50,7 +57,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       plan: {
-        ...plan,
+        ...planWithClient,
         progress: {
           weeksCompleted,
           weeksRemaining,
@@ -116,19 +123,23 @@ export async function POST(
             startDate: data.startDate ? new Date(data.startDate) : new Date(),
             endDate: data.endDate ? new Date(data.endDate) : null,
             updatedAt: new Date()
-          },
-          include: {
-            clients: {
-              select: { id: true, name: true, email: true }
-            }
           }
+        })
+
+        // Fetch client separately
+        const activatedClient = await prisma.clients.findUnique({
+          where: { id: activatedPlan.clientId },
+          select: { id: true, name: true, email: true }
         })
 
         console.log('✅ Training plan activated:', id)
 
         return NextResponse.json({
           success: true,
-          plan: activatedPlan,
+          plan: {
+            ...activatedPlan,
+            clients: activatedClient
+          },
           message: 'Training plan activated'
         })
 
@@ -144,13 +155,13 @@ export async function POST(
             goal: plan.goal,
             duration: plan.duration,
             difficulty: plan.difficulty,
-            clientGoals: plan.clientGoals,
+            clientGoals: plan.clientGoals as any,
             fitnessLevel: plan.fitnessLevel,
             availableTime: plan.availableTime,
             sessionsPerWeek: plan.sessionsPerWeek,
             equipment: plan.equipment,
             injuries: plan.injuries,
-            preferences: plan.preferences,
+            preferences: plan.preferences as any,
             totalSessions: plan.totalSessions,
             generatedBy: 'cloned',
             aiModel: plan.aiModel,
@@ -162,19 +173,23 @@ export async function POST(
             completionRate: 0,
             createdAt: new Date(),
             updatedAt: new Date()
-          },
-          include: {
-            clients: {
-              select: { id: true, name: true, email: true }
-            }
           }
+        })
+
+        // Fetch client separately
+        const clonedClient = await prisma.clients.findUnique({
+          where: { id: clonedPlan.clientId },
+          select: { id: true, name: true, email: true }
         })
 
         console.log('✅ Training plan cloned:', clonedPlan.id)
 
         return NextResponse.json({
           success: true,
-          plan: clonedPlan,
+          plan: {
+            ...clonedPlan,
+            clients: clonedClient
+          },
           message: 'Training plan cloned successfully'
         })
 
