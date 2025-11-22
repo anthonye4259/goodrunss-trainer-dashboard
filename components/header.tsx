@@ -66,9 +66,11 @@ export function Header() {
             <Image 
               src="/goodrunss-logo.png" 
               alt="GoodRunss" 
-              width={28}
-              height={28}
+              width={40}
+              height={40}
               className="object-contain w-full h-full"
+              priority
+              quality={100}
             />
           </div>
         </div>

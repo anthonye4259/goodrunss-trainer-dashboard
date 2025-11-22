@@ -24,9 +24,10 @@ export default function WelcomePage() {
                   <Image 
                     src="/goodrunss-logo.png" 
                     alt="GoodRunss" 
-                    width={72}
-                    height={72}
+                    width={96}
+                    height={96}
                     className="object-contain w-full h-full"
+                    quality={100}
                   />
                 </div>
               </div>

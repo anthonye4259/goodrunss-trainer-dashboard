@@ -93,9 +93,10 @@ export default function LoginPage() {
               <Image 
                 src="/goodrunss-logo.png" 
                 alt="GoodRunss" 
-                width={48}
-                height={48}
+                width={64}
+                height={64}
                 className="object-contain w-full h-full"
+                quality={100}
               />
             </div>
           </div>

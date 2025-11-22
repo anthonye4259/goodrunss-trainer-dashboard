@@ -66,9 +66,11 @@ export function Sidebar() {
             <Image 
               src="/goodrunss-logo.png" 
               alt="GoodRunss" 
-              width={36}
-              height={36}
+              width={48}
+              height={48}
               className="object-contain w-full h-full"
+              priority
+              quality={100}
             />
           </div>
         </div>
