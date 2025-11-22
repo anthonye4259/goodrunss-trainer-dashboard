@@ -96,6 +96,15 @@ export function DashboardOverview() {
         }
         
         const data = await response.json()
+        
+        if (data.error) {
+          throw new Error(data.error)
+        }
+        
+        if (!data.trainer) {
+          throw new Error('Invalid data format')
+        }
+
         setStats(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
