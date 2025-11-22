@@ -66,9 +66,9 @@ export function Header() {
             <Image 
               src="/goodrunss-logo-black.svg" 
               alt="GoodRunss" 
-              width={32}
-              height={32}
-              className="object-contain"
+              width={28}
+              height={28}
+              className="object-contain w-full h-full"
             />
           </div>
         </div>

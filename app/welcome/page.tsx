@@ -26,7 +26,7 @@ export default function WelcomePage() {
                     alt="GoodRunss" 
                     width={72}
                     height={72}
-                    className="object-contain"
+                    className="object-contain w-full h-full"
                   />
                 </div>
               </div>

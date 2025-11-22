@@ -68,7 +68,7 @@ function TrialSuccessContent() {
                 alt="GoodRunss" 
                 width={20}
                 height={20}
-                className="object-contain"
+                className="object-contain w-full h-full"
               />
             </div>
             <p className="text-sm text-left">Your account is being created</p>

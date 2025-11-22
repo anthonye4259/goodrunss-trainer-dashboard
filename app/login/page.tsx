@@ -95,7 +95,7 @@ export default function LoginPage() {
                 alt="GoodRunss" 
                 width={48}
                 height={48}
-                className="object-contain"
+                className="object-contain w-full h-full"
               />
             </div>
           </div>
