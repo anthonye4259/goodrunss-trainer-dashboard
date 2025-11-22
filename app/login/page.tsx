@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useSignIn } from '@clerk/nextjs'
+import { useState, useEffect } from 'react'
+import { useSignIn, useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,11 +12,19 @@ import Link from "next/link"
 
 export default function LoginPage() {
   const { isLoaded, signIn, setActive } = useSignIn()
+  const { user } = useUser()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      window.location.href = "/dashboard"
+    }
+  }, [user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,6 +49,11 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       console.error(err)
+      // Handle "session already exists" error specifically
+      if (err.errors?.[0]?.code === "session_exists") {
+        window.location.href = "/dashboard"
+        return
+      }
       setError(err.errors?.[0]?.message || "Invalid email or password")
     } finally {
       setIsLoading(false)
