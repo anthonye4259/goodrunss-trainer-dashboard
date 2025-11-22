@@ -1,6 +1,7 @@
 "use client"
 
-import { Bell, MessageSquare, HelpCircle, Zap, Globe } from "lucide-react"
+import { Bell, MessageSquare, HelpCircle, Globe } from "lucide-react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -61,8 +62,14 @@ export function Header() {
       <div className="flex items-center gap-2 md:gap-3">
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-lg blur-md opacity-50" />
-          <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center">
-            <Zap className="w-5 h-5 md:w-6 md:h-6 text-black fill-black" />
+          <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-lg bg-white flex items-center justify-center p-1">
+            <Image 
+              src="/goodrunss-logo-black.svg" 
+              alt="GoodRunss" 
+              width={32}
+              height={32}
+              className="object-contain"
+            />
           </div>
         </div>
 

@@ -88,7 +88,7 @@ export default function WelcomePage() {
 
           <Card className="glass border-border/50 backdrop-blur-xl p-8 space-y-4 glow-on-hover">
             <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Zap className="h-6 w-6 text-primary" />
+              <Sparkles className="h-6 w-6 text-primary" />
             </div>
             <h3 className="text-2xl font-bold">AI Marketing Suite</h3>
             <p className="text-muted-foreground">

@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShareToSocial } from "@/components/share-to-social"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, Users, DollarSign, Target, Calendar, Activity, Award, Zap } from "lucide-react"
+import { TrendingUp, Users, DollarSign, Target, Calendar, Activity, Award, CheckCircle2 } from "lucide-react"
 
 export default function SocialPage() {
   const shareableStats = [
@@ -54,7 +54,7 @@ export default function SocialPage() {
       value: "78%",
       subtitle: "All programs avg",
       gradient: "bg-gradient-to-br from-violet-400 via-purple-500 to-indigo-600",
-      icon: Zap,
+      icon: CheckCircle2,
     },
     {
       title: "Revenue Growth",
