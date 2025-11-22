@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import { ClerkProvider } from "@clerk/nextjs"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { SportProvider } from "@/contexts/sport-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -26,7 +27,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <SportProvider>
+              {children}
+            </SportProvider>
           </ThemeProvider>
         </body>
       </html>
