@@ -21,15 +21,18 @@ export function HardSignOut() {
           .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
       })
       
-      // 3. Sign out from Clerk
+      // 3. Sign out from Clerk (this clears their session)
       await signOut()
       
-      // 4. Force hard redirect to login (don't trust Clerk redirect)
-      window.location.href = '/login'
+      // 4. Wait a moment for Clerk to fully clear
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // 5. Force hard redirect to welcome page (bypasses any auth checks)
+      window.location.href = '/welcome'
     } catch (error) {
       console.error("Sign out error:", error)
       // Force redirect if Clerk fails
-      window.location.href = '/login'
+      window.location.href = '/welcome'
     }
   }
 
