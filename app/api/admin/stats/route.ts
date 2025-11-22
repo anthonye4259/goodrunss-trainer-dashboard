@@ -11,7 +11,9 @@ export async function GET(request: NextRequest) {
     }
 
     const email = user.emailAddresses[0]?.emailAddress
-    const isAdmin = email === 'anthony@goodrunss.com' || email === 'anthonyedwards@goodrunss.com'
+    const isAdmin = email === 'anthony@goodrunss.com' || 
+                   email === 'anthonyedwards@goodrunss.com' || 
+                   email === 'anthonye@andrew.cmu.edu'
 
     if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

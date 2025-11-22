@@ -45,7 +45,9 @@ export default function AdminLayout({
 
   // Double check render protection
   const email = user?.primaryEmailAddress?.emailAddress
-  const isAdmin = email === 'anthony@goodrunss.com' || email === 'anthonyedwards@goodrunss.com'
+  const isAdmin = email === 'anthony@goodrunss.com' || 
+                 email === 'anthonyedwards@goodrunss.com' || 
+                 email === 'anthonye@andrew.cmu.edu'
   
   if (!isAdmin) {
     return null
