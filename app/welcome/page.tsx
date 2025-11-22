@@ -22,7 +22,7 @@ export default function WelcomePage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent to-primary rounded-3xl blur-2xl opacity-50"></div>
                 <div className="relative h-24 w-24 rounded-3xl bg-white flex items-center justify-center shadow-2xl p-3">
                   <Image 
-                    src="/goodrunss-logo.png" 
+                    src="/goodrunss-logo-green.svg" 
                     alt="GoodRunss" 
                     width={96}
                     height={96}

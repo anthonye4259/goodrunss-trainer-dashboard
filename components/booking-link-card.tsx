@@ -78,7 +78,7 @@ export function BookingLinkCard() {
   const trainerName = user?.fullName || user?.firstName || "Trainer"
 
   return (
-    <Card className="p-8 bg-gradient-to-br from-green-500/20 via-emerald-500/10 to-green-500/20 border-2 border-green-500/50 shadow-lg shadow-green-500/20">
+    <Card data-tour="booking-link" className="p-8 bg-gradient-to-br from-green-500/20 via-emerald-500/10 to-green-500/20 border-2 border-green-500/50 shadow-lg shadow-green-500/20">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 bg-green-500 rounded-full">
           <Link2 className="h-6 w-6 text-white" />

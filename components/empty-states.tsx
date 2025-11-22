@@ -1,121 +1,119 @@
-import {
-  Users,
-  Calendar,
-  Dumbbell,
-  CreditCard,
-  MessageSquare,
-  FileText,
-  TrendingUp,
-  Video,
-  Bell,
-  Package,
-} from "lucide-react"
-import { EmptyState } from "./empty-state"
+"use client"
 
-export function NoClientsState({ onAddClient }: { onAddClient?: () => void }) {
+import { Calendar, Users, ShoppingBag, Sparkles, ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import Link from "next/link"
+
+export function EmptyCalendar() {
   return (
-    <EmptyState
-      icon={Users}
-      title="No Clients Yet"
-      description="Start building your client roster by adding your first client"
-      primaryAction={onAddClient ? { label: "Add First Client", onClick: onAddClient } : undefined}
-    />
+    <Card className="p-12 text-center">
+      <div className="inline-flex p-4 bg-primary/10 rounded-full mb-4">
+        <Calendar className="h-12 w-12 text-primary" />
+      </div>
+      <h3 className="text-2xl font-bold mb-2">No Sessions Yet</h3>
+      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+        Start scheduling sessions with your clients. Add your first session to get started!
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <Button asChild className="bg-primary hover:bg-primary/90">
+          <Link href="/dashboard/availability">
+            Set Availability <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href="/dashboard">Share Booking Link</Link>
+        </Button>
+      </div>
+      <div className="mt-8 bg-primary/5 border border-primary/20 rounded-lg p-4 max-w-lg mx-auto">
+        <p className="text-sm text-muted-foreground">
+          💡 <span className="font-semibold text-foreground">Quick Tip:</span> Set up your availability first, then share your booking link with clients. They can book sessions directly!
+        </p>
+      </div>
+    </Card>
   )
 }
 
-export function NoSessionsState({ onScheduleSession }: { onScheduleSession?: () => void }) {
+export function EmptyClients() {
   return (
-    <EmptyState
-      icon={Calendar}
-      title="No Sessions Scheduled"
-      description="Your calendar is empty. Schedule your first training session to get started"
-      primaryAction={onScheduleSession ? { label: "Schedule Session", onClick: onScheduleSession } : undefined}
-    />
+    <Card className="p-12 text-center">
+      <div className="inline-flex p-4 bg-primary/10 rounded-full mb-4">
+        <Users className="h-12 w-12 text-primary" />
+      </div>
+      <h3 className="text-2xl font-bold mb-2">No Clients Yet</h3>
+      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+        Start building your client roster. Share your booking link to get your first clients!
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <Button asChild className="bg-primary hover:bg-primary/90">
+          <Link href="/dashboard">
+            Get Booking Link <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href="/dashboard/clients/new">Add Client Manually</Link>
+        </Button>
+      </div>
+      <div className="mt-8 bg-primary/5 border border-primary/20 rounded-lg p-4 max-w-lg mx-auto">
+        <p className="text-sm text-muted-foreground">
+          💡 <span className="font-semibold text-foreground">Quick Tip:</span> Share your booking link on social media, your website, or in your bio. Clients can book and pay automatically!
+        </p>
+      </div>
+    </Card>
   )
 }
 
-export function NoWorkoutsState({ onCreateWorkout }: { onCreateWorkout?: () => void }) {
+export function EmptyServices() {
   return (
-    <EmptyState
-      icon={Dumbbell}
-      title="No Workouts Created"
-      description="Build your first workout plan to start training your clients"
-      primaryAction={onCreateWorkout ? { label: "Create Workout", onClick: onCreateWorkout } : undefined}
-    />
+    <Card className="p-12 text-center">
+      <div className="inline-flex p-4 bg-primary/10 rounded-full mb-4">
+        <ShoppingBag className="h-12 w-12 text-primary" />
+      </div>
+      <h3 className="text-2xl font-bold mb-2">No Services Created</h3>
+      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+        Define your training packages, pricing, and what you offer. Clients can see these when booking!
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <Button asChild className="bg-primary hover:bg-primary/90">
+          <Link href="/dashboard/services">
+            Create First Service <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
+      <div className="mt-8 bg-primary/5 border border-primary/20 rounded-lg p-4 max-w-lg mx-auto">
+        <p className="text-sm text-muted-foreground">
+          💡 <span className="font-semibold text-foreground">Examples:</span> 1-on-1 Training ($50/hr), Group Sessions ($25/person), Monthly Package ($400/month)
+        </p>
+      </div>
+    </Card>
   )
 }
 
-export function NoPaymentsState({ onCreateInvoice }: { onCreateInvoice?: () => void }) {
+export function EmptyAIContent() {
   return (
-    <EmptyState
-      icon={CreditCard}
-      title="No Payments Yet"
-      description="Start tracking your income by creating your first invoice"
-      primaryAction={onCreateInvoice ? { label: "Create Invoice", onClick: onCreateInvoice } : undefined}
-    />
-  )
-}
-
-export function NoMessagesState() {
-  return (
-    <EmptyState
-      icon={MessageSquare}
-      title="No Messages"
-      description="You're all caught up! No new messages at this time"
-    />
-  )
-}
-
-export function NoReportsState({ onCreateReport }: { onCreateReport?: () => void }) {
-  return (
-    <EmptyState
-      icon={FileText}
-      title="No Reports Available"
-      description="Generate your first report to track client progress and performance"
-      primaryAction={onCreateReport ? { label: "Generate Report", onClick: onCreateReport } : undefined}
-    />
-  )
-}
-
-export function NoAnalyticsState() {
-  return (
-    <EmptyState
-      icon={TrendingUp}
-      title="Not Enough Data"
-      description="Add clients and sessions to see analytics and insights about your business"
-    />
-  )
-}
-
-export function NoVideosState({ onUploadVideo }: { onUploadVideo?: () => void }) {
-  return (
-    <EmptyState
-      icon={Video}
-      title="No Videos Uploaded"
-      description="Share exercise demonstrations and form tips with your clients"
-      primaryAction={onUploadVideo ? { label: "Upload Video", onClick: onUploadVideo } : undefined}
-    />
-  )
-}
-
-export function NoRemindersState({ onCreateReminder }: { onCreateReminder?: () => void }) {
-  return (
-    <EmptyState
-      icon={Bell}
-      title="No Reminders Set"
-      description="Create reminders to stay on top of important tasks and follow-ups"
-      primaryAction={onCreateReminder ? { label: "Create Reminder", onClick: onCreateReminder } : undefined}
-    />
-  )
-}
-
-export function NoProgramsState({ onCreateProgram }: { onCreateProgram?: () => void }) {
-  return (
-    <EmptyState
-      icon={Package}
-      title="No Programs Created"
-      description="Build structured training programs to offer to your clients"
-      primaryAction={onCreateProgram ? { label: "Create Program", onClick: onCreateProgram } : undefined}
-    />
+    <Card className="p-12 text-center">
+      <div className="inline-flex p-4 bg-primary/10 rounded-full mb-4">
+        <Sparkles className="h-12 w-12 text-primary" />
+      </div>
+      <h3 className="text-2xl font-bold mb-2">Start Creating with AI</h3>
+      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+        Generate social media posts, workout plans, and marketing content in seconds with GIA, your AI assistant.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <Button asChild className="bg-primary hover:bg-primary/90">
+          <Link href="/dashboard/gia">
+            Try AI Generator <Sparkles className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href="/dashboard/ai-persona">Create AI Persona</Link>
+        </Button>
+      </div>
+      <div className="mt-8 bg-primary/5 border border-primary/20 rounded-lg p-4 max-w-lg mx-auto">
+        <p className="text-sm text-muted-foreground">
+          ✨ <span className="font-semibold text-foreground">AI can create:</span> Instagram captions, workout programs, email campaigns, client check-ins, and more!
+        </p>
+      </div>
+    </Card>
   )
 }

@@ -41,20 +41,20 @@ export function Sidebar() {
 
   const navigation = [
     // Essential (5 items)
-    { name: t("dashboard"), href: "/dashboard", icon: Home },
+    { name: t("dashboard"), href: "/dashboard", icon: Home, tourId: "dashboard-overview" },
     { name: t("clients"), href: "/dashboard/clients", icon: Users },
-    { name: t("calendar"), href: "/dashboard/calendar", icon: Calendar },
+    { name: t("calendar"), href: "/dashboard/calendar", icon: Calendar, tourId: "calendar" },
     { name: t("messages"), href: "/dashboard/messages", icon: MessageSquare },
     { name: t("settings"), href: "/dashboard/settings", icon: Settings },
     
     // Business (3 items)
     { name: "Business", href: "/dashboard/business", icon: DollarSign },
     { name: "Services", href: "/dashboard/services-hub", icon: ShoppingBag },
-    { name: "Growth", href: "/dashboard/growth", icon: TrendingUp },
+    { name: "Growth", href: "/dashboard/growth", icon: TrendingUp, tourId: "social-share" },
     
     // Training & Client Tools (2 items)
-    { name: "Training", href: "/dashboard/training", icon: ClipboardList },
-    { name: "Client Tools", href: "/dashboard/client-tools", icon: UserCheck },
+    { name: "Training", href: "/dashboard/training", icon: ClipboardList, tourId: "ai-features" },
+    { name: "Client Tools", href: "/dashboard/client-tools", icon: UserCheck, tourId: "referrals" },
   ]
 
   return (
@@ -64,7 +64,7 @@ export function Sidebar() {
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-xl blur-lg opacity-0 group-hover:opacity-75 transition-opacity duration-300" />
           <div className="relative w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/50 transition-all duration-300 group-hover:scale-110 p-1.5">
             <Image 
-              src="/goodrunss-logo.png" 
+              src="/goodrunss-logo-green.svg" 
               alt="GoodRunss" 
               width={48}
               height={48}
@@ -85,6 +85,7 @@ export function Sidebar() {
                 <TooltipTrigger asChild>
                   <Link
                     href={item.href}
+                    data-tour={(item as any).tourId}
                     className={cn(
                       "h-14 w-14 flex-shrink-0 rounded-xl flex items-center justify-center transition-all duration-200",
                       isActive

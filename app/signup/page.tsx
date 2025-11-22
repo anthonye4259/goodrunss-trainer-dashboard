@@ -86,7 +86,7 @@ export default function SignupPage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent to-primary rounded-2xl blur-xl opacity-50"></div>
                 <div className="relative h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-2xl p-2">
                   <Image 
-                    src="/goodrunss-logo.png" 
+                    src="/goodrunss-logo-green.svg" 
                     alt="GoodRunss" 
                     width={64}
                     height={64}
@@ -299,7 +299,7 @@ export default function SignupPage() {
           <div className="flex justify-center">
             <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-lg p-2">
               <Image 
-                src="/goodrunss-logo.png" 
+                src="/goodrunss-logo-green.svg" 
                 alt="GoodRunss" 
                 width={64}
                 height={64}
