@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         _count: {
           select: { 
             clients: true,
-            trainer_sessions: true
+            trainer_sessions_trainer_sessions_trainerIdTousers: true
           }
         }
       }

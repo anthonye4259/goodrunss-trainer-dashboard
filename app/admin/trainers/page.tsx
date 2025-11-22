@@ -109,7 +109,7 @@ export default function AdminTrainersPage() {
                       <p className="text-xs text-muted-foreground">Clients</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-2xl font-bold">{user._count?.trainer_sessions || 0}</p>
+                      <p className="text-2xl font-bold">{user._count?.trainer_sessions_trainer_sessions_trainerIdTousers || 0}</p>
                       <p className="text-xs text-muted-foreground">Sessions</p>
                     </div>
                     <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'}>
