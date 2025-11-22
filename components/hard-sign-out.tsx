@@ -10,18 +10,22 @@ export function HardSignOut() {
 
   const handleSignOut = async () => {
     try {
-      // 1. Clear local storage
+      // 1. Clear all browser storage FIRST
       localStorage.clear()
       sessionStorage.clear()
       
-      // 2. Clear specific Clerk keys if any remain
-      // (This is redundant with clear() but safe)
+      // 2. Clear all cookies (Clerk stores session in cookies)
+      document.cookie.split(";").forEach((c) => {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
+      })
       
       // 3. Sign out from Clerk
-      await signOut({ redirectUrl: '/login' })
+      await signOut()
       
-      // 4. Hard reload to ensure clean state if redirect doesn't happen
-      // (Clerk usually handles the redirect, but this is a fallback)
+      // 4. Force hard redirect to login (don't trust Clerk redirect)
+      window.location.href = '/login'
     } catch (error) {
       console.error("Sign out error:", error)
       // Force redirect if Clerk fails
