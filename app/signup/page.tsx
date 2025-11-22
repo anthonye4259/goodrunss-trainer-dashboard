@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useSignUp, useUser } from '@clerk/nextjs'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,8 +9,6 @@ import { Zap, AlertCircle, Loader2, ArrowRight, Sparkles } from "lucide-react"
 import Link from "next/link"
 
 export default function SignupPage() {
-  const { isLoaded, signUp, setActive } = useSignUp()
-  const { user, isLoaded: userLoaded } = useUser()
   const [step, setStep] = useState<"account" | "plan">("account")
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -20,60 +17,39 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  // If already logged in, redirect to dashboard
-  useEffect(() => {
-    if (userLoaded && user) {
-      window.location.href = "/dashboard"
-    }
-  }, [userLoaded, user])
-
-  const handleAccountCreation = async (e: React.FormEvent) => {
+  const handleAccountCreation = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isLoaded) return
-
-    setError('')
-    setIsLoading(true)
-
-    try {
-      // Create Clerk account
-      const result = await signUp.create({
-        emailAddress: email,
-        password,
-        firstName: name.split(' ')[0],
-        lastName: name.split(' ').slice(1).join(' ') || businessName,
-      })
-
-      // If email verification is disabled, account is created immediately
-      if (result.status === 'complete') {
-        await setActive({ session: result.createdSessionId })
-        // Move to plan selection step
-        setStep("plan")
-      } else {
-        // If verification is required (shouldn't happen with current settings)
-        setError("Email verification required. Please check Clerk settings.")
-      }
-    } catch (err: any) {
-      console.error(err)
-      setError(err.errors?.[0]?.message || "Failed to create account")
-    } finally {
-      setIsLoading(false)
+    
+    // Validate inputs
+    if (!name || !email || !password) {
+      setError("Please fill in all required fields")
+      return
     }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters")
+      return
+    }
+
+    // Store data for later use (will be sent to Stripe)
+    // Account will be created AFTER payment via webhook
+    setError('')
+    setStep("plan")
   }
 
   const handlePlanSelection = async (planId: string) => {
     setIsLoading(true)
     try {
-      // Store business name in localStorage for later
-      localStorage.setItem("trainer_business", businessName)
-      localStorage.setItem("selected_plan", planId)
-
-      // Create Stripe Checkout session with 7-day trial
+      // Create Stripe Checkout session with user data
+      // Clerk account will be created by webhook AFTER successful payment
       const response = await fetch("/api/create-trial-subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
-          name: `${name} (${businessName})`,
+          name: `${name}`,
+          businessName,
+          password, // Send securely to webhook via Stripe metadata
           planId,
         }),
       })

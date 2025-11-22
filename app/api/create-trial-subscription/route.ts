@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
     // Log incoming request
     console.log('[TRIAL SIGNUP] Request received')
     
-    const { email, name, planId } = await request.json()
+    const { email, name, businessName, password, planId } = await request.json()
 
-    console.log('[TRIAL SIGNUP] Parsed data:', { email, name: name?.substring(0, 10) + '...', planId })
+    console.log('[TRIAL SIGNUP] Parsed data:', { email, name: name?.substring(0, 10) + '...', planId, hasPassword: !!password })
 
     if (!email || !planId) {
       console.error('[TRIAL SIGNUP] Missing required fields')
@@ -116,9 +116,13 @@ export async function POST(request: NextRequest) {
       payment_method_collection: 'always',
       
       // Customer can cancel anytime
+      // Pass user data to webhook for account creation after payment
       metadata: {
         planId: planId,
         email: email,
+        name: name,
+        businessName: businessName || '',
+        password: password, // Webhook will create Clerk account with this
         trialDays: '7',
       },
     })

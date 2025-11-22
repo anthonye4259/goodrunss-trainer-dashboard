@@ -72,22 +72,22 @@ export async function POST(request: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
 
-        // Extract customer details
-        const customerEmail = session.customer_email || session.customer_details?.email
-        const customerName = session.customer_details?.name
+        // Extract customer details from Stripe session
+        const metadata = session.metadata || {}
+        const customerEmail = metadata.email || session.customer_email || session.customer_details?.email
+        const customerName = metadata.name || session.customer_details?.name
         const customerId = session.customer as string
-        const metadata = session.metadata
-
+        
         if (!customerEmail) {
           console.error(`[WEBHOOK] No email in session ${session.id}`)
           return NextResponse.json({ error: 'Missing email' }, { status: 400 })
         }
 
-        const plan = metadata?.plan || '3-month'
-        const password = metadata?.password
-        const businessName = metadata?.businessName
+        const plan = metadata.planId || metadata.plan || '3-month'
+        const password = metadata.password
+        const businessName = metadata.businessName || ''
 
-        console.log(`[WEBHOOK] Payment from ${customerEmail}, plan: ${plan}`)
+        console.log(`[WEBHOOK] Payment from ${customerEmail}, plan: ${plan}, hasPassword: ${!!password}`)
 
         // ============================================
         // 4. CHECK IF USER ALREADY EXISTS (Idempotency - Database)
