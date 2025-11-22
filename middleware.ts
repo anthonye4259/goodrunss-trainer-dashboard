@@ -1,8 +1,61 @@
-import { clerkMiddleware } from '@clerk/nextjs/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
-// PASSIVE MIDDLEWARE - No server-side redirects
-// This relies on the client-side application to handle protection
-export default clerkMiddleware()
+// Define route matchers
+const isAdminRoute = createRouteMatcher(['/admin(.*)'])
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)',
+  '/services(.*)',
+  '/availability(.*)',
+  '/calendar(.*)',
+  '/clients(.*)',
+  '/payments(.*)',
+  '/settings(.*)',
+  '/subscription(.*)',
+])
+
+// Admin emails - only these users can access /admin
+const ADMIN_EMAILS = [
+  'anthony@goodrunss.com',
+  'anthonyedwards@goodrunss.com',
+  'anthonye@andrew.cmu.edu',
+]
+
+export default clerkMiddleware(async (auth, req) => {
+  const { userId } = await auth()
+  const { pathname } = req.nextUrl
+
+  // Admin route protection
+  if (isAdminRoute(req)) {
+    if (!userId) {
+      // Not logged in - redirect to admin login
+      const loginUrl = new URL('/admin/login', req.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    // Check if user has admin email
+    const user = await auth().then(a => a.sessionClaims)
+    const userEmail = user?.email as string
+    
+    if (!ADMIN_EMAILS.includes(userEmail?.toLowerCase())) {
+      // Not an admin - redirect to regular dashboard
+      return NextResponse.redirect(new URL('/dashboard', req.url))
+    }
+  }
+
+  // Protected routes (dashboard, etc.)
+  if (isProtectedRoute(req)) {
+    if (!userId) {
+      // Not logged in - redirect to login
+      const loginUrl = new URL('/login', req.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
+  return NextResponse.next()
+})
 
 export const config = {
   matcher: [
