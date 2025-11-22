@@ -29,17 +29,22 @@ export default function SignupPage() {
     setIsLoading(true)
 
     try {
-      await signUp.create({
+      const result = await signUp.create({
         emailAddress: email,
         password,
         firstName: name.split(' ')[0],
         lastName: name.split(' ').slice(1).join(' '),
       })
 
-      // Send email verification code
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" })
-
-      setPendingVerification(true)
+      // If email verification is disabled, sign-up completes immediately
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId })
+        window.location.href = "/onboarding"
+      } else {
+        // If verification is required, send the code
+        await signUp.prepareEmailAddressVerification({ strategy: "email_code" })
+        setPendingVerification(true)
+      }
     } catch (err: any) {
       console.error(err)
       setError(err.errors?.[0]?.message || "Failed to create account")
