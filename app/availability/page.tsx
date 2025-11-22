@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, Save } from "lucide-react"
 import { useUser } from "@clerk/nextjs"
 
+export const dynamic = 'force-dynamic'
+
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 const TIMES = [
   "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",

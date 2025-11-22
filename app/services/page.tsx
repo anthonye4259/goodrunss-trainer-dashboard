@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Plus, Edit2, Trash2, DollarSign, Clock } from "lucide-react"
 import { useUser } from "@clerk/nextjs"
 
+export const dynamic = 'force-dynamic'
+
 interface Service {
   id: string
   name: string
