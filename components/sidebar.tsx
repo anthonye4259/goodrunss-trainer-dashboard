@@ -33,8 +33,7 @@ import {
 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useLanguage } from "@/contexts/language-context"
-import { SignOutButton } from "@clerk/nextjs"
-import { LogOut } from "lucide-react"
+import { HardSignOut } from "@/components/hard-sign-out"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -101,11 +100,7 @@ export function Sidebar() {
         <TooltipProvider delayDuration={300}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <SignOutButton redirectUrl="/login">
-                <button className="h-14 w-14 flex-shrink-0 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200 hover:scale-105">
-                  <LogOut className="w-6 h-6" />
-                </button>
-              </SignOutButton>
+              <HardSignOut />
             </TooltipTrigger>
             <TooltipContent side="right" className="bg-card border-destructive/20">
               <p className="font-medium text-destructive">Sign Out</p>
