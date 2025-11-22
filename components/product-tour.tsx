@@ -28,7 +28,6 @@ export function ProductTour() {
       showButtons: ["next", "previous", "close"],
       steps: [
         {
-          element: "body",
           popover: {
             title: "Welcome to GoodRunss! 🎉",
             description: `
@@ -37,8 +36,6 @@ export function ProductTour() {
                 <p style="color: #a0a0a0; font-size: 0.875rem;">You can skip this tour anytime or restart it from Settings.</p>
               </div>
             `,
-            side: "center",
-            align: "center",
           },
         },
         {
@@ -122,7 +119,6 @@ export function ProductTour() {
           },
         },
         {
-          element: "body",
           popover: {
             title: "You're All Set! 🚀",
             description: `
@@ -140,8 +136,6 @@ export function ProductTour() {
                 <p style="color: #808080; font-size: 0.75rem; margin-top: 12px;">Need help? Check out the Help Center in Settings.</p>
               </div>
             `,
-            side: "center",
-            align: "center",
           },
         },
       ],
