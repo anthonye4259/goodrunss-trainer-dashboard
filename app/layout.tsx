@@ -1,12 +1,20 @@
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import type React from "react"
+import type { Metadata, Viewport } from "next"
 import "./globals.css"
+import { ClientLayout } from "./client-layout"
+import { ClerkProvider } from '@clerk/nextjs'
 
-const inter = Inter({ subsets: ["latin"] })
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+}
 
 export const metadata: Metadata = {
-  title: "GoodRunss Trainer Dashboard",
-  description: "AI-powered sports & wellness dashboard",
+  generator: 'v0.app',
+  title: 'GoodRunss Trainer Dashboard',
+  description: 'Manage your training business with ease',
 }
 
 export default function RootLayout({
@@ -15,8 +23,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className="dark">
+        <body>
+          <ClientLayout>{children}</ClientLayout>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }
