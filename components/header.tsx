@@ -64,7 +64,7 @@ export function Header() {
           <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-lg blur-md opacity-50" />
           <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-lg bg-white flex items-center justify-center p-1">
             <Image 
-              src="/goodrunss-logo-black.svg" 
+              src="/goodrunss-logo.svg" 
               alt="GoodRunss" 
               width={28}
               height={28}

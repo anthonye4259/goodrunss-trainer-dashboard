@@ -64,7 +64,7 @@ export function Sidebar() {
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-xl blur-lg opacity-0 group-hover:opacity-75 transition-opacity duration-300" />
           <div className="relative w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/50 transition-all duration-300 group-hover:scale-110 p-1.5">
             <Image 
-              src="/goodrunss-logo-black.svg" 
+              src="/goodrunss-logo.svg" 
               alt="GoodRunss" 
               width={36}
               height={36}

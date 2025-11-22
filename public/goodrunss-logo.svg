@@ -1,73 +1,21 @@
-<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-  <!-- GoodRunss Chain Link Logo -->
-  <defs>
-    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#a3f030;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#7dd22e;stop-opacity:1" />
-    </linearGradient>
-  </defs>
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main chain link logo -->
+  <g transform="translate(95, 108)">
+    <!-- Left curve (G shape) -->
+    <path d="M 0 25 C 0 5 15 0 40 0 L 90 0 C 110 0 120 10 120 25 L 120 35 L 85 35 C 85 25 80 20 70 20 L 40 20 C 30 20 25 25 25 35 L 25 65 C 25 75 30 80 40 80 L 75 80 L 75 70 L 50 70 L 50 50 L 100 50 L 100 100 L 40 100 C 15 100 0 85 0 60 L 0 25 Z" 
+          fill="black"/>
+    
+    <!-- Right curve with tail (R shape) -->
+    <path d="M 100 50 L 140 50 C 165 50 175 60 175 75 C 175 88 168 98 150 100 L 190 145 L 155 145 L 120 105 L 120 100 L 100 100 L 100 50 Z M 120 70 L 140 70 C 150 70 155 75 155 80 C 155 85 150 90 140 90 L 120 90 L 120 70 Z" 
+          fill="black"/>
+  </g>
   
-  <!-- G - Left curved chain link -->
-  <path d="M 80 120 
-           C 80 90, 100 70, 130 70
-           L 190 70
-           C 210 70, 220 85, 220 100
-           C 220 100, 220 105, 220 105
-           L 150 105
-           L 150 135
-           L 220 135
-           L 220 140
-           C 220 170, 200 190, 170 190
-           L 110 190
-           C 80 190, 60 170, 60 140
-           L 60 120
-           Z
-           M 110 105
-           C 100 105, 95 110, 95 120
-           L 95 140
-           C 95 155, 105 165, 120 165
-           L 170 165
-           C 185 165, 195 155, 195 140
-           L 195 135
-           L 150 135
-           L 150 105
-           L 110 105
-           Z"
-        fill="url(#logoGradient)" 
-        stroke="none"/>
-  
-  <!-- R - Right chain link with extending leg -->
-  <path d="M 230 135
-           L 290 135
-           C 310 135, 320 145, 320 165
-           C 320 185, 310 195, 290 195
-           L 285 195
-           L 340 250
-           L 305 250
-           L 255 200
-           L 255 195
-           L 230 195
-           L 230 135
-           Z
-           M 255 160
-           L 255 170
-           L 290 170
-           C 298 170, 303 168, 303 165
-           C 303 162, 298 160, 290 160
-           L 255 160
-           Z"
-        fill="url(#logoGradient)" 
-        stroke="none"/>
-  
-  <!-- Connecting piece between G and R -->
-  <rect x="195" y="130" width="35" height="30" rx="5" fill="url(#logoGradient)"/>
-  
-  <!-- GOODRUNSS Text -->
-  <text x="200" y="310" 
-        font-family="Arial, sans-serif, -apple-system, BlinkMacSystemFont" 
-        font-size="36" 
-        font-weight="800" 
+  <!-- GOODRUNSS text -->
+  <text x="200" y="340" 
+        font-family="Arial, Helvetica, sans-serif" 
+        font-size="42" 
+        font-weight="600" 
         text-anchor="middle" 
-        letter-spacing="3"
-        fill="url(#logoGradient)">GOODRUNSS</text>
+        letter-spacing="2"
+        fill="black">GOODRUNSS</text>
 </svg>

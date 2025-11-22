@@ -91,7 +91,7 @@ export default function LoginPage() {
           <div className="flex justify-center">
             <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-lg p-2">
               <Image 
-                src="/goodrunss-logo-black.svg" 
+                src="/goodrunss-logo.svg" 
                 alt="GoodRunss" 
                 width={48}
                 height={48}
