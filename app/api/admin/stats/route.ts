@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { currentUser } from "@clerk/nextjs/server"
 
 export async function GET(request: NextRequest) {
   try {
+    // Security Check
+    const user = await currentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const email = user.emailAddresses[0]?.emailAddress
+    const isAdmin = email === 'anthony@goodrunss.com' || email === 'anthonyedwards@goodrunss.com'
+
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // Get total trainers
     const totalTrainers = await prisma.users.count({
       where: { role: 'TRAINER' },
@@ -99,4 +113,3 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-

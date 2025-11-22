@@ -2,8 +2,10 @@
 
 import { Inter } from "next/font/google"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, DollarSign, Settings, ArrowLeft } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { LayoutDashboard, Users, DollarSign, Settings, ArrowLeft, Loader2 } from "lucide-react"
+import { useUser } from "@clerk/nextjs"
+import { useEffect } from "react"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -13,6 +15,41 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, isLoaded, isSignedIn } = useUser()
+
+  useEffect(() => {
+    if (isLoaded) {
+      if (!isSignedIn) {
+        router.push("/login")
+        return
+      }
+
+      // Check for admin email
+      const email = user?.primaryEmailAddress?.emailAddress
+      const isAdmin = email === 'anthony@goodrunss.com' || email === 'anthonyedwards@goodrunss.com' // Added variation just in case
+
+      if (!isAdmin) {
+        router.push("/dashboard")
+      }
+    }
+  }, [isLoaded, isSignedIn, user, router])
+
+  if (!isLoaded || !isSignedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // Double check render protection
+  const email = user?.primaryEmailAddress?.emailAddress
+  const isAdmin = email === 'anthony@goodrunss.com' || email === 'anthonyedwards@goodrunss.com'
+  
+  if (!isAdmin) {
+    return null
+  }
 
   return (
     <div className={`min-h-screen bg-background ${inter.className}`}>
@@ -86,4 +123,3 @@ function AdminNavLink({
     </Link>
   )
 }
-
