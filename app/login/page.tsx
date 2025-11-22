@@ -19,14 +19,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  // Auto-redirect if already logged in (prevents cache issues)
-  // BUT: Don't redirect if we just logged out (wait for explicit login)
-  useEffect(() => {
-    if (userLoaded && user) {
-      // Only redirect if user is actually authenticated AND onboarded
-      router.push("/dashboard")
-    }
-  }, [userLoaded, user, router])
+  // DO NOT auto-redirect - causes logout loops
+  // Let middleware handle redirects
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
