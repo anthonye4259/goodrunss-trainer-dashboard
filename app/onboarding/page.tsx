@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
-import { CheckCircle2, Sparkles, Users, TrendingUp, MapPin, Target, Briefcase } from "lucide-react"
+import { CheckCircle2, Sparkles, Users, TrendingUp, MapPin, Target, Briefcase, Loader2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 
 const specialties = [
@@ -74,6 +74,8 @@ const goals = [
 export default function OnboardingPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   
   // Step 1: Specialty & Business
   const [specialty, setSpecialty] = useState("")
@@ -91,30 +93,72 @@ export default function OnboardingPage() {
 
   const progress = (step / 3) * 100
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 3) {
-      // Save all onboarding data
-      localStorage.setItem("onboarding_complete", "true")
-      localStorage.setItem("trainer_specialty", specialty)
-      localStorage.setItem("trainer_business_type", businessType)
-      localStorage.setItem("trainer_location", `${city}, ${state}`)
-      localStorage.setItem("trainer_client_count", clientCount)
-      localStorage.setItem("trainer_primary_goal", primaryGoal)
-      localStorage.setItem("trainer_secondary_goal", secondaryGoal)
-      localStorage.setItem("trainer_timezone", timezone)
+      // Save all onboarding data to database
+      setIsLoading(true)
+      setError("")
       
-      router.push("/dashboard")
+      try {
+        const response = await fetch("/api/onboarding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            specialty,
+            businessType,
+            city,
+            state,
+            clientCount,
+            primaryGoal,
+            secondaryGoal,
+            timezone,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to save onboarding data")
+        }
+
+        // Success! Redirect to dashboard
+        router.push("/dashboard")
+      } catch (err: any) {
+        console.error("Onboarding save error:", err)
+        setError(err.message || "Failed to save. Please try again.")
+        setIsLoading(false)
+      }
     } else {
       setStep(step + 1)
     }
   }
 
   const handleBack = () => {
+    setError("")
     setStep(step - 1)
   }
 
-  const handleSkip = () => {
-    localStorage.setItem("onboarding_complete", "true")
+  const handleSkip = async () => {
+    // Still save minimal data even if skipped
+    setIsLoading(true)
+    try {
+      await fetch("/api/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          specialty: specialty || "general",
+          businessType: businessType || "solo",
+          city: "",
+          state: "",
+          clientCount: "",
+          primaryGoal: "",
+          secondaryGoal: "",
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
+      })
+    } catch (err) {
+      console.error("Skip onboarding error:", err)
+    }
     router.push("/dashboard")
   }
 
@@ -446,20 +490,48 @@ export default function OnboardingPage() {
             </div>
           )}
 
+          {/* Error Message */}
+          {error && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive mt-4">
+              <p className="text-sm font-medium">{error}</p>
+            </div>
+          )}
+
           {/* Navigation Buttons */}
           <div className="flex justify-between items-center mt-8 pt-6 border-t border-border">
-            <Button variant="ghost" onClick={handleBack} disabled={step === 1} className="text-muted-foreground">
+            <Button 
+              variant="ghost" 
+              onClick={handleBack} 
+              disabled={step === 1 || isLoading} 
+              className="text-muted-foreground"
+            >
               Back
             </Button>
 
-            <Button onClick={handleNext} disabled={!canProceed()} className="min-w-32">
-              {step === 3 ? "Launch Dashboard" : "Continue"}
+            <Button 
+              onClick={handleNext} 
+              disabled={!canProceed() || isLoading} 
+              className="min-w-32"
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </div>
+              ) : (
+                step === 3 ? "Launch Dashboard" : "Continue"
+              )}
             </Button>
           </div>
 
           {step < 3 && (
             <div className="text-center mt-4">
-              <Button variant="link" onClick={handleSkip} className="text-muted-foreground text-sm">
+              <Button 
+                variant="link" 
+                onClick={handleSkip} 
+                disabled={isLoading}
+                className="text-muted-foreground text-sm"
+              >
                 I'll do this later
               </Button>
             </div>

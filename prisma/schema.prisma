@@ -1811,6 +1811,7 @@ model users {
   email                                                String             @unique
   emailVerified                                        DateTime?
   image                                                String?
+  password                                             String?
   role                                                 UserRole           @default(CLIENT)
   createdAt                                            DateTime           @default(now())
   updatedAt                                            DateTime
@@ -1838,6 +1839,10 @@ model users {
   age_range                                            String?
   years_experience                                     String?
   primary_goal                                         String?
+  secondary_goal                                       String?
+  business_type                                        String?
+  client_count                                         String?
+  timezone                                             String?
   frequency                                            String?
   budget                                               String?
   preferred_time                                       String?
