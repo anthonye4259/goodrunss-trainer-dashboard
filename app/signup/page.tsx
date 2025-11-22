@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useSignUp } from '@clerk/nextjs'
+import { useState, useEffect } from 'react'
+import { useSignUp, useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import Link from "next/link"
 
 export default function SignupPage() {
   const { isLoaded, signUp, setActive } = useSignUp()
+  const { user, isLoaded: userLoaded } = useUser()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,6 +21,13 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+
+  // If already logged in, redirect to dashboard
+  useEffect(() => {
+    if (userLoaded && user) {
+      window.location.href = "/dashboard"
+    }
+  }, [userLoaded, user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

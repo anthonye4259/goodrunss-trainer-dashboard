@@ -19,7 +19,12 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  // Don't auto-redirect to avoid loops. Just show logged in state.
+  // Auto-redirect if already logged in (prevents cache issues)
+  useEffect(() => {
+    if (userLoaded && user) {
+      window.location.href = "/dashboard"
+    }
+  }, [userLoaded, user])
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,34 +73,11 @@ export default function LoginPage() {
     }
   }
 
-  // If user is already logged in, show a different UI
-  if (userLoaded && user) {
+  // Show loading while checking auth status
+  if (!userLoaded || !isLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md border-border/50 backdrop-blur-xl bg-card/50 shadow-2xl">
-          <CardHeader className="text-center space-y-4">
-            <div className="flex justify-center">
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-lg">
-                <Zap className="h-10 w-10 text-black fill-black" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl font-bold">Welcome back!</CardTitle>
-            <p className="text-muted-foreground">
-              You are already logged in as <span className="font-medium text-foreground">{user.primaryEmailAddress?.emailAddress}</span>
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button 
-              className="w-full h-11 font-semibold" 
-              onClick={() => window.location.href = "/dashboard"}
-            >
-              Continue to Dashboard
-            </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              Not you? <button onClick={() => window.location.href = "/"} className="text-primary hover:underline">Sign out</button> (via Clerk UI)
-            </p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
