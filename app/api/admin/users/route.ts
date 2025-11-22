@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
                    email === 'anthonye@andrew.cmu.edu'
 
     if (!isAdmin) {
+      console.log(`[ADMIN API] Access denied for ${email}`)
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -30,9 +31,9 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ users: dbUsers })
-  } catch (error) {
-    console.error('Error fetching users:', error)
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
+  } catch (error: any) {
+    console.error('[ADMIN API] Error fetching users:', error)
+    return NextResponse.json({ error: error.message || 'Failed to fetch users' }, { status: 500 })
   }
 }
 
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
                    email === 'anthonye@andrew.cmu.edu'
 
     if (!isAdmin) {
+      console.log(`[ADMIN API] Sync denied for ${email}`)
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -53,8 +55,13 @@ export async function POST(request: NextRequest) {
     const { action } = body
 
     if (action === 'sync_clerk') {
+      console.log('[ADMIN API] Starting Clerk Sync...')
+      
       // Fetch latest users from Clerk
-      const clerkUsers = await (await clerkClient()).users.getUserList({ limit: 100 })
+      const client = await clerkClient()
+      const clerkUsers = await client.users.getUserList({ limit: 100 })
+      
+      console.log(`[ADMIN API] Found ${clerkUsers.data.length} users in Clerk`)
       
       const syncedUsers = []
       
@@ -87,6 +94,8 @@ export async function POST(request: NextRequest) {
         syncedUsers.push(dbUser)
       }
 
+      console.log(`[ADMIN API] Successfully synced ${syncedUsers.length} users`)
+
       return NextResponse.json({ 
         success: true, 
         count: syncedUsers.length,
@@ -96,8 +105,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   } catch (error: any) {
-    console.error('Error syncing users:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('[ADMIN API] Error syncing users:', error)
+    console.error(error.stack)
+    return NextResponse.json({ error: error.message || 'Sync failed' }, { status: 500 })
   }
 }
-

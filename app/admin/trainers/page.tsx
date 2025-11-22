@@ -35,15 +35,18 @@ export default function AdminTrainersPage() {
         body: JSON.stringify({ action: 'sync_clerk' })
       })
       
+      const data = await res.json()
+      
       if (res.ok) {
         await fetchUsers()
-        alert('Successfully synced with Clerk!')
+        alert(`Successfully synced ${data.count} users!`)
       } else {
-        alert('Failed to sync')
+        console.error('Sync failed:', data)
+        alert(`Failed to sync: ${data.error}`)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sync error:', error)
-      alert('Error during sync')
+      alert(`Error during sync: ${error.message}`)
     } finally {
       setSyncing(false)
     }
