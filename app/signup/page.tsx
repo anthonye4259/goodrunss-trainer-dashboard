@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Zap, AlertCircle, Loader2, ArrowRight, Sparkles } from "lucide-react"
+import { AlertCircle, Loader2, ArrowRight, Sparkles } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function SignupPage() {
   const [step, setStep] = useState<"account" | "plan">("account")
@@ -83,8 +84,14 @@ export default function SignupPage() {
             <div className="flex justify-center">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent to-primary rounded-2xl blur-xl opacity-50"></div>
-                <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-2xl">
-                  <Zap className="h-10 w-10 text-black fill-black" />
+                <div className="relative h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-2xl p-2">
+                  <Image 
+                    src="/goodrunss-logo-black.svg" 
+                    alt="GoodRunss" 
+                    width={48}
+                    height={48}
+                    className="object-contain"
+                  />
                 </div>
               </div>
             </div>
@@ -289,8 +296,14 @@ export default function SignupPage() {
       <Card className="w-full max-w-md relative z-10 border-border/50 backdrop-blur-xl bg-card/50 shadow-2xl">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
-            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-lg">
-              <Zap className="h-10 w-10 text-black fill-black" />
+            <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-lg p-2">
+              <Image 
+                src="/goodrunss-logo-black.svg" 
+                alt="GoodRunss" 
+                width={48}
+                height={48}
+                className="object-contain"
+              />
             </div>
           </div>
           <div className="space-y-2">

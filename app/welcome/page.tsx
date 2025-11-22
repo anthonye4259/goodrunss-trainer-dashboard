@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ActivityIcon, Sparkles, TrendingUp, Users, Zap } from "lucide-react"
+import { Sparkles, TrendingUp, Users } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function WelcomePage() {
   return (
@@ -19,8 +20,14 @@ export default function WelcomePage() {
             <div className="flex justify-center">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent to-primary rounded-3xl blur-2xl opacity-50"></div>
-                <div className="relative h-24 w-24 rounded-3xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-2xl">
-                  <ActivityIcon className="h-12 w-12 text-black" />
+                <div className="relative h-24 w-24 rounded-3xl bg-white flex items-center justify-center shadow-2xl p-3">
+                  <Image 
+                    src="/goodrunss-logo-black.svg" 
+                    alt="GoodRunss" 
+                    width={72}
+                    height={72}
+                    className="object-contain"
+                  />
                 </div>
               </div>
             </div>

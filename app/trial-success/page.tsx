@@ -4,8 +4,9 @@ import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Sparkles, CheckCircle, Zap, ArrowRight } from "lucide-react"
+import { Sparkles, CheckCircle, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 function TrialSuccessContent() {
   const router = useRouter()
@@ -61,7 +62,15 @@ function TrialSuccessContent() {
             <p className="text-sm text-left">Full access to all features unlocked</p>
           </div>
           <div className="flex items-center gap-3">
-            <Zap className="h-5 w-5 text-primary flex-shrink-0" />
+            <div className="h-5 w-5 flex-shrink-0 flex items-center justify-center">
+              <Image 
+                src="/goodrunss-logo-black.svg" 
+                alt="GoodRunss" 
+                width={20}
+                height={20}
+                className="object-contain"
+              />
+            </div>
             <p className="text-sm text-left">Your account is being created</p>
           </div>
           <div className="flex items-center gap-3">
