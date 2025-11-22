@@ -21,10 +21,14 @@ export default function LoginPage() {
 
   // Auto-redirect if already logged in
   useEffect(() => {
-    if (user) {
-      window.location.href = "/dashboard"
+    if (user && isLoaded) {
+      // Add slight delay to ensure we don't bounce
+      const timer = setTimeout(() => {
+        window.location.href = "/dashboard"
+      }, 500)
+      return () => clearTimeout(timer)
     }
-  }, [user])
+  }, [user, isLoaded])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,8 +45,11 @@ export default function LoginPage() {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId })
-        // Force hard navigation to stop glitches
-        window.location.href = "/dashboard"
+        
+        // Wait for session to propagate
+        setTimeout(() => {
+          window.location.href = "/dashboard"
+        }, 1000)
       } else {
         console.log(result)
         setError("Something went wrong during sign in.")
