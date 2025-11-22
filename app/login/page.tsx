@@ -12,24 +12,15 @@ import Link from "next/link"
 
 export default function LoginPage() {
   const { isLoaded, signIn, setActive } = useSignIn()
-  const { user } = useUser()
+  const { user, isLoaded: userLoaded } = useUser()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  // Auto-redirect if already logged in
-  useEffect(() => {
-    if (user && isLoaded) {
-      // Add slight delay to ensure we don't bounce
-      const timer = setTimeout(() => {
-        window.location.href = "/dashboard"
-      }, 500)
-      return () => clearTimeout(timer)
-    }
-  }, [user, isLoaded])
-
+  // Don't auto-redirect to avoid loops. Just show logged in state.
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isLoaded) return
@@ -45,19 +36,16 @@ export default function LoginPage() {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId })
-        
-        // Wait for session to propagate
-        setTimeout(() => {
-          window.location.href = "/dashboard"
-        }, 1000)
+        // Force hard navigation to dashboard
+        window.location.href = "/dashboard"
       } else {
         console.log(result)
         setError("Something went wrong during sign in.")
       }
     } catch (err: any) {
       console.error(err)
-      // Handle "session already exists" error specifically
       if (err.errors?.[0]?.code === "session_exists") {
+        // If session exists, redirect manually
         window.location.href = "/dashboard"
         return
       }
@@ -78,6 +66,38 @@ export default function LoginPage() {
     } catch (err) {
       console.error("OAuth error:", err)
     }
+  }
+
+  // If user is already logged in, show a different UI
+  if (userLoaded && user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md border-border/50 backdrop-blur-xl bg-card/50 shadow-2xl">
+          <CardHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-lg">
+                <Zap className="h-10 w-10 text-black fill-black" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold">Welcome back!</CardTitle>
+            <p className="text-muted-foreground">
+              You are already logged in as <span className="font-medium text-foreground">{user.primaryEmailAddress?.emailAddress}</span>
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              className="w-full h-11 font-semibold" 
+              onClick={() => window.location.href = "/dashboard"}
+            >
+              Continue to Dashboard
+            </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              Not you? <button onClick={() => window.location.href = "/"} className="text-primary hover:underline">Sign out</button> (via Clerk UI)
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -160,7 +180,6 @@ export default function LoginPage() {
                   className="text-xs text-primary hover:text-primary/80 hover:underline"
                   onClick={(e) => {
                     e.preventDefault()
-                    // Add password reset logic later or link to Clerk's hosted page
                     alert("Please use the 'Forgot Password' link on the main sign in page for now.")
                   }}
                 >
