@@ -1,20 +1,14 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { clerkMiddleware } from '@clerk/nextjs/server'
 
-// Define routes that should be ignored by authentication
-const isWebhookRoute = createRouteMatcher(['/api/webhooks(.*)'])
-
-export default clerkMiddleware((auth, req) => {
-  // If it's a webhook route, do nothing (allow access)
-  if (isWebhookRoute(req)) {
-    return
-  }
-})
+// PASSIVE MIDDLEWARE - No server-side redirects
+// This relies on the client-side application to handle protection
+export default clerkMiddleware()
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and static files
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
+    // Skip Next.js internals, static files, and Stripe webhooks
+    '/((?!_next|api/webhooks|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes (except webhooks which are excluded above)
     '/(api|trpc)(.*)',
   ],
 }
