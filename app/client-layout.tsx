@@ -13,7 +13,7 @@ import { GiaChatbot } from "@/components/gia-chatbot"
 
 const inter = Inter({ subsets: ["latin"] })
 
-const unauthenticatedRoutes = ["/", "/language-select", "/welcome", "/login", "/signup", "/checkout", "/onboarding"]
+const unauthenticatedRoutes = ["/", "/welcome", "/login", "/signup", "/onboarding", "/trial-success"]
 
 export function ClientLayout({
   children,
