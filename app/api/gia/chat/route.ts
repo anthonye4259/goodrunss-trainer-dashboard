@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import OpenAI from 'openai'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,9 +17,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No messages provided' }, { status: 400 })
     }
 
-    // Initialize Gemini with latest model
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    // Initialize OpenAI
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
 
     // Get last user message
     const lastUserMessage = messages[messages.length - 1]
@@ -30,31 +31,39 @@ export async function POST(request: NextRequest) {
       fileContext = `\n\n**Attached Files:**\n${files.map((f: any) => `- ${f.name} (${f.type})`).join('\n')}\n\n`
     }
 
-    // System prompt
-    const systemPrompt = `You are GIA (Goodrunss Intelligence Assistant), an expert AI assistant for fitness trainers and wellness professionals. Be helpful, professional, and concise.`
+    // Call OpenAI
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are GIA (Goodrunss Intelligence Assistant), an expert AI assistant for fitness trainers and wellness professionals. Be helpful, professional, and concise.'
+        },
+        {
+          role: 'user',
+          content: `${lastUserMessage.content}${fileContext}`
+        }
+      ],
+      max_tokens: 1024,
+    })
 
-    // Call Gemini
-    const result = await model.generateContent(`${systemPrompt}\n\n${lastUserMessage.content}${fileContext}`)
-    const response = await result.response
-    const aiResponse = response.text()
+    const aiResponse = completion.choices[0]?.message?.content || 'No response'
       
     return NextResponse.json({
       success: true,
       response: aiResponse,
     })
   } catch (error: any) {
-    console.error('[GIA Chat] Gemini error:', error)
+    console.error('[GIA Chat] OpenAI error:', error)
     console.error('[GIA Chat] Error details:', {
       message: error.message,
       stack: error.stack,
-      hasApiKey: !!process.env.GEMINI_API_KEY,
-      apiKeyLength: process.env.GEMINI_API_KEY?.length || 0,
+      hasApiKey: !!process.env.OPENAI_API_KEY,
     })
     
-    // Fallback response if API fails
     return NextResponse.json({
       success: true,
-      response: `I'm having trouble connecting to my AI brain right now. 🤖\n\nError: ${error.message}\n\nIn the meantime, here are some things I can help you with once I'm back:\n\n• Create workout plans\n• Analyze client progress\n• Generate social media content\n• Answer training questions\n• Review uploaded files\n\nPlease try again in a moment!`,
+      response: `I'm having trouble connecting right now. 🤖\n\nError: ${error.message}\n\nPlease check that OPENAI_API_KEY is set in Vercel.`,
     })
   }
 }
