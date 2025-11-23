@@ -18,6 +18,8 @@ import {
   Minimize2,
   Maximize2,
   Maximize,
+  Save,
+  Check,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { GIAModeSelector, type GIAMode } from "@/components/gia-mode-selector"
@@ -28,6 +30,13 @@ type Message = {
   content: string
   timestamp: Date
   files?: UploadedFile[]
+  program?: {
+    title: string
+    type: string
+    sportCategory?: string
+    canSave: boolean
+    data: any
+  }
 }
 
 type UploadedFile = {
@@ -48,6 +57,8 @@ export function FloatingGIA() {
   const [isLoading, setIsLoading] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [savedPrograms, setSavedPrograms] = useState<Set<string>>(new Set())
+  const [savingProgram, setSavingProgram] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
@@ -148,6 +159,13 @@ export function FloatingGIA() {
         role: "assistant",
         content: data.response,
         timestamp: new Date(),
+        program: data.program ? {
+          title: data.program.title,
+          type: data.program.type,
+          sportCategory: data.program.sportCategory,
+          canSave: data.program.canSave,
+          data: data.program
+        } : undefined
       }
 
       setMessages((prev) => [...prev, assistantMessage])
@@ -160,6 +178,38 @@ export function FloatingGIA() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleSaveProgram = async (messageId: string, programData: any) => {
+    setSavingProgram(messageId)
+    try {
+      const response = await fetch("/api/gia/save-program", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(programData),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to save program")
+      }
+
+      const data = await response.json()
+      
+      setSavedPrograms(prev => new Set([...prev, messageId]))
+      toast({
+        title: "Program saved!",
+        description: `"${data.program.title}" is now in your library`,
+      })
+    } catch (error) {
+      console.error("Save program error:", error)
+      toast({
+        title: "Failed to save",
+        description: "Could not save program. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setSavingProgram(null)
     }
   }
 
@@ -321,6 +371,41 @@ export function FloatingGIA() {
                                 <span className="truncate flex-1">{file.name}</span>
                               </div>
                             ))}
+                          </div>
+                        )}
+
+                        {/* Save Program Button */}
+                        {message.role === "assistant" && message.program?.canSave && (
+                          <div className="mt-3 pt-3 border-t border-border/40">
+                            <Button
+                              size="sm"
+                              variant={savedPrograms.has(message.id) ? "outline" : "default"}
+                              className="w-full"
+                              onClick={() => handleSaveProgram(message.id, message.program!.data)}
+                              disabled={savedPrograms.has(message.id) || savingProgram === message.id}
+                            >
+                              {savingProgram === message.id ? (
+                                <>
+                                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : savedPrograms.has(message.id) ? (
+                                <>
+                                  <Check className="h-3 w-3 mr-2" />
+                                  Saved to Library
+                                </>
+                              ) : (
+                                <>
+                                  <Save className="h-3 w-3 mr-2" />
+                                  Save Program
+                                </>
+                              )}
+                            </Button>
+                            {message.program.sportCategory && (
+                              <p className="text-xs opacity-60 mt-1 text-center">
+                                {message.program.sportCategory} • {message.program.type}
+                              </p>
+                            )}
                           </div>
                         )}
 

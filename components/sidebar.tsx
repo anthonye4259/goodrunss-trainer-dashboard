@@ -18,6 +18,7 @@ import {
   Layers,
   CreditCard,
   Share2,
+  BookOpen,
   Megaphone,
   Gift,
   AlertTriangle,
@@ -43,6 +44,7 @@ export function Sidebar() {
   const navigation = [
     // Essential (5 items)
     { name: t("dashboard"), href: "/dashboard", icon: Home, tourId: "dashboard-overview" },
+    { name: "Programs", href: "/dashboard/programs", icon: BookOpen },
     { name: t("clients"), href: "/dashboard/clients", icon: Users },
     { name: t("calendar"), href: "/dashboard/calendar", icon: Calendar, tourId: "calendar" },
     { name: t("messages"), href: "/dashboard/messages", icon: MessageSquare },

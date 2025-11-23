@@ -1867,6 +1867,9 @@ model users {
   trainer_sessions_trainer_sessions_appClientIdTousers trainer_sessions[] @relation("trainer_sessions_appClientIdTousers")
   trainer_sessions_trainer_sessions_trainerIdTousers   trainer_sessions[] @relation("trainer_sessions_trainerIdTousers")
   viral_content                                        viral_content[]
+  gia_programs                                         gia_programs[]     @relation("InstructorPrograms")
+  gia_program_usage_instructor                         gia_program_usage[] @relation("InstructorProgramUsage")
+  gia_program_usage_student                            gia_program_usage[] @relation("StudentProgramUsage")
 }
 
 model verification_tokens {
@@ -2116,4 +2119,53 @@ enum UserRole {
   CLIENT
   TRAINER
   ADMIN
+}
+
+model gia_programs {
+  id               String   @id
+  instructorId     String
+  title            String
+  description      String?
+  type             String   // 'lesson_plan', 'workout_program', 'class_sequence', 'drill_progression'
+  sportCategory    String?  // 'pickleball', 'yoga', 'tennis', 'pilates', 'performance', etc.
+  difficultyLevel  String?  // 'beginner', 'intermediate', 'advanced'
+  durationMinutes  Int?
+  content          Json     // Structured program data
+  giaPrompt        String?  // Original prompt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  isFavorite       Boolean  @default(false)
+  timesUsed        Int      @default(0)
+  
+  instructor       users    @relation("InstructorPrograms", fields: [instructorId], references: [id], onDelete: Cascade)
+  usage            gia_program_usage[]
+
+  @@index([instructorId])
+  @@index([type])
+  @@index([sportCategory])
+  @@index([createdAt(sort: Desc)])
+}
+
+model gia_program_usage {
+  id           String   @id
+  programId    String
+  instructorId String
+  studentId    String?
+  usedAt       DateTime @default(now())
+  feedback     String?
+  rating       Int?     // 1-5 stars
+  
+  program      gia_programs @relation(fields: [programId], references: [id], onDelete: Cascade)
+  instructor   users        @relation("InstructorProgramUsage", fields: [instructorId], references: [id], onDelete: Cascade)
+  student      users?       @relation("StudentProgramUsage", fields: [studentId], references: [id], onDelete: SetNull)
+
+  @@index([programId])
+  @@index([instructorId])
+}
+
+enum GiaProgramType {
+  LESSON_PLAN
+  WORKOUT_PROGRAM
+  CLASS_SEQUENCE
+  DRILL_PROGRESSION
 }

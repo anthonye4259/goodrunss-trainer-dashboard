@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
 import OpenAI from 'openai'
 import { GIA_CORE_IDENTITY, SPECIALIZATION_PROMPTS, CONTEXT_ENHANCED_PROMPT } from '@/lib/gia/expert-prompts'
+import { parseGIAResponse } from '@/lib/gia/program-parser'
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,20 +35,46 @@ export async function POST(request: NextRequest) {
 
     // Detect specialization from message content
     const messageText = lastUserMessage.content.toLowerCase()
-    let specialization: keyof typeof SPECIALIZATION_PROMPTS = 'programming'
+    let specialization: keyof typeof SPECIALIZATION_PROMPTS = 'sports' // Default to sports
     
-    if (messageText.includes('nutrition') || messageText.includes('diet') || messageText.includes('meal') || messageText.includes('macro')) {
-      specialization = 'nutrition'
-    } else if (messageText.includes('injury') || messageText.includes('pain') || messageText.includes('rehab') || messageText.includes('mobility')) {
-      specialization = 'rehab'
-    } else if (messageText.includes('business') || messageText.includes('client') || messageText.includes('marketing') || messageText.includes('social media')) {
-      specialization = 'business'
-    } else if (messageText.includes('motivation') || messageText.includes('psychology') || messageText.includes('habit')) {
-      specialization = 'psychology'
-    } else if (messageText.includes('sport') || messageText.includes('basketball') || messageText.includes('soccer') || messageText.includes('tennis')) {
-      specialization = 'sports'
-    } else if (messageText.includes('yoga') || messageText.includes('pilates') || messageText.includes('barre') || messageText.includes('wellness') || messageText.includes('meditation') || messageText.includes('breathwork') || messageText.includes('mindfulness')) {
+    // Wellness keywords
+    if (messageText.includes('yoga') || messageText.includes('pilates') || messageText.includes('barre') || 
+        messageText.includes('meditation') || messageText.includes('breathwork') || messageText.includes('mindfulness') ||
+        messageText.includes('stretching') || messageText.includes('flexibility') || messageText.includes('mind-body')) {
       specialization = 'wellness'
+    } 
+    // Sports keywords
+    else if (messageText.includes('pickleball') || messageText.includes('tennis') || messageText.includes('golf') || 
+             messageText.includes('basketball') || messageText.includes('soccer') || messageText.includes('padel') ||
+             messageText.includes('racquetball') || messageText.includes('volleyball') || messageText.includes('baseball') ||
+             messageText.includes('drill') || messageText.includes('technique') || messageText.includes('lesson plan')) {
+      specialization = 'sports'
+    }
+    // Nutrition keywords  
+    else if (messageText.includes('nutrition') || messageText.includes('diet') || messageText.includes('meal') || 
+             messageText.includes('macro') || messageText.includes('fuel') || messageText.includes('hydration')) {
+      specialization = 'nutrition'
+    }
+    // Performance keywords
+    else if (messageText.includes('speed') || messageText.includes('strength') || messageText.includes('power') || 
+             messageText.includes('agility') || messageText.includes('vertical') || messageText.includes('conditioning') ||
+             messageText.includes('athletic') || messageText.includes('performance')) {
+      specialization = 'programming'
+    }
+    // Injury/Rehab keywords
+    else if (messageText.includes('injury') || messageText.includes('pain') || messageText.includes('rehab') || 
+             messageText.includes('recovery') || messageText.includes('physical therapy')) {
+      specialization = 'rehab'
+    }
+    // Business keywords
+    else if (messageText.includes('business') || messageText.includes('marketing') || messageText.includes('social media') ||
+             messageText.includes('client') || messageText.includes('pricing') || messageText.includes('revenue')) {
+      specialization = 'business'
+    }
+    // Psychology keywords
+    else if (messageText.includes('motivation') || messageText.includes('psychology') || messageText.includes('habit') ||
+             messageText.includes('mental') || messageText.includes('mindset')) {
+      specialization = 'psychology'
     }
 
     // Use mode if explicitly provided
@@ -84,10 +111,14 @@ export async function POST(request: NextRequest) {
     })
 
     const aiResponse = completion.choices[0]?.message?.content || 'No response'
+    
+    // Parse response to check if it's a saveable program
+    const parsedProgram = parseGIAResponse(aiResponse, specialization)
       
     return NextResponse.json({
       success: true,
       response: aiResponse,
+      program: parsedProgram, // Include parsed program data if available
     })
   } catch (error: any) {
     console.error('[GIA Chat] OpenAI error:', error)
