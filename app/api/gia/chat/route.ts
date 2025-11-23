@@ -74,11 +74,17 @@ Be helpful, professional, and concise. Format responses with bullet points and c
     })
   } catch (error: any) {
     console.error('[GIA Chat] Gemini error:', error)
+    console.error('[GIA Chat] Error details:', {
+      message: error.message,
+      stack: error.stack,
+      hasApiKey: !!process.env.GEMINI_API_KEY,
+      apiKeyLength: process.env.GEMINI_API_KEY?.length || 0,
+    })
     
     // Fallback response if API fails
     return NextResponse.json({
       success: true,
-      response: `I'm having trouble connecting to my AI brain right now. 🤖\n\nIn the meantime, here are some things I can help you with once I'm back:\n\n• Create workout plans\n• Analyze client progress\n• Generate social media content\n• Answer training questions\n• Review uploaded files\n\nPlease try again in a moment!`,
+      response: `I'm having trouble connecting to my AI brain right now. 🤖\n\nError: ${error.message}\n\nIn the meantime, here are some things I can help you with once I'm back:\n\n• Create workout plans\n• Analyze client progress\n• Generate social media content\n• Answer training questions\n• Review uploaded files\n\nPlease try again in a moment!`,
     })
   }
 }
