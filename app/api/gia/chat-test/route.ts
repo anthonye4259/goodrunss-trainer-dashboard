@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
 
+export async function GET(request: NextRequest) {
+  try {
+    // List all available models
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`
+    )
+    const data = await response.json()
+    return NextResponse.json(data)
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const user = await currentUser()
