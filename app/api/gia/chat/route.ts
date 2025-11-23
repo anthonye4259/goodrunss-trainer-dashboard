@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
 import OpenAI from 'openai'
 import { GIA_CORE_IDENTITY, SPECIALIZATION_PROMPTS, CONTEXT_ENHANCED_PROMPT } from '@/lib/gia/expert-prompts'
-import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,16 +21,6 @@ export async function POST(request: NextRequest) {
     // Initialize OpenAI
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-    })
-
-    // Get trainer context from database
-    const trainer = await prisma.users.findUnique({
-      where: { clerkUserId: user.id },
-      include: {
-        clients: {
-          select: { id: true }
-        }
-      }
     })
 
     // Get last user message
@@ -70,9 +59,7 @@ export async function POST(request: NextRequest) {
     const systemPrompt = CONTEXT_ENHANCED_PROMPT(
       specialization,
       undefined, // Client context (will add later)
-      {
-        clientCount: trainer?.clients?.length || 0,
-      }
+      undefined  // Trainer context (will add later)
     )
 
     // Call OpenAI with expert prompt
