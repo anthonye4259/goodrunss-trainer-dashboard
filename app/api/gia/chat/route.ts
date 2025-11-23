@@ -3,6 +3,7 @@ import { currentUser } from '@clerk/nextjs/server'
 import OpenAI from 'openai'
 import { GIA_CORE_IDENTITY, SPECIALIZATION_PROMPTS, CONTEXT_ENHANCED_PROMPT } from '@/lib/gia/expert-prompts'
 import { parseGIAResponse } from '@/lib/gia/program-parser'
+import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { messages, files, mode } = body
+    const { messages, files, mode, clientId } = body
 
     if (!messages || messages.length === 0) {
       return NextResponse.json({ error: 'No messages provided' }, { status: 400 })
@@ -24,6 +25,42 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.OPENAI_API_KEY,
     })
 
+    // Get trainer from database
+    const dbUser = await prisma.users.findUnique({
+      where: { email: user.emailAddresses[0]?.emailAddress },
+      include: {
+        clients: {
+          select: {
+            id: true,
+            name: true,
+            goals: true,
+            sport: true,
+            skillLevel: true,
+            injuries: true,
+            preferences: true,
+            progress: true,
+            sessionsCount: true,
+            lastSessionDate: true,
+          }
+        }
+      }
+    })
+
+    // If specific client mentioned, get their context
+    let clientContext = null
+    if (clientId && dbUser) {
+      clientContext = dbUser.clients.find(c => c.id === clientId)
+    } else if (dbUser) {
+      // Try to detect client name in message
+      const lastMessage = messages[messages.length - 1]?.content.toLowerCase()
+      const detectedClient = dbUser.clients.find(c => 
+        lastMessage && lastMessage.includes(c.name.toLowerCase())
+      )
+      if (detectedClient) {
+        clientContext = detectedClient
+      }
+    }
+
     // Get last user message
     const lastUserMessage = messages[messages.length - 1]
     
@@ -31,6 +68,12 @@ export async function POST(request: NextRequest) {
     let fileContext = ''
     if (files && files.length > 0) {
       fileContext = `\n\n**Attached Files:**\n${files.map((f: any) => `- ${f.name} (${f.type})`).join('\n')}\n\n`
+    }
+
+    // Add client context hint to user message
+    let clientContextHint = ''
+    if (clientContext) {
+      clientContextHint = `\n\n[IMPORTANT: I have context about ${clientContext.name}. Reference their specific situation in your response.]`
     }
 
     // Detect specialization from message content
@@ -82,11 +125,20 @@ export async function POST(request: NextRequest) {
       specialization = mode as keyof typeof SPECIALIZATION_PROMPTS
     }
 
-    // Build context-aware system prompt
+    // Build context-aware system prompt with client data
     const systemPrompt = CONTEXT_ENHANCED_PROMPT(
       specialization,
-      undefined, // Client context (will add later)
-      undefined  // Trainer context (will add later)
+      clientContext ? {
+        name: clientContext.name,
+        goals: clientContext.goals,
+        injuries: clientContext.injuries,
+        experience: clientContext.skillLevel || undefined,
+        equipment: [], // Can add later from client preferences
+      } : undefined,
+      dbUser ? {
+        specialty: dbUser.specialties?.[0],
+        clientCount: dbUser.clients?.length || 0,
+      } : undefined
     )
 
     // Call OpenAI with expert prompt
@@ -103,7 +155,7 @@ export async function POST(request: NextRequest) {
         })),
         {
           role: 'user',
-          content: `${lastUserMessage.content}${fileContext}`
+          content: `${lastUserMessage.content}${fileContext}${clientContextHint}`
         }
       ],
       max_tokens: 2048, // Increased for detailed responses

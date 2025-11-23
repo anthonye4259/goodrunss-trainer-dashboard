@@ -412,6 +412,15 @@ model clients {
   createdAt        DateTime           @default(now())
   updatedAt        DateTime
   trainerId        String
+  // Enhanced client intelligence for GIA
+  sport            String?            // Primary sport (pickleball, tennis, yoga, etc.)
+  skillLevel       String?            // beginner, intermediate, advanced
+  injuries         String[]           @default([]) // Current injuries/limitations
+  preferences      String[]           @default([]) // Likes/dislikes
+  progress         Json?              // Track milestones and progress
+  lastSessionDate  DateTime?          // Last time they trained
+  sessionsCount    Int                @default(0)
+  
   users            users              @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   payments         payments[]
   trainer_sessions trainer_sessions[]

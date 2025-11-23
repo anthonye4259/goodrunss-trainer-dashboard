@@ -312,7 +312,7 @@ export function FloatingGIA() {
               <ScrollArea 
                 className={cn(
                   "flex-1 p-4",
-                  isFullscreen ? "h-[calc(100vh-280px)]" : "h-[440px]"
+                  isFullscreen ? "h-[calc(100vh-280px)]" : "h-[380px]"
                 )} 
                 ref={scrollAreaRef}
               >
