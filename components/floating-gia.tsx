@@ -46,7 +46,7 @@ export function FloatingGIA() {
       id: "welcome",
       role: "assistant",
       content:
-        "👋 Hi! I'm **GIA**, your AI assistant for sports & wellness professionals!\n\nI'm an expert in:\n• **Wellness** - Yoga, Pilates, Barre & mindfulness\n• **Sports** - Sport-specific training\n• **Nutrition** - Meal plans & macros\n• **Programming** - Workout plans & periodization\n• **Rehab** - Injury prevention & recovery\n• **Business** - Growth & marketing\n• **Psychology** - Client motivation\n\n**Select a mode above and ask me anything!**",
+        "👋 Hi! I'm **GIA**, your AI training expert!\n\n**Select a mode above:**\n• Wellness - Yoga, Pilates, Barre\n• Sports - Sport-specific training\n• Nutrition - Meal plans & macros\n• Programming - Workouts\n• Rehab - Injury prevention\n• Business - Growth strategies\n• Psychology - Motivation\n\n**Ask me anything!**",
       timestamp: new Date(),
     },
   ])
@@ -198,7 +198,7 @@ export function FloatingGIA() {
         <Card
           className={cn(
             "fixed bottom-6 right-6 shadow-2xl border-border/50 backdrop-blur-xl z-50 transition-all duration-300",
-            isMinimized ? "w-80 h-16" : "w-96 h-[600px]",
+            isMinimized ? "w-80 h-16" : "w-96 h-[700px]",
           )}
         >
           {/* Header */}
@@ -245,7 +245,7 @@ export function FloatingGIA() {
               />
               
               {/* Messages */}
-              <ScrollArea className="flex-1 p-4 h-[340px]" ref={scrollAreaRef}>
+              <ScrollArea className="flex-1 p-4 h-[440px]" ref={scrollAreaRef}>
                 <div className="space-y-4">
                   {messages.map((message) => (
                     <div
