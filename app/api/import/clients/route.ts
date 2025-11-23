@@ -77,11 +77,13 @@ export async function POST(request: NextRequest) {
       try {
         await prisma.clients.create({
           data: {
+            id: crypto.randomUUID(),
             trainerId: trainer.id,
             name: data.name || 'Unknown',
             email: data.email,
             phone: data.phone || null,
             notes: data.notes || null,
+            updatedAt: new Date(),
           },
         })
         imported++
