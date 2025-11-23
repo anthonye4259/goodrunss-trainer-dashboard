@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
+import Anthropic from '@anthropic-ai/sdk'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +17,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No messages provided' }, { status: 400 })
     }
 
+    // Initialize Anthropic (ORIGINAL WORKING VERSION)
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    })
+
     // Get last user message
     const lastUserMessage = messages[messages.length - 1]
     
@@ -28,31 +34,17 @@ export async function POST(request: NextRequest) {
     // System prompt
     const systemPrompt = `You are GIA (Goodrunss Intelligence Assistant), an expert AI assistant for fitness trainers and wellness professionals. Be helpful, professional, and concise.`
 
-    // Call Gemini API directly - using models/gemini-1.5-flash (confirmed available)
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `${systemPrompt}\n\n${lastUserMessage.content}${fileContext}`
-            }]
-          }]
-        })
-      }
-    )
+    // Call Claude (ORIGINAL WORKING VERSION)
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: `${systemPrompt}\n\n${lastUserMessage.content}${fileContext}`
+      }]
+    })
 
-    const data = await geminiResponse.json()
-
-    if (!geminiResponse.ok) {
-      throw new Error(data.error?.message || 'Gemini API call failed')
-    }
-
-    const aiResponse = data.candidates[0].content.parts[0].text
+    const aiResponse = response.content[0].type === 'text' ? response.content[0].text : ''
       
       return NextResponse.json({
         success: true,
