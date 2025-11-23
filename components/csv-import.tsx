@@ -29,7 +29,7 @@ export function CSVImport({ type, onImportComplete }: CSVImportProps) {
       title: "Import Clients",
       description: "Upload a CSV file with your existing client data",
       icon: FileSpreadsheet,
-      sampleFields: ["name", "email", "phone", "location", "notes"],
+      sampleFields: ["name", "email", "phone", "notes"],
       endpoint: "/api/import/clients",
     },
     sessions: {

@@ -81,7 +81,6 @@ export async function POST(request: NextRequest) {
             name: data.name || 'Unknown',
             email: data.email,
             phone: data.phone || null,
-            location: data.location || null,
             notes: data.notes || null,
           },
         })
