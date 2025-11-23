@@ -17,6 +17,7 @@ import {
   Image as ImageIcon,
   Minimize2,
   Maximize2,
+  Maximize,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { GIAModeSelector, type GIAMode } from "@/components/gia-mode-selector"
@@ -40,16 +41,9 @@ export function FloatingGIA() {
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [selectedMode, setSelectedMode] = useState<GIAMode>('wellness')
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "👋 Hi! I'm **GIA**, your AI training expert!\n\n**Select a mode above:**\n• Wellness - Yoga, Pilates, Barre\n• Sports - Sport-specific training\n• Nutrition - Meal plans & macros\n• Programming - Workouts\n• Rehab - Injury prevention\n• Business - Growth strategies\n• Psychology - Motivation\n\n**Ask me anything!**",
-      timestamp: new Date(),
-    },
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
@@ -197,8 +191,12 @@ export function FloatingGIA() {
       {isOpen && (
         <Card
           className={cn(
-            "fixed bottom-6 right-6 shadow-2xl border-border/50 backdrop-blur-xl z-50 transition-all duration-300",
-            isMinimized ? "w-80 h-16" : "w-96 h-[700px]",
+            "fixed shadow-2xl border-border/50 backdrop-blur-xl z-50 transition-all duration-300",
+            isFullscreen 
+              ? "inset-4 w-auto h-auto" 
+              : isMinimized 
+                ? "bottom-6 right-6 w-80 h-16" 
+                : "bottom-6 right-6 w-96 h-[700px]",
           )}
         >
           {/* Header */}
@@ -217,19 +215,35 @@ export function FloatingGIA() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => setIsMinimized(!isMinimized)}
+                onClick={() => {
+                  setIsFullscreen(!isFullscreen)
+                  setIsMinimized(false)
+                }}
+                title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
               >
-                {isMinimized ? (
-                  <Maximize2 className="h-4 w-4" />
-                ) : (
-                  <Minimize2 className="h-4 w-4" />
-                )}
+                <Maximize className="h-4 w-4" />
               </Button>
+              {!isFullscreen && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setIsMinimized(!isMinimized)}
+                  title={isMinimized ? "Expand" : "Minimize"}
+                >
+                  {isMinimized ? (
+                    <Maximize2 className="h-4 w-4" />
+                  ) : (
+                    <Minimize2 className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => setIsOpen(false)}
+                title="Close"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -245,7 +259,13 @@ export function FloatingGIA() {
               />
               
               {/* Messages */}
-              <ScrollArea className="flex-1 p-4 h-[440px]" ref={scrollAreaRef}>
+              <ScrollArea 
+                className={cn(
+                  "flex-1 p-4",
+                  isFullscreen ? "h-[calc(100vh-280px)]" : "h-[440px]"
+                )} 
+                ref={scrollAreaRef}
+              >
                 <div className="space-y-4">
                   {messages.map((message) => (
                     <div
