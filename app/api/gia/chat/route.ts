@@ -28,9 +28,9 @@ export async function POST(request: NextRequest) {
     // System prompt
     const systemPrompt = `You are GIA (Goodrunss Intelligence Assistant), an expert AI assistant for fitness trainers and wellness professionals. Be helpful, professional, and concise.`
 
-    // Call Gemini API directly using v1beta endpoint with gemini-1.5-pro-latest
+    // Call Gemini API directly - try gemini-pro (stable model name)
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: {
