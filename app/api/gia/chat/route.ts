@@ -17,11 +17,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No messages provided' }, { status: 400 })
     }
 
-    // Initialize Gemini (using latest SDK)
+    // Initialize Gemini
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-    // Try gemini-1.5-flash (no -latest suffix needed in v0.21.0+)
+    // Use gemini-1.0-pro (stable, works with all API keys)
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.0-pro',
     })
 
     // Build context from files if provided
