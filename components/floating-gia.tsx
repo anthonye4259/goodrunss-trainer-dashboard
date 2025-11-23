@@ -19,6 +19,7 @@ import {
   Maximize2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { GIAModeSelector, type GIAMode } from "@/components/gia-mode-selector"
 
 type Message = {
   id: string
@@ -39,12 +40,13 @@ export function FloatingGIA() {
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
+  const [selectedMode, setSelectedMode] = useState<GIAMode>('wellness')
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
       role: "assistant",
       content:
-        "👋 Hi! I'm **GIA**, your AI training assistant!\n\nI can help you:\n• Create workout plans\n• Analyze client data\n• Generate marketing content\n• Answer training questions\n• Review uploaded files\n\n**Upload a file or ask me anything!**",
+        "👋 Hi! I'm **GIA**, your AI assistant for sports & wellness professionals!\n\nI'm an expert in:\n• **Wellness** - Yoga, Pilates, Barre & mindfulness\n• **Sports** - Sport-specific training\n• **Nutrition** - Meal plans & macros\n• **Programming** - Workout plans & periodization\n• **Rehab** - Injury prevention & recovery\n• **Business** - Growth & marketing\n• **Psychology** - Client motivation\n\n**Select a mode above and ask me anything!**",
       timestamp: new Date(),
     },
   ])
@@ -137,6 +139,7 @@ export function FloatingGIA() {
         body: JSON.stringify({
           messages: [...messages, userMessage],
           files: sentFiles,
+          mode: selectedMode,
         }),
       })
 
@@ -235,8 +238,14 @@ export function FloatingGIA() {
 
           {!isMinimized && (
             <>
+              {/* Mode Selector */}
+              <GIAModeSelector 
+                selectedMode={selectedMode}
+                onModeChange={setSelectedMode}
+              />
+              
               {/* Messages */}
-              <ScrollArea className="flex-1 p-4 h-[420px]" ref={scrollAreaRef}>
+              <ScrollArea className="flex-1 p-4 h-[340px]" ref={scrollAreaRef}>
                 <div className="space-y-4">
                   {messages.map((message) => (
                     <div

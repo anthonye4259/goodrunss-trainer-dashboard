@@ -167,7 +167,7 @@ Analyze this document now:
 
     // Call Claude with Vision
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022', // Latest Claude with vision
+      model: 'claude-3-5-sonnet-20240620', // Latest Claude with vision
       max_tokens: 4000,
       messages: [
         {
@@ -272,7 +272,7 @@ Return ONLY a JSON array like:
     `.trim()
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-5-sonnet-20240620',
       max_tokens: 1000,
       messages: [
         {

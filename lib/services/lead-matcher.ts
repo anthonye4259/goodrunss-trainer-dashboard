@@ -274,7 +274,7 @@ Return ONLY a JSON object:
     `.trim()
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-5-sonnet-20240620',
       max_tokens: 500,
       messages: [{ role: 'user', content: prompt }],
     })
@@ -446,7 +446,7 @@ Be concise and actionable.
     `.trim()
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-5-sonnet-20240620',
       max_tokens: 200,
       messages: [{ role: 'user', content: prompt }],
     })

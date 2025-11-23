@@ -33,7 +33,7 @@ export async function generateSessionPlan(
   try {
     // Call Claude API with streaming disabled for faster response
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022', // Latest Claude model
+      model: 'claude-3-5-sonnet-20240620', // Valid Claude model
       max_tokens: 4000,
       temperature: 0.7,
       messages: [
