@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,7 +11,7 @@ import { User, Save, Loader2, CheckCircle, Calendar, CheckCircle2, Unlink } from
 import { useToast } from "@/hooks/use-toast"
 import { useSearchParams } from "next/navigation"
 
-export default function SettingsPage() {
+function SettingsContent() {
   const { toast } = useToast()
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
@@ -412,5 +412,20 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto" />
+          <p className="text-muted-foreground">Loading settings...</p>
+        </div>
+      </div>
+    }>
+      <SettingsContent />
+    </Suspense>
   )
 }
