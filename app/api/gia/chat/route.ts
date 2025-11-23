@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,10 +17,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No messages provided' }, { status: 400 })
     }
 
-    // Initialize Anthropic (ORIGINAL WORKING VERSION)
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    })
+    // Initialize Gemini
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
 
     // Get last user message
     const lastUserMessage = messages[messages.length - 1]
@@ -34,20 +33,13 @@ export async function POST(request: NextRequest) {
     // System prompt
     const systemPrompt = `You are GIA (Goodrunss Intelligence Assistant), an expert AI assistant for fitness trainers and wellness professionals. Be helpful, professional, and concise.`
 
-    // Call Claude with correct model name
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20240620',
-      max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: `${systemPrompt}\n\n${lastUserMessage.content}${fileContext}`
-      }]
-    })
-
-    const aiResponse = response.content[0].type === 'text' ? response.content[0].text : ''
+    // Call Gemini
+    const result = await model.generateContent(`${systemPrompt}\n\n${lastUserMessage.content}${fileContext}`)
+    const response = await result.response
+    const aiResponse = response.text()
       
-      return NextResponse.json({
-        success: true,
+    return NextResponse.json({
+      success: true,
       response: aiResponse,
     })
   } catch (error: any) {
