@@ -170,16 +170,17 @@ GIA is now a **floating chat widget** that appears on EVERY page of the dashboar
 
 ## 🔐 **ENVIRONMENT VARIABLES:**
 
-Same as before:
+You need 2 environment variables:
 
 1. **Vercel Blob** (for file storage)
    - Enable in Vercel Dashboard → Storage → Blob
    - Auto-adds `BLOB_READ_WRITE_TOKEN`
 
-2. **OpenAI API Key** (for AI chat)
+2. **Gemini API Key** (for AI chat)
    ```bash
-   OPENAI_API_KEY=sk-...
+   GEMINI_API_KEY=your-gemini-api-key-here
    ```
+   - Get from: https://makersuite.google.com/app/apikey
 
 ---
 

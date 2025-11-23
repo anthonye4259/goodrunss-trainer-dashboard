@@ -82,11 +82,11 @@ GIA (Goodrunss Intelligence Assistant) now has a **full file upload system**! Tr
 
 Add these to Vercel:
 
-### 1. **OpenAI API Key** (for GIA chat)
+### 1. **Gemini API Key** (for GIA chat)
 ```bash
-OPENAI_API_KEY=sk-...your-key-here
+GEMINI_API_KEY=your-gemini-api-key-here
 ```
-Get it from: https://platform.openai.com/api-keys
+Get it from: https://makersuite.google.com/app/apikey
 
 ### 2. **Vercel Blob Token** (for file storage)
 ```bash
@@ -106,14 +106,14 @@ This is automatically created when you enable Vercel Blob in your project settin
 4. Click **"Create"**
 5. Token (`BLOB_READ_WRITE_TOKEN`) is auto-added to env vars ✅
 
-### Step 2: Add OpenAI API Key
+### Step 2: Add Gemini API Key
 
-1. Go to: https://platform.openai.com/api-keys
-2. Click **"Create new secret key"**
+1. Go to: https://makersuite.google.com/app/apikey
+2. Click **"Create API Key"**
 3. Copy the key
 4. Add to Vercel: **Settings → Environment Variables**
    ```
-   OPENAI_API_KEY=sk-proj-...
+   GEMINI_API_KEY=your-api-key-here
    ```
 5. Select: Production, Preview, Development
 
@@ -224,9 +224,9 @@ GIA: Creates detailed workout plan with exercises, sets, reps
 - Verify Vercel Blob is enabled in project
 
 ### "GIA not responding"
-- Check `OPENAI_API_KEY` is in Vercel
-- Verify OpenAI account has credits
-- Check API key is valid
+- Check `GEMINI_API_KEY` is in Vercel
+- Verify Gemini API is enabled
+- Check API key is valid at https://makersuite.google.com
 
 ### "Files not showing"
 - Files must be under 4.5MB (Vercel Blob limit)
@@ -251,8 +251,8 @@ GIA: Creates detailed workout plan with exercises, sets, reps
 Just need:
 1. ✅ Push code to GitHub
 2. ✅ Enable Vercel Blob (auto-adds token)
-3. ✅ Add OpenAI API key to Vercel
-4. ✅ Install `@vercel/blob` package
+3. ✅ Add Gemini API key to Vercel
+4. ✅ Install `@vercel/blob` and `@google/generative-ai` packages
 5. ✅ Deploy!
 
 Then trainers can start uploading files and getting AI insights! 🚀

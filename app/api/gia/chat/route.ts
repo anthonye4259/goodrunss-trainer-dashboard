@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,9 +17,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No messages provided' }, { status: 400 })
     }
 
-    // Get the last user message
-    const lastMessage = messages[messages.length - 1]
-    const userPrompt = lastMessage.content
+    // Initialize Gemini
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
 
     // Build context from files if provided
     let fileContext = ''
@@ -26,64 +27,58 @@ export async function POST(request: NextRequest) {
       fileContext = `\n\n**Attached Files:**\n${files.map((f: any) => `- ${f.name} (${f.type})`).join('\n')}\n\n`
     }
 
-    // Build conversation history for context
+    // Build conversation history for Gemini
     const conversationHistory = messages
       .slice(-5) // Last 5 messages for context
-      .map((m: any) => `${m.role === 'user' ? 'User' : 'GIA'}: ${m.content}`)
-      .join('\n')
+      .map((m: any) => {
+        const role = m.role === 'assistant' ? 'model' : 'user'
+        const content = m.content + (m.role === 'user' && fileContext ? fileContext : '')
+        return { role, parts: [{ text: content }] }
+      })
 
-    // Call OpenAI API
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4-turbo-preview',
-        messages: [
-          {
-            role: 'system',
-            content: `You are GIA (Goodrunss Intelligence Assistant), an expert AI assistant for fitness trainers. You help trainers:
+    // System prompt
+    const systemPrompt = `You are GIA (Goodrunss Intelligence Assistant), an expert AI assistant for fitness trainers and wellness professionals. You help with:
 
-- Create personalized workout plans
-- Analyze client data and progress
-- Generate marketing content for social media
-- Answer training and nutrition questions
-- Review uploaded documents (workout logs, PDFs, images, CSVs)
+- Creating personalized workout plans and training programs
+- Analyzing client data, progress, and performance
+- Generating marketing content for social media
+- Answering training, nutrition, and wellness questions
+- Reviewing uploaded documents (workout logs, PDFs, images, CSVs)
+- Supporting ALL types of trainers: personal trainers, sports coaches (pickleball, basketball, tennis, golf), yoga instructors, pilates instructors, barre instructors, and wellness professionals
 
-Be helpful, professional, and concise. Format responses with bullet points and clear sections. When analyzing uploaded files, reference them directly.`,
-          },
-          ...messages.map((m: any) => ({
-            role: m.role === 'assistant' ? 'assistant' : 'user',
-            content: m.content + (m.role === 'user' && fileContext ? fileContext : ''),
-          })),
-        ],
+Be helpful, professional, and concise. Format responses with bullet points and clear sections. When analyzing uploaded files, reference them directly.`
+
+    // Get last user message
+    const lastUserMessage = messages[messages.length - 1]
+
+    // Start chat with history
+    const chat = model.startChat({
+      history: conversationHistory.slice(0, -1), // All but last message
+      generationConfig: {
         temperature: 0.7,
-        max_tokens: 1000,
-      }),
+        maxOutputTokens: 1000,
+      },
     })
 
-    if (!openaiResponse.ok) {
-      const error = await openaiResponse.json()
-      console.error('[GIA Chat] OpenAI error:', error)
-      throw new Error('OpenAI request failed')
-    }
-
-    const data = await openaiResponse.json()
-    const aiResponse = data.choices[0].message.content
+    // Send the last message with system prompt context
+    const result = await chat.sendMessage(
+      `${systemPrompt}\n\nUser: ${lastUserMessage.content}${fileContext}`
+    )
+    
+    const response = await result.response
+    const aiResponse = response.text()
 
     return NextResponse.json({
       success: true,
       response: aiResponse,
     })
   } catch (error: any) {
-    console.error('[GIA Chat] Error:', error)
+    console.error('[GIA Chat] Gemini error:', error)
     
     // Fallback response if API fails
     return NextResponse.json({
       success: true,
-      response: `I'm having trouble connecting to my AI brain right now. 🤖\n\nIn the meantime, here are some things I can help you with once I'm back:\n\n• Create workout plans\n• Analyze client progress\n• Generate social media content\n• Answer training questions\n\nPlease try again in a moment!`,
+      response: `I'm having trouble connecting to my AI brain right now. 🤖\n\nIn the meantime, here are some things I can help you with once I'm back:\n\n• Create workout plans\n• Analyze client progress\n• Generate social media content\n• Answer training questions\n• Review uploaded files\n\nPlease try again in a moment!`,
     })
   }
 }
