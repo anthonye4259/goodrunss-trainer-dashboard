@@ -27,15 +27,6 @@ export async function POST(request: NextRequest) {
       fileContext = `\n\n**Attached Files:**\n${files.map((f: any) => `- ${f.name} (${f.type})`).join('\n')}\n\n`
     }
 
-    // Build conversation history for Gemini
-    const conversationHistory = messages
-      .slice(-5) // Last 5 messages for context
-      .map((m: any) => {
-        const role = m.role === 'assistant' ? 'model' : 'user'
-        const content = m.content + (m.role === 'user' && fileContext ? fileContext : '')
-        return { role, parts: [{ text: content }] }
-      })
-
     // System prompt
     const systemPrompt = `You are GIA (Goodrunss Intelligence Assistant), an expert AI assistant for fitness trainers and wellness professionals. You help with:
 
@@ -47,6 +38,21 @@ export async function POST(request: NextRequest) {
 - Supporting ALL types of trainers: personal trainers, sports coaches (pickleball, basketball, tennis, golf), yoga instructors, pilates instructors, barre instructors, and wellness professionals
 
 Be helpful, professional, and concise. Format responses with bullet points and clear sections. When analyzing uploaded files, reference them directly.`
+
+    // Build conversation history for Gemini (must start with 'user')
+    const conversationHistory = messages
+      .slice(-5) // Last 5 messages for context
+      .filter((m: any) => m.role !== 'system') // Remove system messages
+      .map((m: any) => {
+        const role = m.role === 'assistant' ? 'model' : 'user'
+        const content = m.content
+        return { role, parts: [{ text: content }] }
+      })
+
+    // Ensure history starts with 'user' role
+    if (conversationHistory.length > 0 && conversationHistory[0].role !== 'user') {
+      conversationHistory.shift() // Remove first message if it's not a user message
+    }
 
     // Get last user message
     const lastUserMessage = messages[messages.length - 1]
@@ -62,7 +68,7 @@ Be helpful, professional, and concise. Format responses with bullet points and c
 
     // Send the last message with system prompt context
     const result = await chat.sendMessage(
-      `${systemPrompt}\n\nUser: ${lastUserMessage.content}${fileContext}`
+      `${systemPrompt}\n\n${lastUserMessage.content}${fileContext}`
     )
     
     const response = await result.response
