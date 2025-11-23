@@ -14,7 +14,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
     "@clerk/nextjs": "^6.34.0",
-    "@google/generative-ai": "^0.21.0",
+    "@google/generative-ai": "0.17.1",
     "@hookform/resolvers": "^5.2.2",
     "@modelcontextprotocol/sdk": "^1.2.0",
     "@prisma/client": "^6.18.0",
