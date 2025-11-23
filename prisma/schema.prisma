@@ -1851,6 +1851,9 @@ model users {
   onboarding_completed_at                              DateTime?          @db.Timestamptz(6)
   fcmTokens                                            String[]           @default([])
   clerkId                                              String?            @unique
+  google_access_token                                  String?
+  google_refresh_token                                 String?
+  google_token_expires_at                              DateTime?
   accounts                                             accounts[]
   analytics                                            analytics[]
   clients                                              clients[]

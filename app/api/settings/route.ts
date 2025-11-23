@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
         specialties: user.specialties || [],
         certifications: user.certifications || [],
         hourlyRate: user.hourlyRate || null,
+        google_access_token: user.google_access_token || null,
       },
     })
   } catch (error: any) {

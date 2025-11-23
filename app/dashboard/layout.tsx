@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { ProductTour } from "@/components/product-tour"
+import { FloatingGIA } from "@/components/floating-gia"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useUser()
@@ -33,6 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <>
       <ProductTour />
+      <FloatingGIA />
       <div className="flex min-h-screen bg-background">
         {/* Sidebar - hidden on mobile, visible on desktop */}
         <div className="hidden md:block w-64 shrink-0 border-r border-border/40 bg-card/30 backdrop-blur-xl fixed inset-y-0 z-50">

@@ -7,14 +7,18 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { User, Save, Loader2, CheckCircle } from "lucide-react"
+import { User, Save, Loader2, CheckCircle, Calendar, CheckCircle2, Unlink } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useSearchParams } from "next/navigation"
 
 export default function SettingsPage() {
   const { toast } = useToast()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
+  const [googleConnected, setGoogleConnected] = useState(false)
+  const [isDisconnecting, setIsDisconnecting] = useState(false)
   
   const [profile, setProfile] = useState({
     name: "",
@@ -31,7 +35,38 @@ export default function SettingsPage() {
   // Load settings on mount
   useEffect(() => {
     loadSettings()
-  }, [])
+    checkGoogleConnection()
+    
+    // Check for OAuth callback messages
+    const googleSuccess = searchParams.get('google_connected')
+    const googleError = searchParams.get('google_error')
+    
+    if (googleSuccess) {
+      toast({
+        title: "Google Calendar Connected!",
+        description: "Your sessions will now automatically sync to Google Calendar.",
+      })
+      setGoogleConnected(true)
+    }
+    
+    if (googleError) {
+      toast({
+        title: "Connection Failed",
+        description: "Could not connect to Google Calendar. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }, [searchParams, toast])
+  
+  const checkGoogleConnection = async () => {
+    try {
+      const response = await fetch("/api/settings")
+      const data = await response.json()
+      setGoogleConnected(!!data.settings?.google_access_token)
+    } catch (error) {
+      console.error("Error checking Google connection:", error)
+    }
+  }
 
   const loadSettings = async () => {
     setIsLoading(true)
@@ -61,6 +96,37 @@ export default function SettingsPage() {
       setError(err.message || "Failed to load settings")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleConnectGoogle = () => {
+    window.location.href = "/api/auth/google/connect"
+  }
+
+  const handleDisconnectGoogle = async () => {
+    setIsDisconnecting(true)
+    try {
+      const response = await fetch("/api/auth/google/disconnect", {
+        method: "POST",
+      })
+      
+      if (!response.ok) {
+        throw new Error("Failed to disconnect")
+      }
+      
+      setGoogleConnected(false)
+      toast({
+        title: "Disconnected",
+        description: "Google Calendar has been disconnected.",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to disconnect Google Calendar.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDisconnecting(false)
     }
   }
 
@@ -270,6 +336,63 @@ export default function SettingsPage() {
               </>
             )}
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Integrations */}
+      <Card className="glass border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            Integrations
+          </CardTitle>
+          <CardDescription>Connect your tools to sync data automatically</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Google Calendar */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Calendar className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold">Google Calendar</h3>
+                <p className="text-sm text-muted-foreground">
+                  {googleConnected 
+                    ? "Your sessions automatically sync to Google Calendar" 
+                    : "Auto-sync sessions and prevent double-booking"}
+                </p>
+              </div>
+            </div>
+            {googleConnected ? (
+              <Button
+                variant="outline"
+                onClick={handleDisconnectGoogle}
+                disabled={isDisconnecting}
+                className="gap-2"
+              >
+                {isDisconnecting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Disconnecting...
+                  </>
+                ) : (
+                  <>
+                    <Unlink className="h-4 w-4" />
+                    Disconnect
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleConnectGoogle}
+                className="gap-2 bg-primary hover:bg-primary/90"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Connect
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
