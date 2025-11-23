@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from "@/lib/prisma"
 import { getOrCreateUser } from "@/lib/get-or-create-user"
+import { generateMeetingLink, formatMeetingLinkForSession } from "@/lib/integrations/zoom-links"
 
 
 
@@ -129,10 +130,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Generate session ID
+    const sessionId = crypto.randomUUID()
+    
+    // Generate meeting link for virtual sessions
+    let sessionNotes = notes || ''
+    let sessionLocation = location || null
+    
+    if (type === 'VIRTUAL' || type === 'virtual' || location?.toLowerCase().includes('virtual')) {
+      const meetingLink = await generateMeetingLink(trainer.id, sessionId)
+      sessionNotes += formatMeetingLinkForSession(meetingLink)
+      sessionLocation = meetingLink.url
+    }
+    
     // Create session
     const session = await prisma.trainer_sessions.create({
       data: {
-        id: crypto.randomUUID(),
+        id: sessionId,
         trainerId: trainer.id,
         clientId,
         title,
@@ -140,8 +154,8 @@ export async function POST(request: NextRequest) {
         type,
         duration,
         scheduledAt: new Date(scheduledAt),
-        location: location || null,
-        notes: notes || null,
+        location: sessionLocation,
+        notes: sessionNotes,
         status: 'SCHEDULED',
         bookedFrom: 'DASHBOARD',
         updatedAt: new Date(),

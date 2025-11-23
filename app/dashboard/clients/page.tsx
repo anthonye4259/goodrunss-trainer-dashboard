@@ -23,6 +23,8 @@ import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { Spinner } from "@/components/ui/spinner"
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
+import { CSVImport } from "@/components/csv-import"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Clients will be loaded from your database
 export default function ClientsPage() {
@@ -235,6 +237,11 @@ export default function ClientsPage() {
             </form>
           </DialogContent>
         </Dialog>
+      </div>
+
+      {/* CSV Import Section */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <CSVImport type="clients" onImportComplete={fetchClients} />
       </div>
 
       <Card className="glass border-border/50">
