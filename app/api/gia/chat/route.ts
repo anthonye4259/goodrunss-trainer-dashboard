@@ -34,9 +34,9 @@ export async function POST(request: NextRequest) {
     // System prompt
     const systemPrompt = `You are GIA (Goodrunss Intelligence Assistant), an expert AI assistant for fitness trainers and wellness professionals. Be helpful, professional, and concise.`
 
-    // Call Claude (ORIGINAL WORKING VERSION)
+    // Call Claude with correct model name
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-5-sonnet-20240620',
       max_tokens: 1024,
       messages: [{
         role: 'user',
