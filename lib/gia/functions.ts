@@ -247,7 +247,7 @@ async function saveProgram(args: any, trainerId: string) {
         program: {
             id: program.id,
             title: program.title,
-            programType: program.programType
+            programType: program.type
         }
     }
 }
