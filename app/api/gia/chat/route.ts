@@ -172,17 +172,26 @@ export async function POST(request: NextRequest) {
       response: aiResponse,
       program: parsedProgram, // Include parsed program data if available
     })
-  } catch (error: any) {
-    console.error('[GIA Chat] OpenAI error:', error)
-    console.error('[GIA Chat] Error details:', {
-      message: error.message,
-      stack: error.stack,
-      hasApiKey: !!process.env.OPENAI_API_KEY,
+    return NextResponse.json({
+      success: true,
+      response: aiResponse,
+      program: parsedProgram, // Include parsed program data if available
     })
+  } catch (error: any) {
+    console.error('[GIA Chat] Error:', error)
+
+    let errorMessage = `I'm having trouble connecting right now. 🤖\n\nError: ${error.message}`
+
+    // Check for specific error types
+    if (error.message?.includes('Tenant or user not found') || error.code === 'P1001') {
+      errorMessage = "⚠️ **Database Connection Error**\n\nIt looks like your Supabase database is paused or unreachable. Please check your Supabase dashboard and ensure the project is active."
+    } else if (error.message?.includes('OPENAI_API_KEY')) {
+      errorMessage = "⚠️ **Configuration Error**\n\nPlease check that OPENAI_API_KEY is set correctly in your Vercel environment variables."
+    }
 
     return NextResponse.json({
       success: true,
-      response: `I'm having trouble connecting right now. 🤖\n\nError: ${error.message}\n\nPlease check that OPENAI_API_KEY is set in Vercel.`,
+      response: errorMessage,
     })
   }
 }
