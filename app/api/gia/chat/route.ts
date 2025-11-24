@@ -176,8 +176,12 @@ export async function POST(request: NextRequest) {
       // Execute each tool
       const toolOutputs = []
       for (const toolCall of toolCalls) {
-        const functionName = toolCall.function.name
-        const functionArgs = JSON.parse(toolCall.function.arguments)
+        // Cast to any to avoid strict type issues with OpenAI SDK versions
+        const functionCall = (toolCall as any).function
+        if (!functionCall) continue
+
+        const functionName = functionCall.name
+        const functionArgs = JSON.parse(functionCall.arguments)
 
         // Inject trainerId for security
         const result = await executeToolCall(functionName, functionArgs, authUser.id)
