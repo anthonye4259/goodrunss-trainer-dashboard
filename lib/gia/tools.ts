@@ -221,5 +221,113 @@ export const GIA_TOOLS = [
                 }
             }
         }
+    },
+    {
+        type: "function",
+        function: {
+            name: "create_invoice",
+            description: "Create an invoice for a client. Use this when the user wants to bill a client.",
+            parameters: {
+                type: "object",
+                properties: {
+                    clientId: {
+                        type: "string",
+                        description: "The ID of the client to invoice"
+                    },
+                    amount: {
+                        type: "number",
+                        description: "Invoice amount in dollars"
+                    },
+                    dueDate: {
+                        type: "string",
+                        description: "ISO 8601 date string for when payment is due"
+                    },
+                    description: {
+                        type: "string",
+                        description: "Description of what the invoice is for"
+                    }
+                },
+                required: ["clientId", "amount"]
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "assign_program_to_client",
+            description: "Assign a saved program to a specific client. Use this when the user wants to give a program to a client.",
+            parameters: {
+                type: "object",
+                properties: {
+                    programId: {
+                        type: "string",
+                        description: "The ID of the program to assign"
+                    },
+                    clientId: {
+                        type: "string",
+                        description: "The ID of the client to assign the program to"
+                    }
+                },
+                required: ["programId", "clientId"]
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "cancel_session",
+            description: "Cancel a scheduled session. Use this when the user wants to cancel or remove a session.",
+            parameters: {
+                type: "object",
+                properties: {
+                    sessionId: {
+                        type: "string",
+                        description: "The ID of the session to cancel"
+                    },
+                    reason: {
+                        type: "string",
+                        description: "Optional reason for cancellation"
+                    }
+                },
+                required: ["sessionId"]
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "get_client_analytics",
+            description: "Get analytics and progress metrics for a specific client. Use this when the user asks about a client's progress or statistics.",
+            parameters: {
+                type: "object",
+                properties: {
+                    clientId: {
+                        type: "string",
+                        description: "The ID of the client to get analytics for"
+                    }
+                },
+                required: ["clientId"]
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "get_revenue_summary",
+            description: "Get revenue and financial summary. Use this when the user asks about earnings, income, or financial performance.",
+            parameters: {
+                type: "object",
+                properties: {
+                    startDate: {
+                        type: "string",
+                        description: "ISO 8601 date string for start of period (optional)"
+                    },
+                    endDate: {
+                        type: "string",
+                        description: "ISO 8601 date string for end of period (optional)"
+                    }
+                }
+            }
+        }
     }
 ]

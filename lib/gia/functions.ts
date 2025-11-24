@@ -33,6 +33,21 @@ export async function executeToolCall(
             case 'get_upcoming_sessions':
                 return await getUpcomingSessions(args, trainerId)
 
+            case 'create_invoice':
+                return await createInvoice(args, trainerId)
+
+            case 'assign_program_to_client':
+                return await assignProgramToClient(args, trainerId)
+
+            case 'cancel_session':
+                return await cancelSession(args, trainerId)
+
+            case 'get_client_analytics':
+                return await getClientAnalytics(args, trainerId)
+
+            case 'get_revenue_summary':
+                return await getRevenueSummary(args, trainerId)
+
             default:
                 return { error: `Unknown tool: ${toolName}` }
         }
@@ -293,5 +308,225 @@ async function getUpcomingSessions(args: any, trainerId: string) {
             clientName: s.clients?.name,
             status: s.status
         }))
+    }
+}
+
+async function createInvoice(args: any, trainerId: string) {
+    const { clientId, amount, dueDate, description } = args
+
+    // Verify client belongs to trainer
+    const client = await prisma.clients.findFirst({
+        where: { id: clientId, trainerId }
+    })
+
+    if (!client) {
+        return { error: "Client not found." }
+    }
+
+    const invoice = await prisma.payments.create({
+        data: {
+            id: crypto.randomUUID(),
+            trainerId,
+            clientId,
+            amount,
+            currency: 'USD',
+            method: 'CARD', // Default method for invoices
+            status: 'PENDING',
+            description: description || `Invoice for ${client.name}`,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }
+    })
+
+    return {
+        success: true,
+        message: `Created invoice for ${client.name}: $${amount}`,
+        invoice: {
+            id: invoice.id,
+            amount: invoice.amount,
+            status: invoice.status,
+            clientName: client.name
+        }
+    }
+}
+
+async function assignProgramToClient(args: any, trainerId: string) {
+    const { programId, clientId } = args
+
+    // Verify program belongs to trainer
+    const program = await prisma.gia_programs.findFirst({
+        where: { id: programId, instructorId: trainerId }
+    })
+
+    if (!program) {
+        return { error: "Program not found or you don't have permission." }
+    }
+
+    // Verify client belongs to trainer
+    const client = await prisma.clients.findFirst({
+        where: { id: clientId, trainerId }
+    })
+
+    if (!client) {
+        return { error: "Client not found." }
+    }
+
+    // Check if already assigned
+    const existing = await prisma.gia_program_usage.findFirst({
+        where: { programId, studentId: clientId }
+    })
+
+    if (existing) {
+        return { error: `${program.title} is already assigned to ${client.name}` }
+    }
+
+    const assignment = await prisma.gia_program_usage.create({
+        data: {
+            id: crypto.randomUUID(),
+            programId,
+            instructorId: trainerId,
+            studentId: clientId,
+            startedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }
+    })
+
+    // Increment usage count
+    await prisma.gia_programs.update({
+        where: { id: programId },
+        data: { timesUsed: { increment: 1 } }
+    })
+
+    return {
+        success: true,
+        message: `Assigned "${program.title}" to ${client.name}`,
+        assignment: {
+            id: assignment.id,
+            programTitle: program.title,
+            clientName: client.name
+        }
+    }
+}
+
+async function cancelSession(args: any, trainerId: string) {
+    const { sessionId, reason } = args
+
+    // Verify session belongs to trainer
+    const session = await prisma.trainer_sessions.findFirst({
+        where: { id: sessionId, trainerId },
+        include: {
+            clients: {
+                select: { name: true }
+            }
+        }
+    })
+
+    if (!session) {
+        return { error: "Session not found or you don't have permission." }
+    }
+
+    const updatedSession = await prisma.trainer_sessions.update({
+        where: { id: sessionId },
+        data: {
+            status: 'CANCELLED',
+            notes: reason ? `Cancelled: ${reason}` : 'Cancelled',
+            updatedAt: new Date()
+        }
+    })
+
+    return {
+        success: true,
+        message: `Cancelled session: ${session.title} with ${session.clients?.name}`,
+        session: {
+            id: updatedSession.id,
+            title: updatedSession.title,
+            status: updatedSession.status
+        }
+    }
+}
+
+async function getClientAnalytics(args: any, trainerId: string) {
+    const { clientId } = args
+
+    const client = await prisma.clients.findFirst({
+        where: { id: clientId, trainerId },
+        include: {
+            payments: true,
+            trainer_sessions: {
+                where: { status: { not: 'CANCELLED' } }
+            },
+            gia_program_usage_student: {
+                include: {
+                    program: {
+                        select: { title: true }
+                    }
+                }
+            }
+        }
+    })
+
+    if (!client) {
+        return { error: "Client not found." }
+    }
+
+    const totalPaid = client.payments
+        .filter(p => p.status === 'COMPLETED')
+        .reduce((sum, p) => sum + p.amount, 0)
+
+    const totalPending = client.payments
+        .filter(p => p.status === 'PENDING')
+        .reduce((sum, p) => sum + p.amount, 0)
+
+    return {
+        success: true,
+        analytics: {
+            clientName: client.name,
+            totalSessions: client.trainer_sessions.length,
+            completedSessions: client.trainer_sessions.filter(s => s.status === 'COMPLETED').length,
+            upcomingSessions: client.trainer_sessions.filter(s => s.status === 'SCHEDULED').length,
+            totalRevenue: totalPaid,
+            pendingPayments: totalPending,
+            assignedPrograms: client.gia_program_usage_student.length,
+            programTitles: client.gia_program_usage_student.map(u => u.program.title)
+        }
+    }
+}
+
+async function getRevenueSummary(args: any, trainerId: string) {
+    const { startDate, endDate } = args
+
+    const where: any = { trainerId }
+
+    if (startDate && endDate) {
+        where.createdAt = {
+            gte: new Date(startDate),
+            lte: new Date(endDate)
+        }
+    }
+
+    const payments = await prisma.payments.findMany({ where })
+
+    const totalRevenue = payments
+        .filter(p => p.status === 'COMPLETED')
+        .reduce((sum, p) => sum + p.amount, 0)
+
+    const pendingRevenue = payments
+        .filter(p => p.status === 'PENDING')
+        .reduce((sum, p) => sum + p.amount, 0)
+
+    const completedCount = payments.filter(p => p.status === 'COMPLETED').length
+    const pendingCount = payments.filter(p => p.status === 'PENDING').length
+
+    return {
+        success: true,
+        summary: {
+            totalRevenue,
+            pendingRevenue,
+            completedPayments: completedCount,
+            pendingPayments: pendingCount,
+            totalPayments: payments.length,
+            period: startDate && endDate ? `${startDate} to ${endDate}` : 'All time'
+        }
     }
 }
