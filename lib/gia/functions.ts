@@ -232,7 +232,7 @@ async function saveProgram(args: any, trainerId: string) {
             title,
             description: description || null,
             content,
-            programType,
+            type: programType,
             sportCategory: sportCategory || null,
             difficultyLevel: difficultyLevel || null,
             durationMinutes: durationMinutes || null,
