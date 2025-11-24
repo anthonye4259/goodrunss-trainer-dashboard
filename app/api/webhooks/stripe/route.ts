@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
                 duration: 60, // Default, should come from service
                 scheduledAt,
                 status: 'SCHEDULED',
-                bookedFrom: 'PUBLIC_BOOKING',
+                bookedFrom: 'DASHBOARD',
                 notes: `Time: ${metadata.time}\nPayment: $${session.amount_total ? session.amount_total / 100 : 0}`,
                 updatedAt: new Date(),
               },
