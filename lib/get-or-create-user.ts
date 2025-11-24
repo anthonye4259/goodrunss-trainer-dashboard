@@ -7,13 +7,13 @@ import { currentUser } from "@clerk/nextjs/server"
  */
 export async function getOrCreateUser() {
   const clerkUser = await currentUser()
-  
+
   if (!clerkUser) {
     return null
   }
 
   const email = clerkUser.emailAddresses[0]?.emailAddress
-  const name = clerkUser.firstName 
+  const name = clerkUser.firstName
     ? `${clerkUser.firstName} ${clerkUser.lastName || ''}`.trim()
     : clerkUser.username || email?.split('@')[0] || 'Trainer'
 
@@ -22,7 +22,27 @@ export async function getOrCreateUser() {
     where: { clerkId: clerkUser.id },
   })
 
-  // If user doesn't exist, create them
+  // If user doesn't exist by clerkId, check if they exist by email
+  if (!user && email) {
+    user = await prisma.users.findUnique({
+      where: { email: email },
+    })
+
+    // If found by email, update with clerkId
+    if (user) {
+      user = await prisma.users.update({
+        where: { id: user.id },
+        data: {
+          clerkId: clerkUser.id,
+          name: name,
+          image: clerkUser.imageUrl || user.image,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  }
+
+  // If still no user, create them
   if (!user) {
     user = await prisma.users.create({
       data: {
