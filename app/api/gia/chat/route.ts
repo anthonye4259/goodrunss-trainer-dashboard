@@ -4,6 +4,8 @@ import OpenAI from 'openai'
 import { GIA_CORE_IDENTITY, SPECIALIZATION_PROMPTS, CONTEXT_ENHANCED_PROMPT } from '@/lib/gia/expert-prompts'
 import { parseGIAResponse } from '@/lib/gia/program-parser'
 import { prisma } from '@/lib/prisma'
+import { GIA_TOOLS } from '@/lib/gia/tools'
+import { executeToolCall } from '@/lib/gia/functions'
 
 export async function POST(request: NextRequest) {
   try {
@@ -141,7 +143,7 @@ export async function POST(request: NextRequest) {
       } : undefined
     )
 
-    // Call OpenAI with expert prompt
+    // Call OpenAI with expert prompt and tools
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -158,20 +160,54 @@ export async function POST(request: NextRequest) {
           content: `${lastUserMessage.content}${fileContext}${clientContextHint}`
         }
       ],
+      tools: GIA_TOOLS as any,
+      tool_choice: 'auto',
       max_tokens: 2048, // Increased for detailed responses
       temperature: 0.7,
     })
 
-    const aiResponse = completion.choices[0]?.message?.content || 'No response'
+    const responseMessage = completion.choices[0]?.message
+    let aiResponse = responseMessage?.content || ''
+
+    // Handle Tool Calls
+    if (responseMessage?.tool_calls) {
+      const toolCalls = responseMessage.tool_calls
+
+      // Execute each tool
+      const toolOutputs = []
+      for (const toolCall of toolCalls) {
+        const functionName = toolCall.function.name
+        const functionArgs = JSON.parse(toolCall.function.arguments)
+
+        // Inject trainerId for security
+        const result = await executeToolCall(functionName, functionArgs, authUser.id)
+
+        toolOutputs.push({
+          tool_call_id: toolCall.id,
+          role: 'tool',
+          name: functionName,
+          content: JSON.stringify(result)
+        })
+      }
+
+      // Second call to OpenAI with tool outputs
+      const secondResponse = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...messages.slice(0, -1).map((m: any) => ({ role: m.role, content: m.content })),
+          { role: 'user', content: `${lastUserMessage.content}${fileContext}${clientContextHint}` },
+          responseMessage,
+          ...toolOutputs as any
+        ],
+      })
+
+      aiResponse = secondResponse.choices[0]?.message?.content || 'Action completed.'
+    }
 
     // Parse response to check if it's a saveable program
     const parsedProgram = parseGIAResponse(aiResponse, specialization)
 
-    return NextResponse.json({
-      success: true,
-      response: aiResponse,
-      program: parsedProgram, // Include parsed program data if available
-    })
     return NextResponse.json({
       success: true,
       response: aiResponse,
