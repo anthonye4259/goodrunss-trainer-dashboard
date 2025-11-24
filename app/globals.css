@@ -3,98 +3,79 @@
 @tailwind utilities;
 
 :root {
+  /* Light mode - Clean, minimal, professional */
   --background: 0 0% 100%;
-  --foreground: 0 0% 14.5%;
+  --foreground: 222 47% 11%;
+
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 14.5%;
+  --card-foreground: 222 47% 11%;
+
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 14.5%;
-  --primary: 0 0% 20.5%;
-  --primary-foreground: 0 0% 98.5%;
-  --secondary: 0 0% 97%;
-  --secondary-foreground: 0 0% 20.5%;
-  --muted: 0 0% 97%;
-  --muted-foreground: 0 0% 55.6%;
-  --accent: 0 0% 97%;
-  --accent-foreground: 0 0% 20.5%;
-  --destructive: 0 75% 58%;
-  --destructive-foreground: 0 75% 58%;
-  --border: 0 0% 92.2%;
-  --input: 0 0% 92.2%;
-  --ring: 0 0% 70.8%;
-  --chart-1: 38 92% 50%;
-  --chart-2: 180 60% 55%;
-  --chart-3: 270 60% 60%;
-  --chart-4: 88 70% 65%;
-  --chart-5: 330 65% 55%;
-  --radius: 1rem;
-}
+  --popover-foreground: 222 47% 11%;
 
-/* Updated to match GoodRunss brand colors - dark navy/slate blue backgrounds with lime green accents */
-.dark {
-  /* Core backgrounds - Dark navy/slate blue matching GoodRunss brand */
-  --background: 215 30% 12%;
-  --foreground: 0 0% 98%;
+  /* Primary - Lime green (GoodRunss brand) */
+  --primary: 88 70% 50%;
+  --primary-foreground: 0 0% 100%;
 
-  /* Card system - Medium gray/slate with blue tint */
-  --card: 215 25% 18%;
-  --card-foreground: 0 0% 98%;
-  --card-elevated: 215 25% 22%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
 
-  /* Popover - Elevated surfaces */
-  --popover: 215 28% 16%;
-  --popover-foreground: 0 0% 98%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
 
-  /* Primary - Bright lime green brand color from GoodRunss */
-  --primary: 88 70% 65%;
-  --primary-foreground: 215 30% 12%;
-  --primary-hover: 88 75% 70%;
-  --primary-muted: 88 50% 25%;
+  --accent: 88 70% 50%;
+  --accent-foreground: 0 0% 100%;
 
-  /* Secondary - Slate gray for hierarchy */
-  --secondary: 215 20% 25%;
-  --secondary-foreground: 0 0% 95%;
-  --secondary-hover: 215 20% 30%;
-
-  /* Muted - Subtle backgrounds */
-  --muted: 215 22% 20%;
-  --muted-foreground: 0 0% 60%;
-
-  /* Accent - Lime green variant */
-  --accent: 88 70% 65%;
-  --accent-foreground: 215 30% 12%;
-  --accent-muted: 88 60% 25%;
-
-  /* Destructive - Red */
-  --destructive: 0 75% 58%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
 
-  /* Success - Lime green */
-  --success: 88 70% 65%;
-  --success-foreground: 215 30% 12%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 88 70% 50%;
 
-  /* Warning - Amber */
-  --warning: 38 92% 50%;
-  --warning-foreground: 215 30% 12%;
+  --radius: 0.75rem;
+}
 
-  /* Borders - Lighter slate blue/gray */
-  --border: 215 20% 28%;
-  --border-strong: 215 20% 35%;
-  --border-glow: 88 70% 65%;
+/* Refined dark mode - Cleaner, less visual noise */
+.dark {
+  /* Core backgrounds - Simplified navy */
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
 
-  /* Input */
-  --input: 215 20% 28%;
-  --input-focus: 215 20% 32%;
+  /* Card system - Single shade for consistency */
+  --card: 222 47% 15%;
+  --card-foreground: 210 40% 98%;
 
-  /* Ring - Focus states with lime green */
+  /* Popover */
+  --popover: 222 47% 15%;
+  --popover-foreground: 210 40% 98%;
+
+  /* Primary - Lime green (only accent color) */
+  --primary: 88 70% 65%;
+  --primary-foreground: 222 47% 11%;
+
+  /* Secondary - Subtle gray */
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+
+  /* Muted */
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+
+  /* Accent - Same as primary for consistency */
+  --accent: 88 70% 65%;
+  --accent-foreground: 222 47% 11%;
+
+  /* Destructive */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+
+  /* Borders - Subtle */
+  --border: 217 33% 24%;
+  --input: 217 33% 24%;
+
+  /* Ring - Primary color */
   --ring: 88 70% 65%;
-
-  /* Charts - Lime green focused palette */
-  --chart-1: 88 70% 65%;
-  --chart-2: 180 60% 55%;
-  --chart-3: 270 60% 60%;
-  --chart-4: 38 85% 55%;
-  --chart-5: 330 65% 55%;
 }
 
 @layer base {
@@ -108,9 +89,10 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  /* Enhanced typography with tighter tracking for tech aesthetic */
+  /* Improved typography hierarchy with clear scale */
   h1,
   h2,
   h3,
@@ -118,22 +100,35 @@
   h5,
   h6 {
     font-weight: 700;
-    letter-spacing: -0.04em;
-    line-height: 1.1;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0;
   }
 
   h1 {
-    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
   }
+
   h2 {
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
   }
+
   h3 {
-    font-size: clamp(1.25rem, 3vw, 1.875rem);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 600;
+  }
+
+  h4 {
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    font-weight: 600;
   }
 
   p {
-    line-height: 1.6;
+    line-height: 1.7;
+    margin: 0;
   }
 
   /* Smooth scrolling */
@@ -283,6 +278,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -294,6 +290,7 @@
     opacity: 0;
     transform: translateX(20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -301,10 +298,12 @@
 }
 
 @keyframes pulse-glow {
+
   0%,
   100% {
     box-shadow: 0 0 20px hsla(88 70% 65% / 0.2);
   }
+
   50% {
     box-shadow: 0 0 40px hsla(88 70% 65% / 0.4);
   }
@@ -314,6 +313,7 @@
   0% {
     background-position: -1000px 0;
   }
+
   100% {
     background-position: 1000px 0;
   }
@@ -321,10 +321,12 @@
 
 /* Added gradient shift animation for dynamic text effects */
 @keyframes gradient-shift {
+
   0%,
   100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -384,4 +386,100 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Micro-animations for delightful UX */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+
+  70% {
+    transform: scale(0.9);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes confetti {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Staggered animations for lists */
+.stagger-fade-in>* {
+  animation: fade-in 0.5s ease-out backwards;
+}
+
+.stagger-fade-in>*:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.stagger-fade-in>*:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.stagger-fade-in>*:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.stagger-fade-in>*:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.stagger-fade-in>*:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.stagger-fade-in>*:nth-child(6) {
+  animation-delay: 0.3s;
+}
+
+/* Hover effects */
+.hover-lift-subtle {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift-subtle:hover {
+  transform: translateY(-4px);
+}
+
+/* Pulse animation for action items */
+.pulse-action {
+  animation: pulse-glow 2s ease-in-out infinite;
 }

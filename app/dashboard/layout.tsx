@@ -9,6 +9,7 @@ import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { ProductTour } from "@/components/product-tour"
 import { FloatingGIA } from "@/components/floating-gia"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useUser()
@@ -43,13 +44,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Main Content */}
         <div className="flex-1 md:pl-64 flex flex-col min-h-screen">
-          {/* Header */}
+          {/* Header with Theme Toggle */}
           <div className="sticky top-0 z-40 border-b border-border/40 bg-background/80 backdrop-blur-xl">
-            <Header />
+            <div className="flex items-center justify-between px-4 md:px-8">
+              <Header />
+              <ThemeToggle />
+            </div>
           </div>
 
-          {/* Page Content */}
-          <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+          {/* Page Content with fade-in animation */}
+          <main className="flex-1 p-4 md:p-8 overflow-y-auto animate-fade-in">
             {children}
           </main>
         </div>
