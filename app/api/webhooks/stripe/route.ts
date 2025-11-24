@@ -77,12 +77,139 @@ export async function POST(request: NextRequest) {
         const customerEmail = metadata.email || session.customer_email || session.customer_details?.email
         const customerName = metadata.name || session.customer_details?.name
         const customerId = session.customer as string
-        
+
         if (!customerEmail) {
           console.error(`[WEBHOOK] No email in session ${session.id}`)
           return NextResponse.json({ error: 'Missing email' }, { status: 400 })
         }
 
+        // ============================================
+        // CHECK IF THIS IS A BOOKING OR SUBSCRIPTION
+        // ============================================
+        const isBooking = metadata.trainerId && metadata.serviceId
+
+        if (isBooking) {
+          // BOOKING FLOW: Create session and client
+          console.log(`[WEBHOOK] Processing booking for trainer ${metadata.trainerId}`)
+
+          try {
+            // 1. Create or update client
+            let client = await prisma.clients.findFirst({
+              where: {
+                email: customerEmail,
+                trainerId: metadata.trainerId,
+              },
+            })
+
+            if (!client) {
+              client = await prisma.clients.create({
+                data: {
+                  id: crypto.randomUUID(),
+                  trainerId: metadata.trainerId,
+                  name: metadata.clientName || customerName || customerEmail.split('@')[0],
+                  email: customerEmail,
+                  phone: metadata.clientPhone || null,
+                  updatedAt: new Date(),
+                },
+              })
+              console.log(`[WEBHOOK] Created new client: ${client.id}`)
+            } else {
+              console.log(`[WEBHOOK] Found existing client: ${client.id}`)
+            }
+
+            // 2. Create training session
+            const scheduledAt = metadata.date ? new Date(metadata.date) : new Date()
+
+            const trainingSession = await prisma.trainer_sessions.create({
+              data: {
+                id: crypto.randomUUID(),
+                trainerId: metadata.trainerId,
+                clientId: client.id,
+                title: metadata.serviceName || 'Training Session',
+                description: `Booked via GoodRunss - ${metadata.serviceName}`,
+                type: 'PERSONAL_TRAINING',
+                duration: 60, // Default, should come from service
+                scheduledAt,
+                status: 'SCHEDULED',
+                bookedFrom: 'PUBLIC_BOOKING',
+                notes: `Time: ${metadata.time}\nPayment: $${session.amount_total ? session.amount_total / 100 : 0}`,
+                updatedAt: new Date(),
+              },
+            })
+            console.log(`[WEBHOOK] Created training session: ${trainingSession.id}`)
+
+            // 3. Create payment record
+            await prisma.payments.create({
+              data: {
+                id: crypto.randomUUID(),
+                trainerId: metadata.trainerId,
+                clientId: client.id,
+                sessionId: trainingSession.id,
+                amount: session.amount_total ? session.amount_total / 100 : 0,
+                currency: 'USD',
+                status: 'COMPLETED',
+                method: 'STRIPE',
+                description: `Payment for ${metadata.serviceName}`,
+                stripePaymentIntentId: session.payment_intent as string,
+                updatedAt: new Date(),
+              },
+            })
+            console.log(`[WEBHOOK] Created payment record`)
+
+            // 4. Send confirmation email (non-blocking)
+            if (process.env.RESEND_API_KEY) {
+              fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  from: 'GoodRunss <bookings@goodrunss.com>',
+                  to: [customerEmail],
+                  subject: '✅ Booking Confirmed - Training Session',
+                  html: `
+                    <h1>Booking Confirmed!</h1>
+                    <p>Hi ${metadata.clientName || 'there'},</p>
+                    <p>Your training session has been successfully booked and paid for.</p>
+                    <h3>Session Details:</h3>
+                    <ul>
+                      <li><strong>Service:</strong> ${metadata.serviceName}</li>
+                      <li><strong>Date:</strong> ${metadata.date}</li>
+                      <li><strong>Time:</strong> ${metadata.time}</li>
+                      <li><strong>Amount Paid:</strong> $${session.amount_total ? session.amount_total / 100 : 0}</li>
+                    </ul>
+                    <p>Your trainer will contact you shortly with additional details.</p>
+                    <p>See you soon!</p>
+                    <p>- The GoodRunss Team</p>
+                  `,
+                }),
+              }).catch(err => {
+                console.error(`[WEBHOOK] Failed to send booking confirmation email: ${err.message}`)
+              })
+            }
+
+            processedEvents.set(eventId, Date.now())
+            console.log(`[WEBHOOK] ✅ Booking completed successfully`)
+
+            return NextResponse.json({
+              success: true,
+              type: 'booking',
+              sessionId: trainingSession.id,
+              clientId: client.id,
+            })
+
+          } catch (error: any) {
+            console.error(`[WEBHOOK] ❌ Error creating booking: ${error.message}`)
+            return NextResponse.json({
+              error: 'Booking creation failed',
+              details: error.message,
+              retryable: true,
+            }, { status: 500 })
+          }
+        }
+
+        // SUBSCRIPTION FLOW (existing code)
         const plan = metadata.planId || metadata.plan || '3-month'
         const password = metadata.password
         const businessName = metadata.businessName || ''
@@ -98,7 +225,7 @@ export async function POST(request: NextRequest) {
 
         if (existingUser) {
           console.log(`[WEBHOOK] User ${customerEmail} already exists`)
-          
+
           // Check if they already have an active subscription for this payment
           const existingSubscription = await prisma.user_subscriptions.findFirst({
             where: {
@@ -111,10 +238,10 @@ export async function POST(request: NextRequest) {
           if (existingSubscription) {
             console.log(`[WEBHOOK] Subscription already exists, marking as processed`)
             processedEvents.set(eventId, Date.now())
-            return NextResponse.json({ 
-              success: true, 
+            return NextResponse.json({
+              success: true,
               message: 'User and subscription already exist',
-              userId: existingUser.id 
+              userId: existingUser.id
             })
           }
 
@@ -155,7 +282,7 @@ export async function POST(request: NextRequest) {
         try {
           // Step 1: Create Clerk user
           console.log(`[WEBHOOK] Creating Clerk user for ${customerEmail}`)
-          
+
           const client = await clerkClient()
           const clerkUser = await client.users.createUser({
             emailAddress: [customerEmail],
@@ -174,7 +301,7 @@ export async function POST(request: NextRequest) {
 
           // Step 2: Create database user
           console.log(`[WEBHOOK] Creating database user`)
-          
+
           const dbUser = await prisma.users.create({
             data: {
               id: crypto.randomUUID(),
@@ -303,7 +430,7 @@ export async function POST(request: NextRequest) {
 
           // Mark as processed
           processedEvents.set(eventId, Date.now())
-          
+
           const processingTime = Date.now() - startTime
           console.log(`[WEBHOOK] ✅ User created successfully in ${processingTime}ms`)
 
@@ -316,7 +443,7 @@ export async function POST(request: NextRequest) {
 
         } catch (error: any) {
           console.error(`[WEBHOOK] ❌ Error creating user: ${error.message}`)
-          
+
           // ROLLBACK: Clean up Clerk user if database creation failed
           if (clerkUserId && !dbUserId) {
             console.log(`[WEBHOOK] Rolling back Clerk user ${clerkUserId}`)
@@ -330,8 +457,8 @@ export async function POST(request: NextRequest) {
           }
 
           // Don't mark as processed - allow Stripe to retry
-          return NextResponse.json({ 
-            error: 'User creation failed', 
+          return NextResponse.json({
+            error: 'User creation failed',
             details: error.message,
             retryable: true,
           }, { status: 500 })
@@ -346,7 +473,7 @@ export async function POST(request: NextRequest) {
         // Get customer email from Stripe
         const customerId = subscription.customer as string
         const customer = await stripe.customers.retrieve(customerId)
-        
+
         // Check if customer is deleted
         if ('deleted' in customer && customer.deleted) {
           console.error(`[WEBHOOK] Customer ${customerId} is deleted`)
@@ -407,7 +534,7 @@ export async function POST(request: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription
 
         console.log(`[WEBHOOK] Updating subscription ${subscription.id}`)
-        
+
         const updated = await prisma.user_subscriptions.updateMany({
           where: { stripeSubscriptionId: subscription.id },
           data: {
@@ -435,9 +562,9 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error(`[WEBHOOK] ❌ Fatal error: ${error.message}`)
     console.error(error.stack)
-    
-    return NextResponse.json({ 
-      error: 'Webhook processing failed', 
+
+    return NextResponse.json({
+      error: 'Webhook processing failed',
       details: error.message,
       retryable: true,
     }, { status: 500 })
