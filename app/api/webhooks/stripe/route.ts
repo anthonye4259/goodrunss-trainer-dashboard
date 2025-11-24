@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
                 status: 'COMPLETED',
                 method: 'CARD',
                 description: `Payment for ${metadata.serviceName}`,
-                stripePaymentIntentId: session.payment_intent as string,
+                stripePaymentId: session.payment_intent as string,
                 updatedAt: new Date(),
               },
             })
