@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
                 amount: session.amount_total ? session.amount_total / 100 : 0,
                 currency: 'USD',
                 status: 'COMPLETED',
-                method: 'STRIPE',
+                method: 'CARD',
                 description: `Payment for ${metadata.serviceName}`,
                 stripePaymentIntentId: session.payment_intent as string,
                 updatedAt: new Date(),
