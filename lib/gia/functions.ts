@@ -452,13 +452,6 @@ async function getClientAnalytics(args: any, trainerId: string) {
             payments: true,
             trainer_sessions: {
                 where: { status: { not: 'CANCELLED' } }
-            },
-            gia_program_usage_student: {
-                include: {
-                    program: {
-                        select: { title: true }
-                    }
-                }
             }
         }
     })
@@ -483,9 +476,7 @@ async function getClientAnalytics(args: any, trainerId: string) {
             completedSessions: client.trainer_sessions.filter(s => s.status === 'COMPLETED').length,
             upcomingSessions: client.trainer_sessions.filter(s => s.status === 'SCHEDULED').length,
             totalRevenue: totalPaid,
-            pendingPayments: totalPending,
-            assignedPrograms: client.gia_program_usage_student.length,
-            programTitles: client.gia_program_usage_student.map(u => u.program.title)
+            pendingPayments: totalPending
         }
     }
 }
