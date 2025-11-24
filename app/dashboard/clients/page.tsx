@@ -37,6 +37,15 @@ export default function ClientsPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { toast } = useToast()
 
+  // Read URL params for filtering
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const filter = params.get('filter')
+    if (filter === 'at-risk') {
+      setFilterStatus('at-risk')
+    }
+  }, [])
+
   // Fetch clients on mount
   useEffect(() => {
     fetchClients()
@@ -66,7 +75,16 @@ export default function ClientsPage() {
     const matchesSearch =
       client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       client.email.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = filterStatus === "all" || client.status === filterStatus
+
+    // Check if client is at-risk (no session in 14+ days)
+    const isAtRisk = !client.lastSessionDate ||
+      (new Date().getTime() - new Date(client.lastSessionDate).getTime()) > 14 * 24 * 60 * 60 * 1000
+
+    const matchesStatus =
+      filterStatus === "all" ||
+      client.status === filterStatus ||
+      (filterStatus === "at-risk" && isAtRisk)
+
     return matchesSearch && matchesStatus
   })
 
@@ -120,10 +138,10 @@ export default function ClientsPage() {
       if (!response.ok) throw new Error('Failed to add client')
 
       const data = await response.json()
-      
+
       // Refresh the client list
       await fetchClients()
-      
+
       setIsAddDialogOpen(false)
       setFormErrors({})
       toast({

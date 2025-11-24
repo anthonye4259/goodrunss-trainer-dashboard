@@ -72,6 +72,21 @@ export function FloatingGIA() {
     }
   }, [messages])
 
+  // Listen for openGIA events from dashboard
+  useEffect(() => {
+    const handleOpenGIA = (event: CustomEvent) => {
+      const { prompt } = event.detail
+      setIsOpen(true)
+      setIsMinimized(false)
+      if (prompt) {
+        setInput(prompt)
+      }
+    }
+
+    window.addEventListener('openGIA', handleOpenGIA as EventListener)
+    return () => window.removeEventListener('openGIA', handleOpenGIA as EventListener)
+  }, [])
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return

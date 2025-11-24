@@ -90,17 +90,17 @@ export function DashboardOverview() {
       try {
         setLoading(true)
         const response = await fetch('/api/dashboard/stats')
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch dashboard stats')
         }
-        
+
         const data = await response.json()
-        
+
         if (data.error) {
           throw new Error(data.error)
         }
-        
+
         if (!data.trainer) {
           throw new Error('Invalid data format')
         }
@@ -195,7 +195,7 @@ export function DashboardOverview() {
   return (
     <div className="max-w-[1600px] mx-auto space-y-8">
       <SportSelectorModal />
-      
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
@@ -228,8 +228,8 @@ export function DashboardOverview() {
           <AlertTriangle className="h-5 w-5 text-orange-400" />
           Action Required
         </h2>
-        <div className="grid gap-3">
-          <Card className="bg-gradient-to-r from-red-500/10 to-red-600/5 border-red-500/20 hover:border-red-500/40 transition-colors">
+        <div className="grid gap-3 stagger-fade-in">
+          <Card className="bg-gradient-to-r from-red-500/10 to-red-600/5 border-red-500/20 hover:border-red-500/40 transition-colors hover-lift-subtle">
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -240,14 +240,18 @@ export function DashboardOverview() {
                   <p className="text-sm text-white/60">At risk of churning - reach out today</p>
                 </div>
               </div>
-              <Button size="sm" className="bg-red-500 hover:bg-red-600 text-white">
+              <Button
+                size="sm"
+                className="bg-red-500 hover:bg-red-600 text-white"
+                onClick={() => window.location.href = '/dashboard/clients?filter=at-risk'}
+              >
                 View Clients
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-orange-500/10 to-orange-600/5 border-orange-500/20 hover:border-orange-500/40 transition-colors">
+          <Card className="bg-gradient-to-r from-orange-500/10 to-orange-600/5 border-orange-500/20 hover:border-orange-500/40 transition-colors hover-lift-subtle">
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-orange-500/20 flex items-center justify-center">
@@ -258,14 +262,24 @@ export function DashboardOverview() {
                   <p className="text-sm text-white/60">Send payment reminders to collect revenue</p>
                 </div>
               </div>
-              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
+              <Button
+                size="sm"
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+                onClick={() => {
+                  // Open GIA with pre-filled prompt
+                  const event = new CustomEvent('openGIA', {
+                    detail: { prompt: 'Send payment reminders to overdue clients' }
+                  })
+                  window.dispatchEvent(event)
+                }}
+              >
                 Send Reminders
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 transition-colors">
+          <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 transition-colors hover-lift-subtle">
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -276,7 +290,11 @@ export function DashboardOverview() {
                   <p className="text-sm text-white/60">Your best performing program - promote it more</p>
                 </div>
               </div>
-              <Button size="sm" className="bg-primary hover:bg-primary/90 text-black">
+              <Button
+                size="sm"
+                className="bg-primary hover:bg-primary/90 text-black"
+                onClick={() => window.location.href = '/dashboard/programs?highlight=hiit-bootcamp'}
+              >
                 View Program
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
