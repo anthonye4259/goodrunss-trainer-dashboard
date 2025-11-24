@@ -104,7 +104,7 @@ async function getClientDetails(args: any, trainerId: string) {
         include: {
             payments: {
                 take: 5,
-                orderBy: { date: 'desc' }
+                orderBy: { createdAt: 'desc' }
             },
             trainer_sessions: {
                 take: 5,
