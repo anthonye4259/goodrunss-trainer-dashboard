@@ -21,6 +21,18 @@ export async function executeToolCall(
             case 'get_client_details':
                 return await getClientDetails(args, trainerId)
 
+            case 'schedule_session':
+                return await scheduleSession(args, trainerId)
+
+            case 'record_payment':
+                return await recordPayment(args, trainerId)
+
+            case 'save_program':
+                return await saveProgram(args, trainerId)
+
+            case 'get_upcoming_sessions':
+                return await getUpcomingSessions(args, trainerId)
+
             default:
                 return { error: `Unknown tool: ${toolName}` }
         }
@@ -124,5 +136,162 @@ async function getClientDetails(args: any, trainerId: string) {
             recentPayments: client.payments,
             recentSessions: client.trainer_sessions
         }
+    }
+}
+
+async function scheduleSession(args: any, trainerId: string) {
+    const { clientId, scheduledAt, durationMinutes = 60, title, notes } = args
+
+    // Verify client belongs to trainer
+    const client = await prisma.clients.findFirst({
+        where: { id: clientId, trainerId }
+    })
+
+    if (!client) {
+        return { error: "Client not found or you don't have permission to schedule with them." }
+    }
+
+    const session = await prisma.trainer_sessions.create({
+        data: {
+            id: crypto.randomUUID(),
+            trainerId,
+            clientId,
+            appClientId: null,
+            title,
+            scheduledAt: new Date(scheduledAt),
+            duration: durationMinutes,
+            status: 'SCHEDULED',
+            notes: notes || null,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }
+    })
+
+    return {
+        success: true,
+        message: `Scheduled ${title} with ${client.name} for ${new Date(scheduledAt).toLocaleString()}`,
+        session: {
+            id: session.id,
+            title: session.title,
+            scheduledAt: session.scheduledAt,
+            duration: session.duration,
+            clientName: client.name
+        }
+    }
+}
+
+async function recordPayment(args: any, trainerId: string) {
+    const { clientId, amount, method, sessionId, notes } = args
+
+    // Verify client belongs to trainer
+    const client = await prisma.clients.findFirst({
+        where: { id: clientId, trainerId }
+    })
+
+    if (!client) {
+        return { error: "Client not found." }
+    }
+
+    const payment = await prisma.payments.create({
+        data: {
+            id: crypto.randomUUID(),
+            trainerId,
+            clientId,
+            sessionId: sessionId || null,
+            amount,
+            currency: 'USD',
+            method,
+            status: 'COMPLETED',
+            description: notes || `Payment from ${client.name}`,
+            paidAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }
+    })
+
+    return {
+        success: true,
+        message: `Recorded $${amount} payment from ${client.name}`,
+        payment: {
+            id: payment.id,
+            amount: payment.amount,
+            method: payment.method,
+            paidAt: payment.paidAt
+        }
+    }
+}
+
+async function saveProgram(args: any, trainerId: string) {
+    const { title, description, content, programType, sportCategory, difficultyLevel, durationMinutes } = args
+
+    const program = await prisma.gia_programs.create({
+        data: {
+            id: crypto.randomUUID(),
+            instructorId: trainerId,
+            title,
+            description: description || null,
+            content,
+            programType,
+            sportCategory: sportCategory || null,
+            difficultyLevel: difficultyLevel || null,
+            durationMinutes: durationMinutes || null,
+            isPublic: false,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }
+    })
+
+    return {
+        success: true,
+        message: `Saved program: ${title}`,
+        program: {
+            id: program.id,
+            title: program.title,
+            programType: program.programType
+        }
+    }
+}
+
+async function getUpcomingSessions(args: any, trainerId: string) {
+    const { daysAhead = 7 } = args
+
+    const now = new Date()
+    const futureDate = new Date()
+    futureDate.setDate(now.getDate() + daysAhead)
+
+    const sessions = await prisma.trainer_sessions.findMany({
+        where: {
+            trainerId,
+            scheduledAt: {
+                gte: now,
+                lte: futureDate
+            },
+            status: {
+                not: 'CANCELLED'
+            }
+        },
+        include: {
+            clients: {
+                select: {
+                    name: true,
+                    sport: true
+                }
+            }
+        },
+        orderBy: { scheduledAt: 'asc' },
+        take: 20
+    })
+
+    return {
+        success: true,
+        message: `Found ${sessions.length} upcoming sessions in the next ${daysAhead} days`,
+        sessions: sessions.map(s => ({
+            id: s.id,
+            title: s.title,
+            scheduledAt: s.scheduledAt,
+            duration: s.duration,
+            clientName: s.clients?.name,
+            status: s.status
+        }))
     }
 }

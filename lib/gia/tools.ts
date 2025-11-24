@@ -95,5 +95,131 @@ export const GIA_TOOLS = [
                 required: ["clientId"]
             }
         }
+    },
+    {
+        type: "function",
+        function: {
+            name: "schedule_session",
+            description: "Schedule a training session with a client. Use this when the user wants to book or create a session.",
+            parameters: {
+                type: "object",
+                properties: {
+                    clientId: {
+                        type: "string",
+                        description: "The ID of the client for this session"
+                    },
+                    scheduledAt: {
+                        type: "string",
+                        description: "ISO 8601 datetime string for when the session is scheduled (e.g., '2024-01-15T14:00:00Z')"
+                    },
+                    durationMinutes: {
+                        type: "number",
+                        description: "Duration of the session in minutes (default: 60)"
+                    },
+                    title: {
+                        type: "string",
+                        description: "Title/type of session (e.g., 'Tennis Lesson', 'Strength Training')"
+                    },
+                    notes: {
+                        type: "string",
+                        description: "Optional notes about the session"
+                    }
+                },
+                required: ["clientId", "scheduledAt", "title"]
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "record_payment",
+            description: "Record a payment received from a client. Use this when the user confirms receiving payment.",
+            parameters: {
+                type: "object",
+                properties: {
+                    clientId: {
+                        type: "string",
+                        description: "The ID of the client who made the payment"
+                    },
+                    amount: {
+                        type: "number",
+                        description: "Payment amount in dollars"
+                    },
+                    method: {
+                        type: "string",
+                        enum: ["CASH", "CARD", "BANK_TRANSFER", "VENMO", "PAYPAL", "OTHER"],
+                        description: "Payment method used"
+                    },
+                    sessionId: {
+                        type: "string",
+                        description: "Optional session ID this payment is for"
+                    },
+                    notes: {
+                        type: "string",
+                        description: "Optional notes about the payment"
+                    }
+                },
+                required: ["clientId", "amount", "method"]
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "save_program",
+            description: "Save a training program or workout plan to the database. Use this when the user wants to save a program you've created.",
+            parameters: {
+                type: "object",
+                properties: {
+                    title: {
+                        type: "string",
+                        description: "Title of the program"
+                    },
+                    description: {
+                        type: "string",
+                        description: "Brief description of the program"
+                    },
+                    content: {
+                        type: "string",
+                        description: "The full program content (can be markdown formatted)"
+                    },
+                    programType: {
+                        type: "string",
+                        enum: ["lesson_plan", "workout_program", "class_sequence", "drill_progression"],
+                        description: "Type of program"
+                    },
+                    sportCategory: {
+                        type: "string",
+                        description: "Sport or activity this program is for (e.g., 'tennis', 'yoga')"
+                    },
+                    difficultyLevel: {
+                        type: "string",
+                        enum: ["beginner", "intermediate", "advanced"],
+                        description: "Difficulty level"
+                    },
+                    durationMinutes: {
+                        type: "number",
+                        description: "Expected duration in minutes"
+                    }
+                },
+                required: ["title", "content", "programType"]
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "get_upcoming_sessions",
+            description: "Retrieve the trainer's upcoming sessions. Use this when the user asks about their schedule or calendar.",
+            parameters: {
+                type: "object",
+                properties: {
+                    daysAhead: {
+                        type: "number",
+                        description: "Number of days to look ahead (default: 7)"
+                    }
+                }
+            }
+        }
     }
 ]
