@@ -385,10 +385,7 @@ async function assignProgramToClient(args: any, trainerId: string) {
             id: crypto.randomUUID(),
             programId,
             instructorId: trainerId,
-            studentId: clientId,
-            startedAt: new Date(),
-            createdAt: new Date(),
-            updatedAt: new Date()
+            studentId: clientId
         }
     })
 
