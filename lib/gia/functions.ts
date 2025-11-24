@@ -158,7 +158,7 @@ async function scheduleSession(args: any, trainerId: string) {
             clientId,
             appClientId: null,
             title,
-            type: 'TRAINING', // Default session type
+            type: 'PERSONAL_TRAINING', // Default session type
             scheduledAt: new Date(scheduledAt),
             duration: durationMinutes,
             status: 'SCHEDULED',
