@@ -14,7 +14,7 @@ export async function GET(
 ) {
   try {
     const trainer = await getOrCreateUser()
-    
+
     if (!trainer) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -55,7 +55,7 @@ export async function PUT(
 ) {
   try {
     const trainer = await getOrCreateUser()
-    
+
     if (!trainer) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -113,6 +113,9 @@ export async function PUT(
   }
 }
 
+// PATCH /api/sessions/[id] - Update session (alias for PUT)
+export const PATCH = PUT
+
 // DELETE /api/sessions/[id]
 export async function DELETE(
   request: NextRequest,
@@ -120,7 +123,7 @@ export async function DELETE(
 ) {
   try {
     const trainer = await getOrCreateUser()
-    
+
     if (!trainer) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

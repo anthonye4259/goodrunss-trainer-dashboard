@@ -122,6 +122,9 @@ export async function PUT(
   }
 }
 
+// PATCH /api/clients/[id] - Update client (alias for PUT)
+export const PATCH = PUT
+
 // DELETE /api/clients/[id] - Delete client
 export async function DELETE(
   request: NextRequest,
