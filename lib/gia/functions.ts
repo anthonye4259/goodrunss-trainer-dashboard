@@ -236,7 +236,6 @@ async function saveProgram(args: any, trainerId: string) {
             sportCategory: sportCategory || null,
             difficultyLevel: difficultyLevel || null,
             durationMinutes: durationMinutes || null,
-            isPublic: false,
             createdAt: new Date(),
             updatedAt: new Date()
         }
