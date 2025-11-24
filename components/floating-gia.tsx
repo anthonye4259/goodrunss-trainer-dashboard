@@ -195,7 +195,7 @@ export function FloatingGIA() {
       }
 
       const data = await response.json()
-      
+
       setSavedPrograms(prev => new Set([...prev, messageId]))
       toast({
         title: "Program saved!",
@@ -241,11 +241,11 @@ export function FloatingGIA() {
       {isOpen && (
         <Card
           className={cn(
-            "fixed shadow-2xl border-border/50 backdrop-blur-xl z-50 transition-all duration-300",
-            isFullscreen 
-              ? "inset-4 w-auto h-auto" 
-              : isMinimized 
-                ? "bottom-6 right-6 w-80 h-16" 
+            "fixed shadow-2xl border-border/50 backdrop-blur-xl z-50 transition-all duration-300 flex flex-col overflow-hidden",
+            isFullscreen
+              ? "inset-4 w-auto h-auto"
+              : isMinimized
+                ? "bottom-6 right-6 w-80 h-16"
                 : "bottom-6 right-6 w-96 h-[700px]",
           )}
         >
@@ -303,17 +303,14 @@ export function FloatingGIA() {
           {!isMinimized && (
             <>
               {/* Mode Selector */}
-              <GIAModeSelector 
+              <GIAModeSelector
                 selectedMode={selectedMode}
                 onModeChange={setSelectedMode}
               />
-              
+
               {/* Messages */}
-              <ScrollArea 
-                className={cn(
-                  "flex-1 p-4",
-                  isFullscreen ? "h-[calc(100vh-280px)]" : "h-[380px]"
-                )} 
+              <ScrollArea
+                className="flex-1 p-4 min-h-0"
                 ref={scrollAreaRef}
               >
                 <div className="space-y-4">
