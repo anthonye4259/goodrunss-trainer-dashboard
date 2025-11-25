@@ -5,22 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle, Loader2, ArrowRight, Sparkles } from "lucide-react"
+import { AlertCircle, Loader2, ArrowRight, Sparkles, Zap, Brain, Target } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { Testimonials } from "@/components/testimonials"
+import { TrustBadges } from "@/components/trust-badges"
 
 export default function SignupPage() {
   const [step, setStep] = useState<"account" | "plan">("account")
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [businessName, setBusinessName] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   const handleAccountCreation = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Validate inputs
     if (!name || !email || !password) {
       setError("Please fill in all required fields")
@@ -49,7 +50,6 @@ export default function SignupPage() {
         body: JSON.stringify({
           email,
           name: `${name}`,
-          businessName,
           password, // Send securely to webhook via Stripe metadata
           planId,
         }),
@@ -85,9 +85,9 @@ export default function SignupPage() {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent to-primary rounded-2xl blur-xl opacity-50"></div>
                 <div className="relative h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-2xl p-2">
-                  <Image 
-                    src="/goodrunss-logo-green.svg" 
-                    alt="GoodRunss" 
+                  <Image
+                    src="/goodrunss-logo-green.svg"
+                    alt="GoodRunss"
                     width={64}
                     height={64}
                     className="object-contain w-full h-full"
@@ -109,7 +109,7 @@ export default function SignupPage() {
                 Enter your card • Cancel anytime before trial ends • Full access immediately
               </p>
             </div>
-            
+
             <div className="inline-flex flex-col items-center gap-2 px-6 py-4 rounded-2xl bg-primary/10 border border-primary/20 backdrop-blur-sm">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
@@ -143,33 +143,33 @@ export default function SignupPage() {
               </div>
               <ul className="space-y-3 text-sm">
                 <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Unlimited clients
+                  <Brain className="h-4 w-4 text-primary" />
+                  <span><strong>GIA AI Assistant</strong> - Your 24/7 training copilot</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <span><strong>Auto CRM Parser</strong> - Upload docs, extract data instantly</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-primary" />
+                  <span><strong>Smart Lead Matching</strong> - AI finds your ideal clients</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  AI Session Plan Generator
+                  Session Plan Generator - Custom workouts in seconds
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Auto CRM Document Parser
+                  Unlimited clients & programs
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Client Lead Matching
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Advanced analytics & insights
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Priority support
+                  Predictive analytics & insights
                 </li>
               </ul>
-              <Button 
-                onClick={() => handlePlanSelection("6-month")} 
-                variant="outline" 
+              <Button
+                onClick={() => handlePlanSelection("6-month")}
+                variant="outline"
                 className="w-full h-12"
                 disabled={isLoading}
               >
@@ -195,28 +195,28 @@ export default function SignupPage() {
               </div>
               <ul className="space-y-3 text-sm">
                 <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Unlimited clients
+                  <Brain className="h-4 w-4 text-primary" />
+                  <span><strong>GIA AI Assistant</strong> - Your 24/7 training copilot</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <span><strong>Auto CRM Parser</strong> - Upload docs, extract data instantly</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-primary" />
+                  <span><strong>Smart Lead Matching</strong> - AI finds your ideal clients</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  AI Session Plan Generator
+                  Session Plan Generator - Custom workouts in seconds
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Auto CRM Document Parser
+                  Unlimited clients & programs
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Client Lead Matching
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Advanced analytics & insights
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Priority support
+                  Predictive analytics & insights
                 </li>
               </ul>
               <Button
@@ -240,33 +240,33 @@ export default function SignupPage() {
               </div>
               <ul className="space-y-3 text-sm">
                 <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Unlimited clients
+                  <Brain className="h-4 w-4 text-primary" />
+                  <span><strong>GIA AI Assistant</strong> - Your 24/7 training copilot</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <span><strong>Auto CRM Parser</strong> - Upload docs, extract data instantly</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-primary" />
+                  <span><strong>Smart Lead Matching</strong> - AI finds your ideal clients</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  AI Session Plan Generator
+                  Session Plan Generator - Custom workouts in seconds
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Auto CRM Document Parser
+                  Unlimited clients & programs
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Client Lead Matching
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Advanced analytics & insights
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                  Priority support
+                  Predictive analytics & insights
                 </li>
               </ul>
-              <Button 
-                onClick={() => handlePlanSelection("1-month")} 
-                variant="outline" 
+              <Button
+                onClick={() => handlePlanSelection("1-month")}
+                variant="outline"
                 className="w-full h-12"
                 disabled={isLoading}
               >
@@ -274,6 +274,12 @@ export default function SignupPage() {
               </Button>
             </Card>
           </div>
+
+          {/* Testimonials */}
+          <Testimonials />
+
+          {/* Trust Badges */}
+          <TrustBadges />
 
           <div className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
@@ -298,9 +304,9 @@ export default function SignupPage() {
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
             <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-lg p-2">
-              <Image 
-                src="/goodrunss-logo-green.svg" 
-                alt="GoodRunss" 
+              <Image
+                src="/goodrunss-logo-green.svg"
+                alt="GoodRunss"
                 width={64}
                 height={64}
                 className="object-contain w-full h-full"
@@ -365,19 +371,6 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
-                disabled={isLoading}
-                className="h-11 bg-secondary/30 border-border/50 focus:border-primary focus:ring-primary/20"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="businessName">Business Name (Optional)</Label>
-              <Input
-                id="businessName"
-                type="text"
-                placeholder="Your Training Business"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
                 disabled={isLoading}
                 className="h-11 bg-secondary/30 border-border/50 focus:border-primary focus:ring-primary/20"
               />
