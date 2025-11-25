@@ -1,4 +1,5 @@
 import { Share2 } from "lucide-react"
+import { Card } from "@/components/ui/card"
 import Link from "next/link"
 
 // ... (keep existing imports)
@@ -78,8 +79,8 @@ export default function PublicBookingPage() {
                   <Card
                     key={service.id}
                     className={`p-6 cursor-pointer transition-all duration-200 hover:shadow-md ${selectedService === service.id
-                        ? "border-green-500 border-2 bg-green-50/50 shadow-md ring-1 ring-green-500/20"
-                        : "hover:border-green-200 border-transparent"
+                      ? "border-green-500 border-2 bg-green-50/50 shadow-md ring-1 ring-green-500/20"
+                      : "hover:border-green-200 border-transparent"
                       }`}
                     onClick={() => setSelectedService(service.id)}
                   >
@@ -153,8 +154,8 @@ export default function PublicBookingPage() {
                         key={time}
                         variant={selectedTime === time ? "default" : "outline"}
                         className={`h-12 transition-all ${selectedTime === time
-                            ? "bg-green-600 hover:bg-green-700 shadow-md scale-105"
-                            : "hover:border-green-300 hover:bg-green-50"
+                          ? "bg-green-600 hover:bg-green-700 shadow-md scale-105"
+                          : "hover:border-green-300 hover:bg-green-50"
                           }`}
                         onClick={() => setSelectedTime(time)}
                       >
