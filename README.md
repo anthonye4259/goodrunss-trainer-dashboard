@@ -1,10 +1,13 @@
-# 🏃‍♂️ GoodRunss Trainer Dashboard
+# 🏃‍♂️ GoodRunss .G0 - Trainer Dashboard
 
-The complete, all-in-one trainer dashboard for managing clients, sessions, payments, and growing your training business.
+**Foundation Model** | The complete, all-in-one trainer dashboard for managing clients, sessions, payments, and growing your training business.
+
+> **Version**: GoodRunss .G0 (Foundation Model)  
+> Similar to GPT-3/4/5 or Claude 1/2/3, .G0 represents our first-generation platform with core features and AI capabilities.
 
 ## 🎯 What This Is
 
-This is the **official GoodRunss Trainer Dashboard** - built with Next.js 15, featuring:
+This is the **official GoodRunss .G0 Trainer Dashboard** - built with Next.js 15, featuring:
 
 - ✅ **Modern v0 UI** - Clean, professional dark theme
 - ✅ **Complete Backend** - Full database schema, API routes, Firebase integration

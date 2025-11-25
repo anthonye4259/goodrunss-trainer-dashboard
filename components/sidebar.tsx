@@ -49,12 +49,12 @@ export function Sidebar() {
     { name: t("calendar"), href: "/dashboard/calendar", icon: Calendar, tourId: "calendar" },
     { name: t("messages"), href: "/dashboard/messages", icon: MessageSquare },
     { name: t("settings"), href: "/dashboard/settings", icon: Settings },
-    
+
     // Business (3 items)
     { name: "Business", href: "/dashboard/business", icon: DollarSign },
     { name: "Services", href: "/dashboard/services-hub", icon: ShoppingBag },
     { name: "Growth", href: "/dashboard/growth", icon: TrendingUp, tourId: "social-share" },
-    
+
     // Training & Client Tools (2 items)
     { name: "Training", href: "/dashboard/training", icon: ClipboardList, tourId: "ai-features" },
     { name: "Client Tools", href: "/dashboard/client-tools", icon: UserCheck, tourId: "referrals" },
@@ -66,9 +66,9 @@ export function Sidebar() {
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-xl blur-lg opacity-0 group-hover:opacity-75 transition-opacity duration-300" />
           <div className="relative w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/50 transition-all duration-300 group-hover:scale-110 p-1.5">
-            <Image 
-              src="/goodrunss-logo-green.svg" 
-              alt="GoodRunss" 
+            <Image
+              src="/goodrunss-logo-green.svg"
+              alt="GoodRunss"
               width={48}
               height={48}
               className="object-contain w-full h-full"
@@ -108,7 +108,26 @@ export function Sidebar() {
         </nav>
       </TooltipProvider>
 
-      <div className="mt-auto mb-4 w-full flex justify-center">
+      {/* Version Badge */}
+      <div className="mt-auto mb-2 w-full flex justify-center">
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="px-2 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
+                <p className="text-[10px] font-bold text-primary text-center leading-tight">
+                  .G0
+                </p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-card border-primary/20">
+              <p className="font-medium">GoodRunss .G0</p>
+              <p className="text-xs text-muted-foreground">Foundation Model</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
+      <div className="mb-4 w-full flex justify-center">
         <TooltipProvider delayDuration={300}>
           <Tooltip>
             <TooltipTrigger asChild>
