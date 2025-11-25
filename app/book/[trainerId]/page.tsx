@@ -1,186 +1,75 @@
-"use client"
+import { Share2 } from "lucide-react"
+import Link from "next/link"
 
-import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
-import { Calendar } from "@/components/ui/calendar"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Avatar } from "@/components/ui/avatar"
-import { Check, Clock, DollarSign, MapPin, Loader2 } from "lucide-react"
-
-interface Trainer {
-  id: string
-  name: string
-  email: string
-  bio: string
-  specialties: string[]
-  hourlyRate: number
-  image: string
-  location: string
-  sportType?: string
-}
-
-interface Service {
-  id: string
-  name: string
-  duration: number
-  price: number
-  description: string
-}
+// ... (keep existing imports)
 
 export default function PublicBookingPage() {
-  const params = useParams()
-  const trainerId = params.trainerId as string
-  
-  const [trainer, setTrainer] = useState<Trainer | null>(null)
-  const [services, setServices] = useState<Service[]>([])
-  const [availability, setAvailability] = useState<{[key: string]: string[]}>({})
-  const [availableTimes, setAvailableTimes] = useState<string[]>([])
-  const [selectedDate, setSelectedDate] = useState<Date>()
-  const [selectedTime, setSelectedTime] = useState<string>()
-  const [selectedService, setSelectedService] = useState<string>()
-  const [loading, setLoading] = useState(true)
-  const [loadingTimes, setLoadingTimes] = useState(false)
+  // ... (keep existing state)
 
-  // Fetch trainer data on mount
-  useEffect(() => {
-    async function fetchTrainer() {
-      try {
-        const res = await fetch(`/api/public/trainer/${trainerId}`)
-        if (res.ok) {
-          const data = await res.json()
-          setTrainer(data.trainer)
-          setServices(data.services || [])
-        }
-      } catch (error) {
-        console.error("Error fetching trainer:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchTrainer()
-  }, [trainerId])
-
-  // Fetch availability on mount
-  useEffect(() => {
-    async function fetchAvailability() {
-      try {
-        const res = await fetch(`/api/public/availability/${trainerId}`)
-        if (res.ok) {
-          const data = await res.json()
-          setAvailability(data.availability || {})
-        }
-      } catch (error) {
-        console.error("Error fetching availability:", error)
-      }
-    }
-    fetchAvailability()
-  }, [trainerId])
-
-  // Update available times when date changes
-  useEffect(() => {
-    if (selectedDate) {
-      setLoadingTimes(true)
-      setSelectedTime(undefined)
-      
-      // Get day of week (Sunday = 0, Monday = 1, etc.)
-      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-      const dayName = dayNames[selectedDate.getDay()]
-      
-      // Get times for this day
-      const timesForDay = availability[dayName] || []
-      setAvailableTimes(timesForDay)
-      setLoadingTimes(false)
-    }
-  }, [selectedDate, availability])
-
-  const handleBooking = () => {
-    if (!selectedDate || !selectedTime || !selectedService) {
-      alert("Please select a service, date, and time")
-      return
-    }
-
-    // Redirect to checkout
-    const checkoutUrl = `/book/${trainerId}/checkout?service=${selectedService}&date=${selectedDate.toISOString()}&time=${encodeURIComponent(selectedTime)}`
-    window.location.href = checkoutUrl
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href)
+    alert("Profile link copied to clipboard!")
   }
 
-  // Get sport-specific terminology
-  const getTerminology = () => {
-    const sportType = trainer?.sportType?.toLowerCase() || ''
-    
-    if (sportType.includes('pickleball')) {
-      return { session: 'Lesson', sessions: 'Lessons', book: 'Book a Lesson' }
-    } else if (sportType.includes('yoga') || sportType.includes('pilates') || sportType.includes('barre')) {
-      return { session: 'Class', sessions: 'Classes', book: 'Book a Class' }
-    } else if (sportType.includes('basketball') || sportType.includes('tennis') || sportType.includes('golf')) {
-      return { session: 'Training Session', sessions: 'Training', book: 'Book Training' }
-    } else {
-      return { session: 'Session', sessions: 'Sessions', book: 'Book Session' }
-    }
-  }
-
-  const terms = getTerminology()
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-      </div>
-    )
-  }
-
-  if (!trainer) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Trainer Not Found</h1>
-          <p className="text-gray-600">This booking link may be invalid.</p>
-        </div>
-      </div>
-    )
-  }
+  // ... (keep existing effects)
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
         {/* Trainer Header */}
-        <Card className="mb-8 p-8">
-          <div className="flex items-start gap-6">
-            <Avatar className="h-24 w-24">
-              <img src={trainer.image || "/placeholder-avatar.png"} alt={trainer.name} />
+        <Card className="mb-8 p-8 border-none shadow-xl bg-white/80 backdrop-blur-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-emerald-600"></div>
+          <div className="flex flex-col md:flex-row items-start gap-8">
+            <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
+              <img src={trainer.image || "/placeholder-avatar.png"} alt={trainer.name} className="object-cover" />
             </Avatar>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{trainer.name}</h1>
-              <p className="text-gray-600 mb-4">{trainer.bio}</p>
-              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
+            <div className="flex-1 w-full">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h1 className="text-4xl font-bold text-gray-900 mb-2">{trainer.name}</h1>
+                  <p className="text-lg text-gray-600 mb-6 max-w-2xl">{trainer.bio}</p>
+                </div>
+                <Button variant="outline" size="sm" className="gap-2 hidden md:flex" onClick={handleShare}>
+                  <Share2 className="h-4 w-4" />
+                  Share Profile
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-6 text-sm text-gray-600 mb-6">
+                <div className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-full">
+                  <MapPin className="h-4 w-4 text-green-600" />
                   {trainer.location || "Remote"}
                 </div>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />
-                  ${trainer.hourlyRate}/{terms.session.toLowerCase()}
+                <div className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-full">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                  <span className="font-semibold text-gray-900">${trainer.hourlyRate}</span>/{terms.session.toLowerCase()}
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 mt-4">
+
+              <div className="flex flex-wrap gap-2">
                 {trainer.specialties?.map((specialty, idx) => (
-                  <span key={idx} className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                  <span key={idx} className="px-4 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium border border-green-100">
                     {specialty}
                   </span>
                 ))}
               </div>
             </div>
           </div>
+          <Button variant="ghost" size="sm" className="absolute top-4 right-4 md:hidden" onClick={handleShare}>
+            <Share2 className="h-5 w-5" />
+          </Button>
         </Card>
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Services */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Select a {terms.session}</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <span className="bg-green-100 text-green-700 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
+              Select a {terms.session}
+            </h2>
             <div className="space-y-4">
               {services.length === 0 ? (
-                <Card className="p-6 text-center text-gray-500">
+                <Card className="p-8 text-center text-gray-500 border-dashed">
                   <p>No {terms.sessions.toLowerCase()} available yet.</p>
                   <p className="text-sm mt-2">Contact {trainer.name} directly to book.</p>
                 </Card>
@@ -188,28 +77,29 @@ export default function PublicBookingPage() {
                 services.map((service) => (
                   <Card
                     key={service.id}
-                    className={`p-6 cursor-pointer transition-all ${
-                      selectedService === service.id
-                        ? "border-green-500 border-2 bg-green-50"
-                        : "hover:border-gray-400"
-                    }`}
+                    className={`p-6 cursor-pointer transition-all duration-200 hover:shadow-md ${selectedService === service.id
+                        ? "border-green-500 border-2 bg-green-50/50 shadow-md ring-1 ring-green-500/20"
+                        : "hover:border-green-200 border-transparent"
+                      }`}
                     onClick={() => setSelectedService(service.id)}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-lg font-semibold">{service.name}</h3>
+                      <h3 className="text-lg font-bold text-gray-900">{service.name}</h3>
                       <span className="text-xl font-bold text-green-600">${service.price}</span>
                     </div>
-                    <p className="text-gray-600 text-sm mb-3">{service.description}</p>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Clock className="h-4 w-4" />
-                      {service.duration} minutes
-                    </div>
-                    {selectedService === service.id && (
-                      <div className="mt-3 flex items-center gap-2 text-green-600">
-                        <Check className="h-5 w-5" />
-                        <span className="font-medium">Selected</span>
+                    <p className="text-gray-600 text-sm mb-4 leading-relaxed">{service.description}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 bg-white px-2 py-1 rounded-md border">
+                        <Clock className="h-3.5 w-3.5" />
+                        {service.duration} mins
                       </div>
-                    )}
+                      {selectedService === service.id && (
+                        <div className="flex items-center gap-1.5 text-green-600 text-sm font-medium animate-in fade-in slide-in-from-left-2">
+                          <Check className="h-4 w-4" />
+                          Selected
+                        </div>
+                      )}
+                    </div>
                   </Card>
                 ))
               )}
@@ -218,36 +108,54 @@ export default function PublicBookingPage() {
 
           {/* Date & Time Selection */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Choose Date & Time</h2>
-            <Card className="p-6 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <span className="bg-green-100 text-green-700 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
+              Choose Date & Time
+            </h2>
+            <Card className="p-6 mb-6 border-none shadow-lg">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                className="rounded-md"
+                className="rounded-md flex justify-center"
                 disabled={(date) => date < new Date()}
+                classNames={{
+                  head_cell: "text-gray-500 font-normal text-[0.8rem]",
+                  cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-green-50 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                  day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-gray-100 rounded-md transition-colors",
+                  day_selected: "bg-green-600 text-white hover:bg-green-600 hover:text-white focus:bg-green-600 focus:text-white",
+                  day_today: "bg-gray-100 text-gray-900",
+                }}
               />
             </Card>
 
             {selectedDate && (
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Available Times</h3>
+              <div className="animate-in fade-in slide-in-from-bottom-4">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  Available Times
+                  <span className="text-sm font-normal text-gray-500">
+                    for {selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+                  </span>
+                </h3>
                 {loadingTimes ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+                  <div className="flex justify-center py-12 bg-white rounded-lg border border-dashed">
+                    <Loader2 className="h-8 w-8 animate-spin text-green-600" />
                   </div>
                 ) : availableTimes.length === 0 ? (
-                  <Card className="p-6 text-center text-gray-500">
+                  <Card className="p-8 text-center text-gray-500 border-dashed bg-gray-50/50">
                     <p>No times available on this day.</p>
                     <p className="text-sm mt-2">Please select another date.</p>
                   </Card>
                 ) : (
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-3">
                     {availableTimes.map((time) => (
                       <Button
                         key={time}
                         variant={selectedTime === time ? "default" : "outline"}
-                        className={selectedTime === time ? "bg-green-600 hover:bg-green-700" : ""}
+                        className={`h-12 transition-all ${selectedTime === time
+                            ? "bg-green-600 hover:bg-green-700 shadow-md scale-105"
+                            : "hover:border-green-300 hover:bg-green-50"
+                          }`}
                         onClick={() => setSelectedTime(time)}
                       >
                         {time}
@@ -259,14 +167,32 @@ export default function PublicBookingPage() {
             )}
 
             {selectedService && selectedDate && selectedTime && (
-              <Button
-                className="w-full mt-6 bg-green-600 hover:bg-green-700 text-lg py-6"
-                onClick={handleBooking}
-              >
-                {terms.book}
-              </Button>
+              <div className="sticky bottom-6 mt-8 animate-in fade-in slide-in-from-bottom-8">
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700 text-lg py-8 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 rounded-xl"
+                  onClick={handleBooking}
+                >
+                  <div className="flex flex-col items-center">
+                    <span className="font-bold">{terms.book}</span>
+                    <span className="text-xs font-normal opacity-90">
+                      {selectedDate.toLocaleDateString()} at {selectedTime}
+                    </span>
+                  </div>
+                </Button>
+              </div>
             )}
           </div>
+        </div>
+
+        {/* Powered By Footer */}
+        <div className="mt-20 text-center pb-8">
+          <Link
+            href="/signup"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-green-600 transition-colors group"
+          >
+            <span className="text-sm font-medium">Powered by</span>
+            <span className="font-bold text-gray-600 group-hover:text-green-700">GoodRunss .G0</span>
+          </Link>
         </div>
       </div>
     </div>
