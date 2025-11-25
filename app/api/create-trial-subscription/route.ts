@@ -6,15 +6,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-10-29.clover',
-})
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2025-10-29.clover',
+  })
+  : null
 
 export async function POST(request: NextRequest) {
   try {
+    if (!stripe) {
+      return NextResponse.json(
+        { error: 'Stripe is not configured' },
+        { status: 503 }
+      )
+    }
+
     // Log incoming request
     console.log('[TRIAL SIGNUP] Request received')
-    
+
     const { email, name, businessName, password, planId } = await request.json()
 
     console.log('[TRIAL SIGNUP] Parsed data:', { email, name: name?.substring(0, 10) + '...', planId, hasPassword: !!password })
@@ -95,7 +104,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'subscription',
-      
+
       // 7-day free trial
       subscription_data: {
         trial_period_days: 7,
@@ -104,17 +113,17 @@ export async function POST(request: NextRequest) {
           userId: email, // Will be updated with actual userId after Clerk creation
         },
       },
-      
+
       // Allow promotion codes
       allow_promotion_codes: true,
-      
+
       // Redirect URLs
       success_url: `${baseUrl}/trial-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/signup?step=plan`,
-      
+
       // Collect payment method (card) but don't charge until trial ends
       payment_method_collection: 'always',
-      
+
       // Customer can cancel anytime
       // Pass user data to webhook for account creation after payment
       metadata: {
@@ -142,9 +151,9 @@ export async function POST(request: NextRequest) {
       statusCode: error.statusCode,
       stack: error.stack?.split('\n').slice(0, 3)
     })
-    
+
     return NextResponse.json(
-      { 
+      {
         error: error.message || 'Failed to create subscription',
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },

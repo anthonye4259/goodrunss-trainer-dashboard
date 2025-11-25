@@ -35,6 +35,8 @@ import { cn } from "@/lib/utils"
 import { BookingLinkCard } from "@/components/booking-link-card"
 import { SportSelectorModal } from "@/components/sport-selector-modal"
 import { useSport } from "@/contexts/sport-context"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { ShareableStatsCard } from "@/components/analytics/shareable-stats-card"
 
 interface DashboardStats {
   trainer: {
@@ -208,16 +210,32 @@ export function DashboardOverview() {
             </div>
           </div>
         </div>
-        <Select defaultValue="7days">
-          <SelectTrigger className="w-full sm:w-[180px] bg-card/50 border-border/50 backdrop-blur-sm">
-            <SelectValue placeholder="Select period" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7days">Last 7 Days</SelectItem>
-            <SelectItem value="30days">Last 30 Days</SelectItem>
-            <SelectItem value="90days">Last 90 Days</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white">
+                <Share2 className="mr-2 h-4 w-4" />
+                Share Impact
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] bg-white border-none p-0 overflow-hidden">
+              <div className="p-6">
+                <ShareableStatsCard />
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Select defaultValue="7days">
+            <SelectTrigger className="w-full sm:w-[180px] bg-card/50 border-border/50 backdrop-blur-sm">
+              <SelectValue placeholder="Select period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7days">Last 7 Days</SelectItem>
+              <SelectItem value="30days">Last 30 Days</SelectItem>
+              <SelectItem value="90days">Last 90 Days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Booking Link Card - PROMINENT */}

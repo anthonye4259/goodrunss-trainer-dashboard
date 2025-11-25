@@ -9,9 +9,11 @@ import Stripe from 'stripe'
 import { clerkClient } from '@clerk/nextjs/server'
 import { prisma } from "@/lib/prisma"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-10-29.clover',
-})
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2025-10-29.clover',
+  })
+  : null
 
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -31,6 +33,13 @@ setInterval(() => {
 }, 60 * 60 * 1000) // Every hour
 
 export async function POST(request: NextRequest) {
+  if (!stripe) {
+    return NextResponse.json(
+      { error: 'Stripe is not configured' },
+      { status: 503 }
+    )
+  }
+
   const startTime = Date.now()
   let event: Stripe.Event
 

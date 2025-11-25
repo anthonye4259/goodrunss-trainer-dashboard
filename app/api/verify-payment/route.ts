@@ -3,12 +3,21 @@ import Stripe from "stripe"
 import { prisma } from "@/lib/prisma"
 import { sendBookingConfirmation } from "@/lib/send-email"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-10-29.clover",
-})
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2025-10-29.clover",
+  })
+  : null
 
 export async function GET(request: NextRequest) {
   try {
+    if (!stripe) {
+      return NextResponse.json(
+        { error: "Stripe is not configured" },
+        { status: 503 }
+      )
+    }
+
     const sessionId = request.nextUrl.searchParams.get("session_id")
 
     if (!sessionId) {
@@ -31,7 +40,7 @@ export async function GET(request: NextRequest) {
     // Create session in database and send confirmation email
     try {
       const metadata = session.metadata
-      
+
       if (metadata) {
         // Create the training session in the database
         await prisma.trainer_sessions.create({
