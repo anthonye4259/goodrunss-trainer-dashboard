@@ -37,6 +37,11 @@ import { SportSelectorModal } from "@/components/sport-selector-modal"
 import { useSport } from "@/contexts/sport-context"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { ShareableStatsCard } from "@/components/analytics/shareable-stats-card"
+import { OnboardingChecklist } from "@/components/onboarding-checklist"
+import { EmptyClients } from "@/components/empty-states/empty-clients"
+import { EmptySessions } from "@/components/empty-states/empty-sessions"
+import { EmptyPrograms } from "@/components/empty-states/empty-programs"
+import { EmptyPayments } from "@/components/empty-states/empty-payments"
 
 interface DashboardStats {
   trainer: {
@@ -241,85 +246,97 @@ export function DashboardOverview() {
       {/* Booking Link Card - PROMINENT */}
       <BookingLinkCard />
 
-      <div className="space-y-3">
-        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-orange-400" />
-          Action Required
-        </h2>
-        <div className="grid gap-3 stagger-fade-in">
-          <Card className="bg-gradient-to-r from-red-500/10 to-red-600/5 border-red-500/20 hover:border-red-500/40 transition-colors hover-lift-subtle">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                  <XCircle className="h-5 w-5 text-red-400" />
-                </div>
-                <div>
-                  <p className="font-semibold text-white">{stats.clients.atRisk} {terminology.clientPlural.toLowerCase()} haven't booked in 2+ weeks</p>
-                  <p className="text-sm text-white/60">At risk of churning - reach out today</p>
-                </div>
-              </div>
-              <Button
-                size="sm"
-                className="bg-red-500 hover:bg-red-600 text-white"
-                onClick={() => window.location.href = '/dashboard/clients?filter=at-risk'}
-              >
-                View Clients
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
+      {/* Onboarding Checklist - Show for new users or users with < 3 clients */}
+      {stats.clients.total < 3 && (
+        <OnboardingChecklist />
+      )}
 
-          <Card className="bg-gradient-to-r from-orange-500/10 to-orange-600/5 border-orange-500/20 hover:border-orange-500/40 transition-colors hover-lift-subtle">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                  <DollarSign className="h-5 w-5 text-orange-400" />
-                </div>
-                <div>
-                  <p className="font-semibold text-white">{stats.payments.overdue} payments overdue (${stats.payments.overdueTotal.toFixed(0)} total)</p>
-                  <p className="text-sm text-white/60">Send payment reminders to collect revenue</p>
-                </div>
-              </div>
-              <Button
-                size="sm"
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-                onClick={() => {
-                  // Open GIA with pre-filled prompt
-                  const event = new CustomEvent('openGIA', {
-                    detail: { prompt: 'Send payment reminders to overdue clients' }
-                  })
-                  window.dispatchEvent(event)
-                }}
-              >
-                Send Reminders
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
+      {/* Action Required Section - Show only if there are actual actions */}
+      {(stats.clients.atRisk > 0 || stats.payments.overdue > 0) && (
+        <div className="space-y-3">
+          <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-orange-400" />
+            Action Required
+          </h2>
+          <div className="grid gap-3 stagger-fade-in">
+            {stats.clients.atRisk > 0 && (
+              <Card className="bg-gradient-to-r from-red-500/10 to-red-600/5 border-red-500/20 hover:border-red-500/40 transition-colors hover-lift-subtle">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                      <XCircle className="h-5 w-5 text-red-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">{stats.clients.atRisk} {terminology.clientPlural.toLowerCase()} haven't booked in 2+ weeks</p>
+                      <p className="text-sm text-white/60">At risk of churning - reach out today</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-red-500 hover:bg-red-600 text-white"
+                    onClick={() => window.location.href = '/dashboard/clients?filter=at-risk'}
+                  >
+                    View Clients
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
-          <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 transition-colors hover-lift-subtle">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-primary" />
+            {stats.payments.overdue > 0 && (
+              <Card className="bg-gradient-to-r from-orange-500/10 to-orange-600/5 border-orange-500/20 hover:border-orange-500/40 transition-colors hover-lift-subtle">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                      <DollarSign className="h-5 w-5 text-orange-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">{stats.payments.overdue} payments overdue (${stats.payments.overdueTotal.toFixed(0)} total)</p>
+                      <p className="text-sm text-white/60">Send payment reminders to collect revenue</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                    onClick={() => {
+                      // Open GIA with pre-filled prompt
+                      const event = new CustomEvent('openGIA', {
+                        detail: { prompt: 'Send payment reminders to overdue clients' }
+                      })
+                      window.dispatchEvent(event)
+                    }}
+                  >
+                    Send Reminders
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 transition-colors hover-lift-subtle">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">"HIIT Bootcamp" has 92% completion rate</p>
+                    <p className="text-sm text-white/60">Your best performing program - promote it more</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-white">"HIIT Bootcamp" has 92% completion rate</p>
-                  <p className="text-sm text-white/60">Your best performing program - promote it more</p>
-                </div>
-              </div>
-              <Button
-                size="sm"
-                className="bg-primary hover:bg-primary/90 text-black"
-                onClick={() => window.location.href = '/dashboard/programs?highlight=hiit-bootcamp'}
-              >
-                View Program
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-black"
+                  onClick={() => window.location.href = '/dashboard/programs?highlight=hiit-bootcamp'}
+                >
+                  View Program
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
