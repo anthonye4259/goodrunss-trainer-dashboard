@@ -94,10 +94,10 @@ export default function SignupPage() {
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 mb-4 animate-fade-in">
               <Sparkles className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-bold text-green-600 dark:text-green-400">7-Day Free Trial • Cancel Anytime</span>
+              <span className="text-sm font-bold text-green-600 dark:text-green-400">Join 500+ Trainers Growing with AI</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-              Start Your <span className="text-primary">Free Trial</span>
+              Start Growing Your <span className="text-primary">Training Business</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Join 500+ trainers using AI to grow their business. Full access immediately.
@@ -239,18 +239,17 @@ export default function SignupPage() {
                       {isLoading ? (
                         <div className="flex items-center gap-2">
                           <Loader2 className="h-5 w-5 animate-spin" />
-                          Setting up trial...
+                          Setting up account...
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          Start 7-Day Free Trial <ArrowRight className="h-5 w-5" />
+                          Get Started Now <ArrowRight className="h-5 w-5" />
                         </div>
                       )}
                     </Button>
 
                     <p className="text-center text-xs text-muted-foreground mt-4">
-                      By clicking "Start Trial", you agree to our Terms of Service.
-                      You won't be charged until your trial ends on {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}.
+                      By clicking "Get Started", you agree to our Terms of Service.
                     </p>
                   </form>
                 </CardContent>
