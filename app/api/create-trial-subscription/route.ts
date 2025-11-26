@@ -24,9 +24,9 @@ export async function POST(request: NextRequest) {
     // Log incoming request
     console.log('[TRIAL SIGNUP] Request received')
 
-    const { email, name, businessName, password, planId } = await request.json()
+    const { email, name, businessName, password, planId, referralCode } = await request.json()
 
-    console.log('[TRIAL SIGNUP] Parsed data:', { email, name: name?.substring(0, 10) + '...', planId, hasPassword: !!password })
+    console.log('[TRIAL SIGNUP] Parsed data:', { email, name: name?.substring(0, 10) + '...', planId, hasPassword: !!password, hasReferral: !!referralCode })
 
     if (!email || !planId) {
       console.error('[TRIAL SIGNUP] Missing required fields')

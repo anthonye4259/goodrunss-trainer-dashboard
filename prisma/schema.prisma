@@ -1879,6 +1879,8 @@ model users {
   gia_programs                                         gia_programs[]     @relation("InstructorPrograms")
   gia_program_usage_instructor                         gia_program_usage[] @relation("InstructorProgramUsage")
   gia_program_usage_student                            gia_program_usage[] @relation("StudentProgramUsage")
+  ambassador                                           ambassadors?
+  referrals                                            referrals?
 }
 
 model verification_tokens {
@@ -2177,4 +2179,110 @@ enum GiaProgramType {
   WORKOUT_PROGRAM
   CLASS_SEQUENCE
   DRILL_PROGRESSION
+}
+
+// Ambassador Program Tables
+model ambassadors {
+  id                String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId            String   @unique
+  referralCode      String   @unique
+  isActive          Boolean  @default(true)
+  totalEarnings     Decimal  @default(0) @db.Decimal(10, 2)
+  pendingEarnings   Decimal  @default(0) @db.Decimal(10, 2)
+  paidEarnings      Decimal  @default(0) @db.Decimal(10, 2)
+  totalReferrals    Int      @default(0)
+  activeReferrals   Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  users             users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referrals         referrals[]
+  commissions       commissions[]
+  payouts           payouts[]
+  
+  @@index([userId])
+  @@index([referralCode])
+  @@index([isActive])
+}
+
+model referrals {
+  id                String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  ambassadorId      String
+  referredUserId    String   @unique
+  referralCode      String
+  status            ReferralStatus @default(PENDING)
+  convertedAt       DateTime?
+  firstPaymentAt    DateTime?
+  createdAt         DateTime @default(now())
+  
+  ambassador        ambassadors @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+  referredUser      users    @relation(fields: [referredUserId], references: [id], onDelete: Cascade)
+  commissions       commissions[]
+  
+  @@index([ambassadorId])
+  @@index([referredUserId])
+  @@index([referralCode])
+  @@index([status])
+}
+
+model commissions {
+  id                String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  ambassadorId      String
+  referralId        String
+  amount            Decimal  @db.Decimal(10, 2)
+  type              CommissionType
+  status            CommissionStatus @default(PENDING)
+  paymentId         String?
+  paidAt            DateTime?
+  createdAt         DateTime @default(now())
+  
+  ambassador        ambassadors @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+  referral          referrals @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  
+  @@index([ambassadorId])
+  @@index([referralId])
+  @@index([status])
+  @@index([type])
+}
+
+model payouts {
+  id                String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  ambassadorId      String
+  amount            Decimal  @db.Decimal(10, 2)
+  status            PayoutStatus @default(PENDING)
+  method            String?
+  transactionId     String?
+  paidAt            DateTime?
+  createdAt         DateTime @default(now())
+  
+  ambassador        ambassadors @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+  
+  @@index([ambassadorId])
+  @@index([status])
+}
+
+enum ReferralStatus {
+  PENDING
+  CONVERTED
+  ACTIVE
+  CHURNED
+}
+
+enum CommissionType {
+  FIRST_MONTH    // 50%
+  RECURRING      // 10%
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }
