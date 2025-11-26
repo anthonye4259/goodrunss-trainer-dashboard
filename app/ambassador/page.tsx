@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Copy, DollarSign, Users, TrendingUp, Check, ExternalLink } from "lucide-react"
+import { Copy, DollarSign, Users, TrendingUp, Check, ExternalLink, Globe } from "lucide-react"
 
 interface AmbassadorStats {
     totalEarnings: number
@@ -88,8 +88,13 @@ export default function AmbassadorDashboard() {
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
                 <div>
-                    <h1 className="text-4xl font-bold tracking-tight mb-2">Ambassador Dashboard</h1>
-                    <p className="text-muted-foreground">Track your referrals and earnings</p>
+                    <div className="flex items-center gap-2 mb-2">
+                        <h1 className="text-4xl font-bold tracking-tight">Ambassador Dashboard</h1>
+                        <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1">
+                            <Globe className="h-3 w-3" /> Global Program
+                        </span>
+                    </div>
+                    <p className="text-muted-foreground">Track your referrals and earnings worldwide (USD)</p>
                 </div>
 
                 {/* Stats Grid */}
@@ -180,6 +185,7 @@ export default function AmbassadorDashboard() {
                                 <li>• <strong className="text-green-600">50%</strong> commission on first month sales</li>
                                 <li>• <strong className="text-green-600">10%</strong> recurring commission every month after</li>
                                 <li>• Instant tracking and transparent reporting</li>
+                                <li>• <strong className="text-blue-600">Global Payouts</strong> via Wise & PayPal (USD)</li>
                             </ul>
                         </div>
                     </CardContent>
@@ -214,10 +220,10 @@ export default function AmbassadorDashboard() {
                                                 <td className="p-4">
                                                     <span
                                                         className={`px-2 py-1 rounded-full text-xs font-medium ${referral.status === "ACTIVE"
-                                                                ? "bg-green-100 text-green-700"
-                                                                : referral.status === "CONVERTED"
-                                                                    ? "bg-blue-100 text-blue-700"
-                                                                    : "bg-gray-100 text-gray-700"
+                                                            ? "bg-green-100 text-green-700"
+                                                            : referral.status === "CONVERTED"
+                                                                ? "bg-blue-100 text-blue-700"
+                                                                : "bg-gray-100 text-gray-700"
                                                             }`}
                                                     >
                                                         {referral.status}

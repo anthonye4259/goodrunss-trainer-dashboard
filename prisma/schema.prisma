@@ -1805,6 +1805,7 @@ model user_subscriptions {
   updatedAt            DateTime
   subscription_usage   subscription_usage[]
   subscription_plans   subscription_plans   @relation(fields: [planId], references: [id])
+  user                 users                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, planId])
   @@index([currentPeriodEnd])
@@ -1881,6 +1882,7 @@ model users {
   gia_program_usage_student                            gia_program_usage[] @relation("StudentProgramUsage")
   ambassador                                           ambassadors?
   referrals                                            referrals?
+  user_subscriptions                                   user_subscriptions[]
 }
 
 model verification_tokens {
