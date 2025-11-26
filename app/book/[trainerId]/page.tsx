@@ -1,18 +1,151 @@
-import { Share2 } from "lucide-react"
+"use client"
+
+import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
+import { Calendar } from "@/components/ui/calendar"
+import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Avatar } from "@/components/ui/avatar"
+import { Check, Clock, DollarSign, MapPin, Loader2, Share2 } from "lucide-react"
 import Link from "next/link"
 
-// ... (keep existing imports)
+interface Trainer {
+  id: string
+  name: string
+  email: string
+  bio: string
+  specialties: string[]
+  hourlyRate: number
+  image: string
+  location: string
+  sportType?: string
+}
+
+interface Service {
+  id: string
+  name: string
+  duration: number
+  price: number
+  description: string
+}
 
 export default function PublicBookingPage() {
-  // ... (keep existing state)
+  const params = useParams()
+  const trainerId = params.trainerId as string
+
+  const [trainer, setTrainer] = useState<Trainer | null>(null)
+  const [services, setServices] = useState<Service[]>([])
+  const [availability, setAvailability] = useState<{ [key: string]: string[] }>({})
+  const [availableTimes, setAvailableTimes] = useState<string[]>([])
+  const [selectedDate, setSelectedDate] = useState<Date>()
+  const [selectedTime, setSelectedTime] = useState<string>()
+  const [selectedService, setSelectedService] = useState<string>()
+  const [loading, setLoading] = useState(true)
+  const [loadingTimes, setLoadingTimes] = useState(false)
+
+  // Fetch trainer data on mount
+  useEffect(() => {
+    async function fetchTrainer() {
+      try {
+        const res = await fetch(`/api/public/trainer/${trainerId}`)
+        if (res.ok) {
+          const data = await res.json()
+          setTrainer(data.trainer)
+          setServices(data.services || [])
+        }
+      } catch (error) {
+        console.error("Error fetching trainer:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchTrainer()
+  }, [trainerId])
+
+  // Fetch availability on mount
+  useEffect(() => {
+    async function fetchAvailability() {
+      try {
+        const res = await fetch(`/api/public/availability/${trainerId}`)
+        if (res.ok) {
+          const data = await res.json()
+          setAvailability(data.availability || {})
+        }
+      } catch (error) {
+        console.error("Error fetching availability:", error)
+      }
+    }
+    fetchAvailability()
+  }, [trainerId])
+
+  // Update available times when date changes
+  useEffect(() => {
+    if (selectedDate) {
+      setLoadingTimes(true)
+      setSelectedTime(undefined)
+
+      // Get day of week (Sunday = 0, Monday = 1, etc.)
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+      const dayName = dayNames[selectedDate.getDay()]
+
+      // Get times for this day
+      const timesForDay = availability[dayName] || []
+      setAvailableTimes(timesForDay)
+      setLoadingTimes(false)
+    }
+  }, [selectedDate, availability])
+
+  const handleBooking = () => {
+    if (!selectedDate || !selectedTime || !selectedService) {
+      alert("Please select a service, date, and time")
+      return
+    }
+
+    // Redirect to checkout
+    const checkoutUrl = `/book/${trainerId}/checkout?service=${selectedService}&date=${selectedDate.toISOString()}&time=${encodeURIComponent(selectedTime)}`
+    window.location.href = checkoutUrl
+  }
+
+  // Get sport-specific terminology
+  const getTerminology = () => {
+    const sportType = trainer?.sportType?.toLowerCase() || ''
+
+    if (sportType.includes('pickleball')) {
+      return { session: 'Lesson', sessions: 'Lessons', book: 'Book a Lesson' }
+    } else if (sportType.includes('yoga') || sportType.includes('pilates') || sportType.includes('barre')) {
+      return { session: 'Class', sessions: 'Classes', book: 'Book a Class' }
+    } else if (sportType.includes('basketball') || sportType.includes('tennis') || sportType.includes('golf')) {
+      return { session: 'Training Session', sessions: 'Training', book: 'Book Training' }
+    } else {
+      return { session: 'Session', sessions: 'Sessions', book: 'Book Session' }
+    }
+  }
+
+  const terms = getTerminology()
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href)
     alert("Profile link copied to clipboard!")
   }
 
-  // ... (keep existing effects)
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+      </div>
+    )
+  }
+
+  if (!trainer) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Trainer Not Found</h1>
+          <p className="text-gray-600">This booking link may be invalid.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
