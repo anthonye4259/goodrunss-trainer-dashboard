@@ -66,6 +66,28 @@ export default function AmbassadorDashboard() {
     }
 
     if (!stats) {
+        const handleRegister = async () => {
+            try {
+                setLoading(true)
+                const res = await fetch("/api/ambassador/register", {
+                    method: "POST"
+                })
+                const data = await res.json()
+
+                if (res.ok) {
+                    // Refresh the page to show the dashboard
+                    window.location.reload()
+                } else {
+                    alert(data.error || "Failed to register as ambassador")
+                }
+            } catch (error) {
+                console.error("Error registering:", error)
+                alert("Failed to register as ambassador")
+            } finally {
+                setLoading(false)
+            }
+        }
+
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <Card className="max-w-md">
@@ -74,8 +96,8 @@ export default function AmbassadorDashboard() {
                         <p className="text-muted-foreground mb-6">
                             Earn 50% commission on first month sales and 10% recurring commissions!
                         </p>
-                        <Button onClick={() => window.location.href = "/api/ambassador/register"}>
-                            Become an Ambassador
+                        <Button onClick={handleRegister} disabled={loading}>
+                            {loading ? "Registering..." : "Become an Ambassador"}
                         </Button>
                     </CardContent>
                 </Card>
