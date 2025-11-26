@@ -5,39 +5,58 @@ import { prisma } from "@/lib/prisma"
 export async function GET(req: NextRequest) {
     try {
         const { userId } = getAuth(req)
+        const { searchParams } = new URL(req.url)
+        const email = searchParams.get("email")
 
-        if (!userId) {
+        let ambassador
+
+        // Support both authenticated users and email-based lookups
+        if (email) {
+            // Public ambassador lookup by email
+            ambassador = await prisma.ambassadors.findUnique({
+                where: { email },
+                include: {
+                    referrals: {
+                        include: {
+                            referredUser: true,
+                            commissions: true
+                        }
+                    },
+                    commissions: true
+                }
+            })
+        } else if (userId) {
+            // Authenticated user lookup
+            const user = await prisma.users.findUnique({
+                where: { clerkId: userId },
+                include: {
+                    ambassador: {
+                        include: {
+                            referrals: {
+                                include: {
+                                    referredUser: true,
+                                    commissions: true
+                                }
+                            },
+                            commissions: true
+                        }
+                    }
+                }
+            })
+
+            if (!user) {
+                return NextResponse.json({ error: "User not found" }, { status: 404 })
+            }
+
+            ambassador = user.ambassador
+        } else {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        // Get user from database
-        const user = await prisma.users.findUnique({
-            where: { clerkId: userId },
-            include: {
-                ambassador: {
-                    include: {
-                        referrals: {
-                            include: {
-                                referredUser: true,
-                                commissions: true
-                            }
-                        },
-                        commissions: true
-                    }
-                }
-            }
-        })
-
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 })
-        }
-
         // If not an ambassador yet, return null
-        if (!user.ambassador) {
+        if (!ambassador) {
             return NextResponse.json({ stats: null, referrals: [] })
         }
-
-        const ambassador = user.ambassador
 
         // Calculate stats
         const stats = {
@@ -47,7 +66,9 @@ export async function GET(req: NextRequest) {
             totalReferrals: ambassador.totalReferrals,
             activeReferrals: ambassador.activeReferrals,
             referralCode: ambassador.referralCode,
-            referralLink: `${process.env.NEXT_PUBLIC_APP_URL}/signup?ref=${ambassador.referralCode}`
+            referralLink: `${process.env.NEXT_PUBLIC_APP_URL}/signup?ref=${ambassador.referralCode}`,
+            payoutMethod: ambassador.payoutMethod,
+            payoutEmail: ambassador.payoutEmail
         }
 
         // Format referrals

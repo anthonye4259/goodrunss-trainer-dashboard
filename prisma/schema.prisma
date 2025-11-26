@@ -2186,7 +2186,9 @@ enum GiaProgramType {
 // Ambassador Program Tables
 model ambassadors {
   id                String   @id @default(dbgenerated("(gen_random_uuid())::text"))
-  userId            String   @unique
+  userId            String?  @unique  // Made optional for public signups
+  email             String?  @unique  // For non-user ambassadors
+  name              String?             // Ambassador's name
   referralCode      String   @unique
   isActive          Boolean  @default(true)
   totalEarnings     Decimal  @default(0) @db.Decimal(10, 2)
@@ -2194,15 +2196,20 @@ model ambassadors {
   paidEarnings      Decimal  @default(0) @db.Decimal(10, 2)
   totalReferrals    Int      @default(0)
   activeReferrals   Int      @default(0)
+  payoutMethod      String?  @default("PAYPAL") // PAYPAL, BANK_ACCOUNT, STRIPE
+  payoutEmail       String?             // PayPal email
+  bankAccountLast4  String?             // Last 4 of bank account
+  stripeAccountId   String?             // Stripe Connect account ID
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   
-  users             users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users             users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   referrals         referrals[]
   commissions       commissions[]
   payouts           payouts[]
   
   @@index([userId])
+  @@index([email])
   @@index([referralCode])
   @@index([isActive])
 }
