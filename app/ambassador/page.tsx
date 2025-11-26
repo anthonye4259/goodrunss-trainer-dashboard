@@ -36,7 +36,15 @@ export default function AmbassadorDashboard() {
 
     const fetchAmbassadorData = async () => {
         try {
-            const res = await fetch("/api/ambassador/stats")
+            // Check for email parameter in URL
+            const params = new URLSearchParams(window.location.search)
+            const email = params.get("email")
+
+            const url = email
+                ? `/api/ambassador/stats?email=${encodeURIComponent(email)}`
+                : "/api/ambassador/stats"
+
+            const res = await fetch(url)
             if (res.ok) {
                 const data = await res.json()
                 setStats(data.stats)

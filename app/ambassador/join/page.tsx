@@ -45,6 +45,8 @@ export default function AmbassadorJoinPage() {
     }
 
     if (success) {
+        const dashboardLink = `/ambassador?email=${encodeURIComponent(formData.email)}`
+
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
                 <Card className="max-w-2xl w-full border-none shadow-2xl bg-slate-800/50 backdrop-blur">
@@ -66,16 +68,31 @@ export default function AmbassadorJoinPage() {
 
                         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6">
                             <p className="text-sm text-blue-300">
-                                📧 Check your email for your unique referral link and next steps!
+                                📧 Bookmark this link to access your dashboard anytime:
+                            </p>
+                            <p className="text-xs text-blue-400 mt-2 font-mono break-all">
+                                {window.location.origin}{dashboardLink}
                             </p>
                         </div>
 
-                        <Button
-                            onClick={() => window.location.href = "/ambassador"}
-                            className="bg-green-600 hover:bg-green-700"
-                        >
-                            Go to Dashboard
-                        </Button>
+                        <div className="flex gap-3">
+                            <Button
+                                onClick={() => window.location.href = dashboardLink}
+                                className="flex-1 bg-green-600 hover:bg-green-700"
+                            >
+                                Go to Dashboard
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(`${window.location.origin}${dashboardLink}`)
+                                    alert("Dashboard link copied!")
+                                }}
+                                variant="outline"
+                                className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-white"
+                            >
+                                Copy Link
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
