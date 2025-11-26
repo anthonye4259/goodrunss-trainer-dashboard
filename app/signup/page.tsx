@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,6 +20,22 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [referralCode, setReferralCode] = useState<string | null>(null)
+
+  // Capture referral code from URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const ref = params.get('ref')
+    if (ref) {
+      setReferralCode(ref)
+      // Store in sessionStorage for persistence
+      sessionStorage.setItem('referralCode', ref)
+    } else {
+      // Check sessionStorage
+      const stored = sessionStorage.getItem('referralCode')
+      if (stored) setReferralCode(stored)
+    }
+  }, [])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,6 +65,7 @@ export default function SignupPage() {
           name,
           password, // Send securely to webhook via Stripe metadata
           planId: selectedPlan,
+          referralCode, // Track ambassador referrals
         }),
       })
 

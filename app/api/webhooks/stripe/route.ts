@@ -563,6 +563,48 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true, updated: updated.count })
       }
 
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as Stripe.Invoice
+
+        // Skip if no subscription (e.g. one-time payment)
+        if (!invoice.subscription) return NextResponse.json({ received: true })
+
+        console.log(`[WEBHOOK] Processing invoice payment ${invoice.id}`)
+
+        // Get user from subscription
+        const subscriptionId = invoice.subscription as string
+        const subscription = await prisma.user_subscriptions.findFirst({
+          where: { stripeSubscriptionId: subscriptionId },
+          include: { user: true }
+        })
+
+        if (!subscription || !subscription.user) {
+          console.error(`[WEBHOOK] Subscription/User not found for invoice ${invoice.id}`)
+          return NextResponse.json({ received: true })
+        }
+
+        // Process Commission
+        try {
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://goodrunss-trainer-dashboard.vercel.app'
+          const baseUrl = appUrl.startsWith('http') ? appUrl : `https://${appUrl}`
+
+          await fetch(`${baseUrl}/api/ambassador/process-commission`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: subscription.user.id,
+              amount: invoice.amount_paid / 100, // Convert cents to dollars
+              isFirstPayment: invoice.billing_reason === 'subscription_create'
+            })
+          })
+          console.log(`[WEBHOOK] Commission processed for user ${subscription.user.id}`)
+        } catch (err) {
+          console.error(`[WEBHOOK] Failed to process commission: ${err}`)
+        }
+
+        return NextResponse.json({ success: true })
+      }
+
       default:
         console.log(`[WEBHOOK] Unhandled event type: ${event.type}`)
         return NextResponse.json({ received: true })
