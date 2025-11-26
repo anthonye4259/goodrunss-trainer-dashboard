@@ -567,7 +567,7 @@ export async function POST(request: NextRequest) {
         const invoice = event.data.object as Stripe.Invoice
 
         // Skip if no subscription (e.g. one-time payment)
-        if (!invoice.subscription) return NextResponse.json({ received: true })
+        if (!(invoice as any).subscription) return NextResponse.json({ received: true })
 
         console.log(`[WEBHOOK] Processing invoice payment ${invoice.id}`)
 
