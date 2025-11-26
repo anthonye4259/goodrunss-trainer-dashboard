@@ -121,7 +121,7 @@ export default async function LeaderboardPage() {
                                         {index + 1}
                                     </div>
                                     <Avatar className="w-10 h-10 border border-slate-700">
-                                        <AvatarImage src={profile.profilePhotoUrl || profile.user.image || ""} />
+                                        <AvatarImage src={("profilePhotoUrl" in profile ? profile.profilePhotoUrl : null) || profile.user.image || ""} />
                                         <AvatarFallback>{(profile.user.name || "T").charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 min-w-0">
@@ -161,7 +161,7 @@ export default async function LeaderboardPage() {
                                         {index + 1}
                                     </div>
                                     <Avatar className="w-10 h-10 border border-slate-700">
-                                        <AvatarImage src={profile.profilePhotoUrl || profile.user.image || ""} />
+                                        <AvatarImage src={("profilePhotoUrl" in profile ? profile.profilePhotoUrl : null) || profile.user.image || ""} />
                                         <AvatarFallback>{(profile.user.name || "T").charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 min-w-0">
@@ -197,7 +197,7 @@ export default async function LeaderboardPage() {
                                         {index + 1}
                                     </div>
                                     <Avatar className="w-10 h-10 border border-slate-700">
-                                        <AvatarImage src={profile.profilePhotoUrl || profile.user.image || ""} />
+                                        <AvatarImage src={("profilePhotoUrl" in profile ? profile.profilePhotoUrl : null) || profile.user.image || ""} />
                                         <AvatarFallback>{(profile.user.name || "T").charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 min-w-0">

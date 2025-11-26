@@ -11,9 +11,9 @@ import Image from "next/image"
 export const dynamic = "force-dynamic"
 
 interface TrainerProfilePageProps {
-    params: {
+    params: Promise<{
         id: string
-    }
+    }>
 }
 
 async function getTrainerProfile(id: string) {
@@ -50,7 +50,8 @@ async function getTrainerProfile(id: string) {
 }
 
 export async function generateMetadata({ params }: TrainerProfilePageProps): Promise<Metadata> {
-    const profile = await getTrainerProfile(params.id)
+    const { id } = await params
+    const profile = await getTrainerProfile(id)
 
     if (!profile) {
         return {
@@ -65,7 +66,8 @@ export async function generateMetadata({ params }: TrainerProfilePageProps): Pro
 }
 
 export default async function TrainerProfilePage({ params }: TrainerProfilePageProps) {
-    const profile = await getTrainerProfile(params.id)
+    const { id } = await params
+    const profile = await getTrainerProfile(id)
 
     if (!profile) {
         return notFound()
