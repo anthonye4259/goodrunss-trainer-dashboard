@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, MessageSquare, HelpCircle, Globe } from "lucide-react"
+import { Bell, MessageSquare, HelpCircle, Globe, Crown, Star, Check } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
@@ -26,11 +27,18 @@ export function Header() {
   const { user, isLoaded } = useUser()
   const [userEmail, setUserEmail] = useState<string>("")
   const [userName, setUserName] = useState<string>("")
+  const [trainerProfile, setTrainerProfile] = useState<any>(null)
 
   useEffect(() => {
     if (isLoaded && user) {
       setUserEmail(user.primaryEmailAddress?.emailAddress || "")
       setUserName(user.fullName || user.firstName || "Trainer")
+
+      // Fetch trainer profile for status badge
+      fetch("/api/trainer/profile")
+        .then(res => res.json())
+        .then(data => setTrainerProfile(data))
+        .catch(err => console.error("Failed to fetch profile", err))
     }
   }, [isLoaded, user])
 
@@ -57,15 +65,28 @@ export function Header() {
     { code: "ur", name: "Urdu", native: "اردو" },
   ]
 
+  const getTierBadge = (tier: string) => {
+    switch (tier) {
+      case "LEGEND":
+        return <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none"><Crown className="w-3 h-3 mr-1" /> LEGEND</Badge>
+      case "ELITE":
+        return <Badge className="bg-gradient-to-r from-amber-400 to-yellow-600 text-black border-none"><Star className="w-3 h-3 mr-1 fill-black" /> ELITE</Badge>
+      case "PRO":
+        return <Badge className="bg-blue-500 text-white border-none"><Check className="w-3 h-3 mr-1" /> PRO</Badge>
+      default:
+        return <Badge variant="outline" className="text-slate-400 border-slate-700">MEMBER</Badge>
+    }
+  }
+
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card/95 backdrop-blur-sm px-4 md:px-8 flex-shrink-0">
       <div className="flex items-center gap-2 md:gap-3">
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-lg blur-md opacity-50" />
           <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-lg bg-white flex items-center justify-center p-1">
-            <Image 
-              src="/goodrunss-logo-green.svg" 
-              alt="GoodRunss" 
+            <Image
+              src="/goodrunss-logo-green.svg"
+              alt="GoodRunss"
               width={40}
               height={40}
               className="object-contain w-full h-full"
@@ -79,8 +100,15 @@ export function Header() {
           <h1 className="text-lg md:text-2xl font-bold tracking-tighter bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient-shift">
             GOODRUNSS
           </h1>
-          <div className="text-[10px] md:text-xs font-semibold tracking-widest text-primary/60 uppercase -mt-1">
-            Trainer Dashboard
+          <div className="flex items-center gap-2 -mt-1">
+            <div className="text-[10px] md:text-xs font-semibold tracking-widest text-primary/60 uppercase">
+              Trainer Dashboard
+            </div>
+            {trainerProfile && trainerProfile.tier !== "MEMBER" && (
+              <div className="hidden md:block transform scale-75 origin-left">
+                {getTierBadge(trainerProfile.tier)}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -99,9 +127,8 @@ export function Header() {
               <DropdownMenuItem
                 key={lang.code}
                 onClick={() => setLanguage(lang.code as any)}
-                className={`cursor-pointer focus:bg-primary/10 ${
-                  language === lang.code ? "bg-primary/10 text-primary" : "text-foreground hover:bg-primary/10"
-                }`}
+                className={`cursor-pointer focus:bg-primary/10 ${language === lang.code ? "bg-primary/10 text-primary" : "text-foreground hover:bg-primary/10"
+                  }`}
               >
                 <div className="flex items-center justify-between w-full">
                   <span>{lang.name}</span>
@@ -220,25 +247,38 @@ export function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-primary/10 transition-colors">
-              <Avatar className="h-10 w-10">
+              <Avatar className="h-10 w-10 border-2 border-primary/20">
                 <AvatarImage src={user?.imageUrl} alt={userName} />
                 <AvatarFallback className="bg-primary text-background font-semibold">
                   {userName.split(' ').map(n => n[0]).join('').toUpperCase() || 'T'}
                 </AvatarFallback>
               </Avatar>
+              {trainerProfile && trainerProfile.isVerified && (
+                <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-0.5 border-2 border-card">
+                  <Check className="w-3 h-3" />
+                </div>
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56 bg-card border-primary/20" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-semibold text-primary">{userName || "Trainer"}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-primary">{userName || "Trainer"}</p>
+                  {trainerProfile && getTierBadge(trainerProfile.tier)}
+                </div>
                 <p className="text-xs text-primary/70">{userEmail || "Loading..."}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-primary/20" />
-            <Link href="/dashboard/settings">
+            <Link href={trainerProfile ? `/trainer/${trainerProfile.userId}` : "/dashboard/settings"}>
               <DropdownMenuItem className="text-primary hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
-                Profile
+                Public Profile
+              </DropdownMenuItem>
+            </Link>
+            <Link href="/dashboard/leaderboard">
+              <DropdownMenuItem className="text-primary hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                Leaderboard
               </DropdownMenuItem>
             </Link>
             <Link href="/dashboard/settings">
@@ -259,3 +299,4 @@ export function Header() {
     </header>
   )
 }
+

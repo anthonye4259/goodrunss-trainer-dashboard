@@ -1883,6 +1883,7 @@ model users {
   ambassador                                           ambassadors?
   referrals                                            referrals?
   user_subscriptions                                   user_subscriptions[]
+  trainer_profile                                      trainer_profiles?
 }
 
 model verification_tokens {
@@ -2294,4 +2295,92 @@ enum PayoutStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+// Community & High-Status Features Schema
+
+enum TrainerTier {
+  MEMBER    // Default
+  PRO       // $5k+ monthly revenue
+  ELITE     // $10k+ monthly revenue
+  LEGEND    // $25k+ monthly revenue
+}
+
+model trainer_profiles {
+  id                String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId            String   @unique
+  bio               String?
+  specialties       String[] @default([])
+  certifications    String[] @default([])
+  yearsExperience   Int?
+  instagramHandle   String?
+  tiktokHandle      String?
+  youtubeChannel    String?
+  websiteUrl        String?
+  tier              TrainerTier @default(MEMBER)
+  badges            String[] @default([]) // VERIFIED, TOP_10, FIVE_STAR, TRENDING, etc.
+  isVerified        Boolean  @default(false)
+  profilePhotoUrl   String?
+  coverPhotoUrl     String?
+  location          String?
+  hourlyRate        Float?
+  monthlyRevenue    Decimal  @default(0) @db.Decimal(10, 2)
+  totalClients      Int      @default(0)
+  activeClients     Int      @default(0)
+  averageRating     Float?
+  totalReviews      Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  user              users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  success_stories   success_stories[]
+  
+  @@index([userId])
+  @@index([tier])
+  @@index([isVerified])
+  @@index([monthlyRevenue])
+}
+
+model success_stories {
+  id              String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  trainerId       String
+  trainerProfileId String
+  clientName      String
+  beforePhotoUrl  String?
+  afterPhotoUrl   String?
+  beforeVideoUrl  String?
+  afterVideoUrl   String?
+  testimonial     String
+  metrics         Json?    // { weightLost: 20, prsHit: 5, etc. }
+  timeframe       String?  // "3 months", "6 weeks", etc.
+  isPublic        Boolean  @default(true)
+  likes           Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  trainer_profile trainer_profiles @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
+  
+  @@index([trainerProfileId])
+  @@index([isPublic])
+  @@index([createdAt])
+}
+
+model community_posts {
+  id          String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  trainerId   String
+  type        String   // SUCCESS_STORY, TIP, MILESTONE, QUESTION
+  title       String?
+  content     String
+  mediaUrls   String[] @default([])
+  likes       Int      @default(0)
+  comments    Int      @default(0)
+  views       Int      @default(0)
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([trainerId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([likes])
 }
