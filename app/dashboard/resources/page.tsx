@@ -80,13 +80,13 @@ export default async function ResourcesPage() {
         <div className="space-y-8 pb-20">
             <div>
                 <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-                    <FileText className="w-8 h-8 text-gold" />
+                    <FileText className="w-8 h-8 text-primary" />
                     Exclusive Resources
                 </h1>
                 <p className="text-slate-400 mt-2">
                     Premium tools, templates, and perks to scale your business.
                     <br />
-                    <span className="text-sm">Your current access level: <span className="text-gold font-bold">{userTier}</span></span>
+                    <span className="text-sm">Your current access level: <span className="text-primary font-bold">{userTier}</span></span>
                 </p>
             </div>
 

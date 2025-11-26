@@ -3,83 +3,79 @@
 @tailwind utilities;
 
 :root {
-  /* Light mode - Premium & Clean */
-  --background: 0 0% 98%;
-  --foreground: 240 10% 3.9%;
+  /* Light mode - Clean, minimal, professional */
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
 
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
+  --card-foreground: 222 47% 11%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
+  --popover-foreground: 222 47% 11%;
 
-  /* Primary - Rich Gold */
-  --primary: 46 65% 52%;
-  /* #D4AF37 */
-  --primary-foreground: 240 5.9% 10%;
+  /* Primary - Lime green (GoodRunss brand) */
+  --primary: 88 70% 50%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
 
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
 
-  --accent: 46 65% 52%;
-  --accent-foreground: 240 5.9% 10%;
+  --accent: 88 70% 50%;
+  --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 84.2% 60.2%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 46 65% 52%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 88 70% 50%;
 
   --radius: 0.75rem;
 }
 
-/* Raya-Inspired Dark Mode - Deep Blacks & Golds */
+/* Refined dark mode - Cleaner, less visual noise */
 .dark {
-  /* Core backgrounds - Deepest Black */
-  --background: 240 10% 3.9%;
-  /* #0A0A0A */
-  --foreground: 0 0% 98%;
+  /* Core backgrounds - Simplified navy */
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
 
-  /* Card system - Slightly lighter black */
-  --card: 240 10% 6%;
-  /* #111111 */
-  --card-foreground: 0 0% 98%;
+  /* Card system - Single shade for consistency */
+  --card: 222 47% 15%;
+  --card-foreground: 210 40% 98%;
 
   /* Popover */
-  --popover: 240 10% 6%;
-  --popover-foreground: 0 0% 98%;
+  --popover: 222 47% 15%;
+  --popover-foreground: 210 40% 98%;
 
-  /* Primary - Rich Gold */
-  --primary: 46 65% 52%;
-  /* #D4AF37 */
-  --primary-foreground: 240 5.9% 10%;
+  /* Primary - Lime green (only accent color) */
+  --primary: 88 70% 65%;
+  --primary-foreground: 222 47% 11%;
 
-  /* Secondary - Dark Gray */
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
+  /* Secondary - Subtle gray */
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
 
   /* Muted */
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
 
-  /* Accent - Gold */
-  --accent: 46 65% 52%;
-  --accent-foreground: 240 5.9% 10%;
+  /* Accent - Same as primary for consistency */
+  --accent: 88 70% 65%;
+  --accent-foreground: 222 47% 11%;
 
   /* Destructive */
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
 
-  /* Borders - Subtle Gold/Gray */
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
+  /* Borders - Subtle */
+  --border: 217 33% 24%;
+  --input: 217 33% 24%;
 
-  /* Ring - Gold */
-  --ring: 46 65% 52%;
+  /* Ring - Primary color */
+  --ring: 88 70% 65%;
 }
 
 @layer base {

@@ -90,13 +90,13 @@ export default async function LeaderboardPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-                        <Trophy className="w-8 h-8 text-gold" />
+                        <Trophy className="w-8 h-8 text-primary" />
                         Leaderboard
                     </h1>
                     <p className="text-slate-400">Top performers in the GoodRunss Elite community</p>
                 </div>
                 <div className="bg-slate-900/50 border border-slate-800 rounded-lg px-4 py-2 flex items-center gap-2">
-                    <Crown className="w-5 h-5 text-gold" />
+                    <Crown className="w-5 h-5 text-primary" />
                     <span className="text-slate-300 text-sm">You are ranked <span className="text-white font-bold">#42</span></span>
                 </div>
             </div>
@@ -105,7 +105,7 @@ export default async function LeaderboardPage() {
                 {/* Top Earners */}
                 <Card className="bg-slate-900/50 border-slate-800 backdrop-blur h-full">
                     <CardHeader className="pb-4">
-                        <CardTitle className="text-xl text-gold flex items-center gap-2">
+                        <CardTitle className="text-xl text-primary flex items-center gap-2">
                             <TrendingUp className="w-5 h-5" />
                             Top Earners
                         </CardTitle>
@@ -114,7 +114,7 @@ export default async function LeaderboardPage() {
                         {topEarners.length > 0 ? (
                             topEarners.map((profile, index) => (
                                 <div key={profile.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-800/50 transition-colors">
-                                    <div className={`w-8 h-8 flex items-center justify-center font-bold rounded-full ${index === 0 ? "bg-gold text-black" :
+                                    <div className={`w-8 h-8 flex items-center justify-center font-bold rounded-full ${index === 0 ? "bg-primary text-black" :
                                         index === 1 ? "bg-slate-300 text-black" :
                                             index === 2 ? "bg-amber-700 text-white" : "bg-slate-800 text-slate-500"
                                         }`}>
@@ -203,7 +203,7 @@ export default async function LeaderboardPage() {
                                     <div className="flex-1 min-w-0">
                                         <p className="text-white font-medium truncate">{profile.user.name}</p>
                                         <div className="flex items-center gap-1">
-                                            <Star className="w-3 h-3 text-gold fill-gold" />
+                                            <Star className="w-3 h-3 text-primary fill-primary" />
                                             <span className="text-xs text-slate-400">{profile.averageRating?.toFixed(1) || "N/A"}</span>
                                         </div>
                                     </div>

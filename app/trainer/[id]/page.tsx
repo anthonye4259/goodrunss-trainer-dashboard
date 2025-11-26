@@ -123,7 +123,7 @@ export default async function TrainerProfilePage({ params }: TrainerProfilePageP
                             <h1 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-2">
                                 {user.name}
                                 {profile.tier !== "MEMBER" && (
-                                    <Badge variant="outline" className="border-gold text-gold bg-gold/10 uppercase text-xs tracking-wider">
+                                    <Badge variant="outline" className="border-primary text-primary bg-primary/10 uppercase text-xs tracking-wider">
                                         {profile.tier}
                                     </Badge>
                                 )}
@@ -139,13 +139,13 @@ export default async function TrainerProfilePage({ params }: TrainerProfilePageP
                             )}
                             {profile.yearsExperience && (
                                 <div className="flex items-center gap-1">
-                                    <Star className="w-4 h-4 text-gold" />
+                                    <Star className="w-4 h-4 text-primary" />
                                     {profile.yearsExperience} Years Exp.
                                 </div>
                             )}
                             {profile.averageRating && (
                                 <div className="flex items-center gap-1">
-                                    <Star className="w-4 h-4 text-gold fill-gold" />
+                                    <Star className="w-4 h-4 text-primary fill-primary" />
                                     {profile.averageRating.toFixed(1)} ({profile.totalReviews})
                                 </div>
                             )}
@@ -161,7 +161,7 @@ export default async function TrainerProfilePage({ params }: TrainerProfilePageP
                     </div>
 
                     <div className="flex gap-3 w-full md:w-auto mt-4 md:mt-0">
-                        <Button className="flex-1 md:flex-none bg-gold hover:bg-yellow-600 text-black font-bold">
+                        <Button className="flex-1 md:flex-none bg-primary hover:bg-yellow-600 text-black font-bold">
                             Book Now
                         </Button>
                         <Button variant="outline" className="flex-1 md:flex-none border-slate-700 hover:bg-slate-800">
@@ -209,7 +209,7 @@ export default async function TrainerProfilePage({ params }: TrainerProfilePageP
                     </Card>
                     <Card className="bg-slate-900/50 border-slate-800 backdrop-blur">
                         <CardContent className="p-6 text-center">
-                            <Trophy className="w-6 h-6 text-gold mx-auto mb-2" />
+                            <Trophy className="w-6 h-6 text-primary mx-auto mb-2" />
                             <div className="text-2xl font-bold text-white">{profile.badges.length}</div>
                             <div className="text-xs text-slate-500 uppercase tracking-wider">Awards</div>
                         </CardContent>
@@ -234,7 +234,7 @@ export default async function TrainerProfilePage({ params }: TrainerProfilePageP
                 {success_stories.length > 0 && (
                     <div className="mb-16">
                         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                            <Trophy className="w-5 h-5 text-gold" />
+                            <Trophy className="w-5 h-5 text-primary" />
                             Success Stories
                         </h2>
                         <div className="grid md:grid-cols-2 gap-6">
@@ -274,7 +274,7 @@ export default async function TrainerProfilePage({ params }: TrainerProfilePageP
                                             ) : (
                                                 <div className="bg-slate-800 h-full flex items-center justify-center text-slate-600">No Media</div>
                                             )}
-                                            <div className="absolute top-2 left-2 bg-gold text-black text-xs px-2 py-1 rounded font-bold uppercase tracking-wider">After</div>
+                                            <div className="absolute top-2 left-2 bg-primary text-black text-xs px-2 py-1 rounded font-bold uppercase tracking-wider">After</div>
                                         </div>
                                     </div>
                                     <CardContent className="p-6">
