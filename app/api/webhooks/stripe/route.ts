@@ -572,7 +572,7 @@ export async function POST(request: NextRequest) {
         console.log(`[WEBHOOK] Processing invoice payment ${invoice.id}`)
 
         // Get user from subscription
-        const subscriptionId = invoice.subscription as string
+        const subscriptionId = (invoice as any).subscription as string
         const subscription = await prisma.user_subscriptions.findFirst({
           where: { stripeSubscriptionId: subscriptionId },
           include: { user: true }
