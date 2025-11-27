@@ -131,7 +131,7 @@ export default function AmbassadorJoinPage() {
                     <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
                         <Users className="h-8 w-8 text-purple-400 mb-3" />
                         <div className="text-3xl font-bold text-white mb-1">Global</div>
-                        <p className="text-slate-400 text-sm">PayPal Payouts</p>
+                        <p className="text-slate-400 text-sm">Stripe Payouts</p>
                     </div>
                 </div>
 
@@ -173,7 +173,7 @@ export default function AmbassadorJoinPage() {
 
                             <div>
                                 <Label htmlFor="payoutEmail" className="text-slate-300">
-                                    PayPal Email
+                                    PayPal/Stripe Email
                                     <span className="text-slate-500 text-xs ml-2">(for receiving payments)</span>
                                 </Label>
                                 <Input
@@ -183,7 +183,7 @@ export default function AmbassadorJoinPage() {
                                     value={formData.payoutEmail}
                                     onChange={(e) => setFormData({ ...formData, payoutEmail: e.target.value })}
                                     className="bg-slate-900/50 border-slate-700 text-white"
-                                    placeholder="paypal@example.com"
+                                    placeholder="email@example.com"
                                 />
                             </div>
 
@@ -191,7 +191,7 @@ export default function AmbassadorJoinPage() {
                                 <p className="text-xs text-blue-300">
                                     ✓ No credit card required<br />
                                     ✓ Instant approval<br />
-                                    ✓ Start earning immediately
+                                    ✓ Start selling immediately
                                 </p>
                             </div>
 
@@ -200,7 +200,7 @@ export default function AmbassadorJoinPage() {
                                 disabled={loading}
                                 className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
                             >
-                                {loading ? "Joining..." : "Join Ambassador Program"}
+                                {loading ? "Joining..." : "Join & Start Selling"}
                             </Button>
                         </form>
                     </CardContent>
@@ -223,18 +223,18 @@ export default function AmbassadorJoinPage() {
                             <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <span className="text-2xl font-bold text-blue-400">2</span>
                             </div>
-                            <h3 className="text-lg font-semibold text-white mb-2">Share Your Link</h3>
+                            <h3 className="text-lg font-semibold text-white mb-2">Market Your Link</h3>
                             <p className="text-slate-400 text-sm">
-                                Get your unique referral link and start sharing
+                                Get your unique sales link and start closing deals
                             </p>
                         </div>
                         <div className="text-center">
                             <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <span className="text-2xl font-bold text-purple-400">3</span>
                             </div>
-                            <h3 className="text-lg font-semibold text-white mb-2">Earn Commissions</h3>
+                            <h3 className="text-lg font-semibold text-white mb-2">Get Paid When They Buy</h3>
                             <p className="text-slate-400 text-sm">
-                                Get paid automatically via PayPal every month
+                                Earn massive commissions automatically when trainers subscribe
                             </p>
                         </div>
                     </div>
