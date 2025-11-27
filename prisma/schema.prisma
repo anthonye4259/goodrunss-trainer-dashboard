@@ -2197,10 +2197,12 @@ model ambassadors {
   paidEarnings      Decimal  @default(0) @db.Decimal(10, 2)
   totalReferrals    Int      @default(0)
   activeReferrals   Int      @default(0)
-  payoutMethod      String?  @default("PAYPAL") // PAYPAL, BANK_ACCOUNT, STRIPE
-  payoutEmail       String?             // PayPal email
+  payoutMethod      String?  @default("STRIPE") // PAYPAL, BANK_ACCOUNT, STRIPE
+  payoutEmail       String?             // PayPal email or Stripe email
   bankAccountLast4  String?             // Last 4 of bank account
   stripeAccountId   String?             // Stripe Connect account ID
+  currency          String   @default("USD") // Preferred currency
+  locale            String   @default("en")  // Preferred language
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   
@@ -2208,6 +2210,7 @@ model ambassadors {
   referrals         referrals[]
   commissions       commissions[]
   payouts           payouts[]
+  payout_requests   payout_requests[]
   
   @@index([userId])
   @@index([email])
@@ -2295,6 +2298,37 @@ enum PayoutStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+enum PayoutRequestStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+// Payout Requests (for ambassadors to request payouts)
+model payout_requests {
+  id              String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  ambassadorId    String
+  amount          Decimal  @db.Decimal(10, 2)
+  currency        String   @default("USD")
+  status          PayoutRequestStatus @default(PENDING)
+  requestedAt     DateTime @default(now())
+  processedAt     DateTime?
+  processedBy     String?  // Admin user ID
+  payoutEmail     String   // Email for payout
+  payoutMethod    String   @default("STRIPE") // STRIPE, PAYPAL
+  stripePayoutId  String?  // Stripe payout ID
+  notes           String?
+  rejectionReason String?
+  
+  ambassador      ambassadors @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+  
+  @@index([ambassadorId])
+  @@index([status])
+  @@index([requestedAt])
 }
 
 // Community & High-Status Features Schema
