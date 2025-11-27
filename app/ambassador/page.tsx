@@ -58,14 +58,19 @@ export default function AmbassadorDashboard() {
 
     const fetchAmbassadorData = async () => {
         try {
-            const params = new URLSearchParams(window.location.search)
-            const email = params.get("email")
+            // Check session first
+            const sessionRes = await fetch("/api/ambassador/auth/session")
 
-            const url = email
-                ? `/api/ambassador/stats?email=${encodeURIComponent(email)}`
-                : "/api/ambassador/stats"
+            if (!sessionRes.ok) {
+                // Not authenticated - redirect to login
+                window.location.href = "/ambassador/login"
+                return
+            }
 
-            const res = await fetch(url)
+            const { ambassador } = await sessionRes.json()
+
+            // Fetch stats using authenticated session
+            const res = await fetch("/api/ambassador/stats")
             if (res.ok) {
                 const data = await res.json()
                 setStats(data.stats)
@@ -78,6 +83,8 @@ export default function AmbassadorDashboard() {
             }
         } catch (error) {
             console.error("Error fetching ambassador data:", error)
+            // On error, redirect to login
+            window.location.href = "/ambassador/login"
         } finally {
             setLoading(false)
         }
@@ -119,6 +126,19 @@ export default function AmbassadorDashboard() {
             alert(t.payoutError)
         } finally {
             setRequestingPayout(false)
+        }
+    }
+
+    const handleLogout = async () => {
+        try {
+            await fetch("/api/ambassador/auth/logout", {
+                method: "POST"
+            })
+            window.location.href = "/ambassador/login"
+        } catch (error) {
+            console.error("Logout error:", error)
+            // Force redirect anyway
+            window.location.href = "/ambassador/login"
         }
     }
 
@@ -211,6 +231,14 @@ export default function AmbassadorDashboard() {
                                 <SelectItem value="AED">🇦🇪 AED</SelectItem>
                             </SelectContent>
                         </Select>
+
+                        <Button
+                            onClick={handleLogout}
+                            variant="outline"
+                            className="border-red-700 bg-red-900/20 hover:bg-red-900/40 text-red-400 hover:text-red-300"
+                        >
+                            Logout
+                        </Button>
                     </div>
                 </div>
 
