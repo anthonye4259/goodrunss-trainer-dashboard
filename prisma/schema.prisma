@@ -2211,6 +2211,8 @@ model ambassadors {
   commissions       commissions[]
   payouts           payouts[]
   payout_requests   payout_requests[]
+  magic_links       ambassador_magic_links[]
+  sessions          ambassador_sessions[]
   
   @@index([userId])
   @@index([email])
@@ -2320,15 +2322,47 @@ model payout_requests {
   processedBy     String?  // Admin user ID
   payoutEmail     String   // Email for payout
   payoutMethod    String   @default("STRIPE") // STRIPE, PAYPAL
-  stripePayoutId  String?  // Stripe payout ID
+  stripeTransferId String?  // Stripe transfer ID
   notes           String?
-  rejectionReason String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   
   ambassador      ambassadors @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
   
   @@index([ambassadorId])
   @@index([status])
-  @@index([requestedAt])
+  @@map("payout_requests")
+}
+
+// Magic Links for passwordless ambassador login
+model ambassador_magic_links {
+  id            String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  ambassadorId  String
+  token         String   @unique
+  expiresAt     DateTime
+  used          Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  
+  ambassador    ambassadors @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+  
+  @@index([token])
+  @@index([ambassadorId])
+  @@map("ambassador_magic_links")
+}
+
+// Sessions for ambassador authentication
+model ambassador_sessions {
+  id            String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  ambassadorId  String
+  sessionToken  String   @unique
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  
+  ambassador    ambassadors @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+  
+  @@index([sessionToken])
+  @@index([ambassadorId])
+  @@map("ambassador_sessions")
 }
 
 // Community & High-Status Features Schema
