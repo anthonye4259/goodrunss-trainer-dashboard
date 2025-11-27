@@ -154,8 +154,8 @@ export default function AmbassadorDashboard() {
                             Earn 50% commission on first month sales and 10% recurring commissions!
                         </p>
                         <Button
-                            onClick={() => window.location.href = "/ambassador/join"}
-                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => window.open("https://join.slack.com/t/goodrunssai/shared_invite/zt-3k170i8hs-m~IqYKwSwfn01SscPQqGqQ", "_blank")}
+                            className="bg-white text-purple-900 hover:bg-slate-100 font-bold px-8"
                         >
                             Become an Ambassador
                         </Button>
@@ -319,6 +319,28 @@ export default function AmbassadorDashboard() {
                                 <li>• <strong className="text-blue-400">{t.commission4}</strong></li>
                             </ul>
                         </div>
+                    </CardContent>
+                </Card>
+
+                {/* Community Section */}
+                <Card className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 border-slate-700">
+                    <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div>
+                            <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                                <Users className="h-6 w-6 text-purple-400" />
+                                {t.communityTitle}
+                            </h3>
+                            <p className="text-slate-300">
+                                {t.communitySubtitle}
+                            </p>
+                        </div>
+                        <Button
+                            onClick={() => window.open("https://join.slack.com/t/goodrunssai/shared_invite/zt-3k170i8hs-m~IqYKwSwfn01SscPQqGqQ", "_blank")}
+                            className="bg-white text-purple-900 hover:bg-slate-100 font-bold px-8"
+                        >
+                            <MessageCircle className="h-5 w-5 mr-2" />
+                            {t.joinSlack}
+                        </Button>
                     </CardContent>
                 </Card>
 

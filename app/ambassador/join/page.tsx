@@ -99,7 +99,7 @@ export default function AmbassadorJoinPage() {
                                 🎉 Join our global community of ambassadors!
                             </p>
                             <Button
-                                onClick={() => window.open("https://slack.com", "_blank")}
+                                onClick={() => window.open("https://join.slack.com/t/goodrunssai/shared_invite/zt-3k170i8hs-m~IqYKwSwfn01SscPQqGqQ", "_blank")}
                                 className="w-full bg-purple-600 hover:bg-purple-700"
                             >
                                 Join Slack Community
