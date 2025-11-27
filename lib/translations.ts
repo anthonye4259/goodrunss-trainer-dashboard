@@ -30,7 +30,10 @@ export const translations = {
         amount: "Amount",
         date: "Date",
         method: "Method",
-        processing: "Processing..."
+        processing: "Processing...",
+        communityTitle: "Ambassador Community",
+        communitySubtitle: "Join our global Slack channel to connect, share tips, and celebrate wins!",
+        joinSlack: "Join Slack Channel"
     },
     es: {
         dashboardTitle: "Panel de Embajador",
@@ -63,7 +66,10 @@ export const translations = {
         amount: "Monto",
         date: "Fecha",
         method: "Método",
-        processing: "Procesando..."
+        processing: "Procesando...",
+        communityTitle: "Comunidad de Embajadores",
+        communitySubtitle: "¡Únete a nuestro canal global de Slack para conectar y compartir consejos!",
+        joinSlack: "Unirse al Canal de Slack"
     },
     pt: {
         dashboardTitle: "Painel do Embaixador",
@@ -96,7 +102,10 @@ export const translations = {
         amount: "Valor",
         date: "Data",
         method: "Método",
-        processing: "Procesando..."
+        processing: "Processando...",
+        communityTitle: "Comunidade de Embaixadores",
+        communitySubtitle: "Junte-se ao nosso canal global no Slack para conectar e compartilhar dicas!",
+        joinSlack: "Entrar no Canal do Slack"
     },
     fr: {
         dashboardTitle: "Tableau de Bord Ambassadeur",
@@ -129,7 +138,10 @@ export const translations = {
         amount: "Montant",
         date: "Date",
         method: "Méthode",
-        processing: "Traitement..."
+        processing: "Traitement...",
+        communityTitle: "Communauté des Ambassadeurs",
+        communitySubtitle: "Rejoignez notre canal Slack mondial pour échanger et partager des conseils !",
+        joinSlack: "Rejoindre le Slack"
     },
     ar: {
         dashboardTitle: "لوحة تحكم السفير",
@@ -162,7 +174,10 @@ export const translations = {
         amount: "المبلغ",
         date: "التاريخ",
         method: "الطريقة",
-        processing: "جاري المعالجة..."
+        processing: "جاري المعالجة...",
+        communityTitle: "مجتمع السفراء",
+        communitySubtitle: "انضم إلى قناة Slack العالمية للتواصل ومشاركة النصائح!",
+        joinSlack: "انضم إلى قناة Slack"
     }
 }
 

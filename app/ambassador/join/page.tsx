@@ -93,6 +93,18 @@ export default function AmbassadorJoinPage() {
                                 Copy Link
                             </Button>
                         </div>
+
+                        <div className="mt-4 pt-4 border-t border-slate-700">
+                            <p className="text-sm text-slate-400 mb-3 text-center">
+                                🎉 Join our global community of ambassadors!
+                            </p>
+                            <Button
+                                onClick={() => window.open("https://slack.com", "_blank")}
+                                className="w-full bg-purple-600 hover:bg-purple-700"
+                            >
+                                Join Slack Community
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

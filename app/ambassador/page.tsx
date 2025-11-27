@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Copy, DollarSign, Users, TrendingUp, Check, ExternalLink, Globe, CreditCard, History } from "lucide-react"
+import { Copy, DollarSign, Users, TrendingUp, Check, ExternalLink, Globe, CreditCard, History, MessageCircle, Link as LinkIcon } from "lucide-react"
 import { translations, currencies } from "@/lib/translations"
 
 interface AmbassadorStats {
