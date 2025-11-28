@@ -6,7 +6,7 @@ import { getOrCreateUser } from "@/lib/get-or-create-user"
 export async function GET(req: NextRequest) {
   try {
     const trainer = await getOrCreateUser()
-    
+
     if (!trainer) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -42,13 +42,13 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const trainer = await getOrCreateUser()
-    
+
     if (!trainer) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const body = await req.json()
-    const { 
+    const {
       name,
       tagline,
       bio,
@@ -56,7 +56,9 @@ export async function POST(req: NextRequest) {
       personality,
       specialties,
       certifications,
-      isActive
+      isActive,
+      voiceFileUrl,
+      videoUrl
     } = body
 
     // Check if persona already exists
@@ -79,6 +81,8 @@ export async function POST(req: NextRequest) {
           specialties: specialties || existingPersona.specialties,
           certifications: certifications || existingPersona.certifications,
           isActive: isActive !== undefined ? isActive : existingPersona.isActive,
+          voiceFileUrl: voiceFileUrl !== undefined ? voiceFileUrl : existingPersona.voiceFileUrl,
+          videoUrl: videoUrl !== undefined ? videoUrl : existingPersona.videoUrl,
           updatedAt: new Date()
         }
       })
@@ -109,6 +113,8 @@ export async function POST(req: NextRequest) {
           specialties: specialties || [],
           certifications: certifications || [],
           isActive: isActive !== undefined ? isActive : true,
+          voiceFileUrl: voiceFileUrl || null,
+          videoUrl: videoUrl || null,
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -135,7 +141,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const trainer = await getOrCreateUser()
-    
+
     if (!trainer) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }

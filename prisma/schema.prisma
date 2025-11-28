@@ -541,67 +541,67 @@ model exercises {
 }
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model facilities {
-  id           String                    @id @default(dbgenerated("(gen_random_uuid())::text"))
-  name         String
-  sport        String
-  type         String?
-  category     String                    @default("rec")
-  latitude     Float
-  longitude    Float
-  address      String?
-  city         String?
-  state        String?
-  country      String?
-  postal_code  String?
-  phone        String?
-  website      String?
-  email        String?
-  description  String?
-  amenities    Json?                     @default("[]")
-  surface_type String?
-  court_count  Int?
-  indoor       Boolean?                  @default(false)
-  is_public    Boolean?                  @default(true)
-  hours        Json?
-  rating       Float?
-  review_count Int?                      @default(0)
-  source       String
-  source_id    String
-  source_url   String?
-  metadata     Json?                     @default("{}")
-  created_at   DateTime?                 @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime?                 @default(now()) @db.Timestamptz(6)
-  geo_point    Unsupported("geography")?
-
-  @@unique([source, source_id])
-  @@index([category], map: "idx_facilities_category")
-  @@index([city], map: "idx_facilities_city")
-  @@index([geo_point], map: "idx_facilities_geo_point", type: Gist)
-  @@index([source, source_id], map: "idx_facilities_source")
-  @@index([sport], map: "idx_facilities_sport")
-  @@index([sport, category], map: "idx_facilities_sport_category")
-}
+// model facilities {
+//   id           String                    @id @default(dbgenerated("(gen_random_uuid())::text"))
+//   name         String
+//   sport        String
+//   type         String?
+//   category     String                    @default("rec")
+//   latitude     Float
+//   longitude    Float
+//   address      String?
+//   city         String?
+//   state        String?
+//   country      String?
+//   postal_code  String?
+//   phone        String?
+//   website      String?
+//   email        String?
+//   description  String?
+//   amenities    Json?                     @default("[]")
+//   surface_type String?
+//   court_count  Int?
+//   indoor       Boolean?                  @default(false)
+//   is_public    Boolean?                  @default(true)
+//   hours        Json?
+//   rating       Float?
+//   review_count Int?                      @default(0)
+//   source       String
+//   source_id    String
+//   source_url   String?
+//   metadata     Json?                     @default("{}")
+//   created_at   DateTime?                 @default(now()) @db.Timestamptz(6)
+//   updated_at   DateTime?                 @default(now()) @db.Timestamptz(6)
+//   geo_point    Unsupported("geography")?
+// 
+//   @@unique([source, source_id])
+//   @@index([category], map: "idx_facilities_category")
+//   @@index([city], map: "idx_facilities_city")
+//   @@index([geo_point], map: "idx_facilities_geo_point", type: Gist)
+//   @@index([source, source_id], map: "idx_facilities_source")
+//   @@index([sport], map: "idx_facilities_sport")
+//   @@index([sport, category], map: "idx_facilities_sport_category")
+// }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model facility_data_quality {
-  id                String    @id
-  facility_id       String
-  date              DateTime  @db.Date
-  total_checkins    Int?      @default(0)
-  verified_checkins Int?      @default(0)
-  avg_confidence    Decimal?  @default(0.00) @db.Decimal(3, 2)
-  avg_gps_accuracy  Decimal?  @db.Decimal(10, 2)
-  overall_quality   String?
-  created_at        DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime? @default(now()) @db.Timestamptz(6)
-
-  @@unique([facility_id, date])
-  @@index([date(sort: Desc)], map: "idx_facility_data_quality_date")
-  @@index([facility_id], map: "idx_facility_data_quality_facility")
-  @@index([overall_quality], map: "idx_facility_data_quality_overall")
-}
+// model facility_data_quality {
+//   id                String    @id
+//   facility_id       String
+//   date              DateTime  @db.Date
+//   total_checkins    Int?      @default(0)
+//   verified_checkins Int?      @default(0)
+//   avg_confidence    Decimal?  @default(0.00) @db.Decimal(3, 2)
+//   avg_gps_accuracy  Decimal?  @db.Decimal(10, 2)
+//   overall_quality   String?
+//   created_at        DateTime? @default(now()) @db.Timestamptz(6)
+//   updated_at        DateTime? @default(now()) @db.Timestamptz(6)
+// 
+//   @@unique([facility_id, date])
+//   @@index([date(sort: Desc)], map: "idx_facility_data_quality_date")
+//   @@index([facility_id], map: "idx_facility_data_quality_facility")
+//   @@index([overall_quality], map: "idx_facility_data_quality_overall")
+// }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
