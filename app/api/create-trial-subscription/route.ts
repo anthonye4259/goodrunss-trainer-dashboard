@@ -1,6 +1,6 @@
 /**
- * Create Stripe subscription with 7-day free trial
- * User must enter card but won't be charged until trial ends
+ * Create Stripe subscription with immediate payment
+ * User enters card and is charged immediately
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -105,9 +105,8 @@ export async function POST(request: NextRequest) {
       ],
       mode: 'subscription',
 
-      // 7-day free trial
+      // No trial - charge immediately
       subscription_data: {
-        trial_period_days: 7,
         metadata: {
           planId: planId,
           userId: email, // Will be updated with actual userId after Clerk creation
@@ -118,13 +117,12 @@ export async function POST(request: NextRequest) {
       allow_promotion_codes: true,
 
       // Redirect URLs
-      success_url: `${baseUrl}/trial-success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${baseUrl}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/signup?step=plan`,
 
-      // Collect payment method (card) but don't charge until trial ends
+      // Collect payment method and charge immediately
       payment_method_collection: 'always',
 
-      // Customer can cancel anytime
       // Pass user data to webhook for account creation after payment
       metadata: {
         planId: planId,
@@ -132,7 +130,6 @@ export async function POST(request: NextRequest) {
         name: name,
         businessName: businessName || '',
         password: password, // Webhook will create Clerk account with this
-        trialDays: '7',
       },
     })
 
