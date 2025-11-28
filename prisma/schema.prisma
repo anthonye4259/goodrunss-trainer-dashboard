@@ -2452,3 +2452,87 @@ model community_posts {
   @@index([createdAt])
   @@index([likes])
 }
+
+// Gia Growth Engine Tables
+
+model lead_magnets {
+  id              String   @id
+  trainerId       String
+  title           String
+  description     String?
+  format          String   // 'workout-plan', 'nutrition-guide', 'challenge'
+  specialty       String
+  targetClient    String
+  content         Json
+  landingPageCopy Json?
+  emailSequence   Json?
+  landingPageUrl  String?
+  downloads       Int      @default(0)
+  leads           Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([trainerId])
+  @@index([isActive])
+}
+
+model content_calendar {
+  id           String    @id
+  trainerId    String
+  platform     String    // 'instagram', 'tiktok', 'facebook'
+  contentType  String    // 'client-win', 'tip', 'motivation', 'offer'
+  caption      String
+  imagePrompt  String?
+  hashtags     String[]  @default([])
+  scheduledFor DateTime?
+  status       String    @default("pending") // 'pending', 'approved', 'published'
+  performance  Json?     // likes, shares, comments, leads
+  createdAt    DateTime  @default(now())
+  publishedAt  DateTime?
+
+  @@index([trainerId])
+  @@index([status])
+  @@index([scheduledFor])
+}
+
+model leads {
+  id         String    @id
+  trainerId  String
+  source     String    // 'lead-magnet', 'social', 'referral'
+  sourceId   String?   // ID of lead magnet or content
+  name       String
+  email      String
+  phone      String?
+  goals      String?
+  budget     String?
+  urgency    String?
+  experience String?
+  score      Int?      // 0-100
+  quality    String?   // 'high', 'medium', 'low'
+  status     String    @default("new") // 'new', 'contacted', 'qualified', 'converted', 'lost'
+  notes      String?
+  convertedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([trainerId])
+  @@index([status])
+  @@index([quality])
+  @@index([createdAt])
+}
+
+model nurture_sequences {
+  id            String    @id
+  leadId        String
+  sequence      String    // 'lead-magnet-download', 'discovery-call'
+  currentStep   Int       @default(0)
+  totalSteps    Int
+  lastEmailSent DateTime?
+  opens         Int       @default(0)
+  clicks        Int       @default(0)
+  status        String    @default("active") // 'active', 'completed', 'unsubscribed'
+  createdAt     DateTime  @default(now())
+
+  @@index([leadId])
+  @@index([status])
+}
