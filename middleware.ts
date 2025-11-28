@@ -37,7 +37,7 @@ export default clerkMiddleware(async (auth, req) => {
     // Check if user has admin email
     const user = await auth().then(a => a.sessionClaims)
     const userEmail = user?.email as string
-    
+
     if (!ADMIN_EMAILS.includes(userEmail?.toLowerCase())) {
       // Not an admin - redirect to regular dashboard
       return NextResponse.redirect(new URL('/dashboard', req.url))
@@ -51,6 +51,42 @@ export default clerkMiddleware(async (auth, req) => {
       const loginUrl = new URL('/login', req.url)
       loginUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(loginUrl)
+    }
+
+    // Check if user has active subscription
+    // Import prisma at top of file if needed
+    const { prisma } = await import('@/lib/prisma')
+
+    try {
+      // Get user by Clerk ID
+      const user = await prisma.users.findUnique({
+        where: { clerkId: userId },
+        select: { id: true }
+      })
+
+      if (user) {
+        // Check for active subscription
+        const subscription = await prisma.user_subscriptions.findFirst({
+          where: {
+            userId: user.id,
+            status: { in: ['active', 'trialing'] }
+          }
+        })
+
+        // If no active subscription, redirect to checkout
+        if (!subscription) {
+          // Allow access to subscription page itself
+          if (pathname.startsWith('/subscription')) {
+            return NextResponse.next()
+          }
+
+          const checkoutUrl = new URL('/subscription', req.url)
+          return NextResponse.redirect(checkoutUrl)
+        }
+      }
+    } catch (error) {
+      console.error('Middleware subscription check error:', error)
+      // On error, allow access (fail open to prevent lockouts)
     }
   }
 
