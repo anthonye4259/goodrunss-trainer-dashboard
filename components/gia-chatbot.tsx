@@ -4,21 +4,22 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { 
-  Sparkles, 
-  X, 
-  Send, 
-  Minimize2, 
-  Users, 
-  Calendar, 
-  TrendingUp, 
+import {
+  Sparkles,
+  X,
+  Send,
+  Minimize2,
+  Users,
+  Calendar,
+  TrendingUp,
   MessageCircle,
   Loader2,
   UserPlus,
   CalendarPlus,
   BarChart3,
   BookOpen,
-  CheckCircle2
+  CheckCircle2,
+  Mic
 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
@@ -37,27 +38,27 @@ interface Action {
 }
 
 const quickActions = [
-  { 
-    icon: CalendarPlus, 
-    label: "Create session plan", 
+  {
+    icon: CalendarPlus,
+    label: "Create session plan",
     prompt: "Create a detailed 60-minute training session plan for an intermediate athlete",
     color: "text-blue-400"
   },
-  { 
-    icon: UserPlus, 
-    label: "Client onboarding", 
+  {
+    icon: UserPlus,
+    label: "Client onboarding",
     prompt: "What should I include in my client onboarding process?",
     color: "text-green-400"
   },
-  { 
-    icon: TrendingUp, 
-    label: "Grow my business", 
+  {
+    icon: TrendingUp,
+    label: "Grow my business",
     prompt: "Give me 5 actionable strategies to grow my sports coaching business this month",
     color: "text-purple-400"
   },
-  { 
-    icon: MessageCircle, 
-    label: "Social media content", 
+  {
+    icon: MessageCircle,
+    label: "Social media content",
     prompt: "Create 3 engaging social media posts for this week",
     color: "text-pink-400"
   },
@@ -78,7 +79,7 @@ export function GiaChatbot() {
   const [position, setPosition] = useState({ x: 0, y: 100 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
-  
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
 
@@ -158,10 +159,10 @@ export function GiaChatbot() {
       if (data.success) {
         setMessages((prev) => [
           ...prev,
-          { 
-            role: "assistant", 
+          {
+            role: "assistant",
             content: data.message,
-            actions: data.actions 
+            actions: data.actions
           },
         ])
       } else {
@@ -214,7 +215,7 @@ export function GiaChatbot() {
             <Sparkles className="h-7 w-7 text-black" />
           </Button>
         </div>
-        
+
         {/* Tooltip */}
         <div className="bg-black/90 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg animate-fade-in">
           💬 Ask Gia anything!
@@ -224,20 +225,20 @@ export function GiaChatbot() {
   }
 
   return (
-    <Card 
+    <Card
       ref={cardRef}
       className="fixed w-[450px] h-[650px] shadow-2xl z-50 flex flex-col bg-gradient-to-b from-[#1a1f2e] to-[#0f1419] border border-primary/30 backdrop-blur-xl"
-      style={{ 
-        left: `${position.x}px`, 
+      style={{
+        left: `${position.x}px`,
         top: `${position.y}px`,
         cursor: isDragging ? 'grabbing' : 'default'
       }}
     >
       {/* Animated gradient border */}
       <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary via-accent to-primary opacity-20 blur-sm"></div>
-      
+
       {/* Header - Draggable */}
-      <div 
+      <div
         className="relative flex items-center justify-between p-4 border-b border-border/30 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 cursor-grab active:cursor-grabbing backdrop-blur-sm"
         onMouseDown={handleMouseDown}
       >
@@ -295,21 +296,20 @@ export function GiaChatbot() {
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[90%] rounded-2xl px-4 py-3 ${
-                        message.role === "user"
-                          ? "bg-gradient-to-r from-primary via-accent to-primary text-black shadow-lg"
-                          : "bg-[#1a1f2e] text-white border border-primary/20"
-                      }`}
+                      className={`max-w-[90%] rounded-2xl px-4 py-3 ${message.role === "user"
+                        ? "bg-gradient-to-r from-primary via-accent to-primary text-black shadow-lg"
+                        : "bg-[#1a1f2e] text-white border border-primary/20"
+                        }`}
                     >
                       {message.role === "assistant" ? (
                         <div className="prose prose-sm prose-invert max-w-none">
                           <ReactMarkdown
                             components={{
-                              p: ({children}) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
-                              strong: ({children}) => <strong className="font-bold text-primary">{children}</strong>,
-                              ul: ({children}) => <ul className="space-y-1 my-2">{children}</ul>,
-                              li: ({children}) => <li className="leading-relaxed">{children}</li>,
-                              code: ({children}) => <code className="bg-black/50 px-1.5 py-0.5 rounded text-primary">{children}</code>,
+                              p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
+                              strong: ({ children }) => <strong className="font-bold text-primary">{children}</strong>,
+                              ul: ({ children }) => <ul className="space-y-1 my-2">{children}</ul>,
+                              li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                              code: ({ children }) => <code className="bg-black/50 px-1.5 py-0.5 rounded text-primary">{children}</code>,
                             }}
                           >
                             {message.content}
@@ -320,7 +320,7 @@ export function GiaChatbot() {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Action buttons */}
                   {message.actions && message.actions.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2 justify-start ml-2">
@@ -339,7 +339,7 @@ export function GiaChatbot() {
                   )}
                 </div>
               ))}
-              
+
               {/* Quick Actions */}
               {showSuggestions && messages.length === 1 && (
                 <div className="space-y-3 mt-4">
@@ -359,7 +359,7 @@ export function GiaChatbot() {
                   </div>
                 </div>
               )}
-              
+
               {/* Loading indicator */}
               {isLoading && (
                 <div className="flex justify-start">
@@ -385,6 +385,14 @@ export function GiaChatbot() {
                 disabled={isLoading}
                 className="flex-1 bg-[#0f1419] border-primary/20 focus:border-primary/50 text-white placeholder:text-muted-foreground"
               />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-white/10 text-muted-foreground hover:text-white"
+                onClick={() => alert("Voice mode coming soon!")}
+              >
+                <Mic className="h-4 w-4" />
+              </Button>
               <Button
                 onClick={() => handleSendMessage()}
                 disabled={isLoading || !input.trim()}

@@ -48,6 +48,15 @@ export async function executeToolCall(
             case 'get_revenue_summary':
                 return await getRevenueSummary(args, trainerId)
 
+            case 'get_hot_leads':
+                return await getHotLeads(args, trainerId)
+
+            case 'get_churn_risk':
+                return await getChurnRisk(args, trainerId)
+
+            case 'generate_lead_outreach':
+                return await generateLeadOutreachTool(args, trainerId)
+
             default:
                 return { error: `Unknown tool: ${toolName}` }
         }
@@ -56,6 +65,97 @@ export async function executeToolCall(
         return { error: `Tool execution failed: ${error.message}` }
     }
 }
+
+// ... existing functions ...
+
+async function getHotLeads(args: any, trainerId: string) {
+    const { minScore = 70 } = args
+
+    // In a real app, this would query the DB. For now, we use the same mock data as the API
+    // to ensure consistency across the demo.
+    const mockLeads = [
+        { id: 'lead-1', name: 'Jessica Chen', sport: 'Tennis', score: 95, notes: 'Looking for weight loss' },
+        { id: 'lead-2', name: 'Marcus Williams', sport: 'Golf', score: 88, notes: 'Needs swing correction' },
+        { id: 'lead-3', name: 'Sarah Johnson', sport: 'Pickleball', score: 82, notes: 'Beginner' },
+        { id: 'lead-4', name: 'David Kim', sport: 'Basketball', score: 75, notes: 'Advanced skills training' }
+    ]
+
+    const hotLeads = mockLeads.filter(l => l.score >= minScore)
+
+    return {
+        success: true,
+        message: `Found ${hotLeads.length} hot leads with score >= ${minScore}`,
+        leads: hotLeads
+    }
+}
+
+async function getChurnRisk(args: any, trainerId: string) {
+    // Import dynamically to avoid circular dependencies if any
+    const { analyzeClientRisk } = await import('@/lib/gia/intelligence')
+    const risks = await analyzeClientRisk(trainerId)
+
+    const highRisk = risks.filter(r => r.riskLevel === 'high')
+    const mediumRisk = risks.filter(r => r.riskLevel === 'medium')
+
+    return {
+        success: true,
+        message: `Analysis complete: ${highRisk.length} high risk, ${mediumRisk.length} medium risk clients.`,
+        summary: {
+            highRiskCount: highRisk.length,
+            mediumRiskCount: mediumRisk.length,
+            totalAnalyzed: risks.length
+        },
+        highRiskClients: highRisk.map(c => ({
+            name: c.clientName,
+            reason: c.factors.join(', '),
+            lastActive: c.lastActiveDate
+        }))
+    }
+}
+
+async function generateLeadOutreachTool(args: any, trainerId: string) {
+    const { leadId, tone = 'casual' } = args
+    const { generateLeadOutreach } = await import('@/lib/gia/openai')
+    const { prisma } = await import('@/lib/prisma')
+
+    // Get trainer details
+    const trainer = await prisma.users.findUnique({
+        where: { id: trainerId },
+        select: { name: true }
+    })
+
+    // Mock lead lookup (since we're using mock leads)
+    const mockLeads = [
+        { id: 'lead-1', name: 'Jessica Chen', sport: 'Tennis', experience: 'Beginner', goals: 'weight loss, endurance' },
+        { id: 'lead-2', name: 'Marcus Williams', sport: 'Golf', experience: 'Intermediate', goals: 'fix slice, consistency' },
+        { id: 'lead-3', name: 'Sarah Johnson', sport: 'Pickleball', experience: 'Beginner', goals: 'social, fitness' },
+        { id: 'lead-4', name: 'David Kim', sport: 'Basketball', experience: 'Advanced', goals: 'skills, strength' }
+    ]
+
+    const lead = mockLeads.find(l => l.id === leadId)
+
+    if (!lead) {
+        return { error: "Lead not found" }
+    }
+
+    const message = await generateLeadOutreach({
+        name: lead.name,
+        goals: lead.goals,
+        experience: lead.experience,
+        sport: lead.sport,
+        trainerName: trainer?.name || 'Trainer'
+    })
+
+    return {
+        success: true,
+        message: "Draft generated successfully",
+        draft: message,
+        leadName: lead.name
+    }
+}
+
+// ... rest of file ...
+
 
 async function updateClientProfile(args: any, trainerId: string) {
     const { clientId, updates } = args

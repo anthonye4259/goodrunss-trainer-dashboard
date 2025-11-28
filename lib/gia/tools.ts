@@ -329,5 +329,54 @@ export const GIA_TOOLS = [
                 }
             }
         }
+    },
+    {
+        type: "function",
+        function: {
+            name: "get_hot_leads",
+            description: "Get a list of high-potential leads. Use this when the user asks about new clients, leads, or growth opportunities.",
+            parameters: {
+                type: "object",
+                properties: {
+                    minScore: {
+                        type: "number",
+                        description: "Minimum match score (0-100) to include (default: 70)"
+                    }
+                }
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "get_churn_risk",
+            description: "Identify clients at risk of leaving (churning). Use this when the user asks about retention, at-risk clients, or who needs attention.",
+            parameters: {
+                type: "object",
+                properties: {}
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "generate_lead_outreach",
+            description: "Generate a personalized outreach message for a lead. Use this when the user wants to contact a lead.",
+            parameters: {
+                type: "object",
+                properties: {
+                    leadId: {
+                        type: "string",
+                        description: "The ID of the lead to contact"
+                    },
+                    tone: {
+                        type: "string",
+                        enum: ["professional", "casual", "enthusiastic", "direct"],
+                        description: "The tone of the message (default: casual)"
+                    }
+                },
+                required: ["leadId"]
+            }
+        }
     }
 ]
