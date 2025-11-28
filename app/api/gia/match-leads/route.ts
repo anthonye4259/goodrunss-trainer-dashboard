@@ -204,15 +204,14 @@ export async function POST(request: NextRequest) {
     // Use AI to generate personalized outreach message if none provided
     let personalizedMessage = message
     if (!message) {
-      const { scoreLead } = await import('@/lib/gia/openai')
-      const aiResponse = await scoreLead({
+      const { generateLeadOutreach } = await import('@/lib/gia/openai')
+      personalizedMessage = await generateLeadOutreach({
+        name: lead.name,
         goals: lead.fitnessGoals.join(', '),
-        budget: lead.budget,
-        urgency: 'high',
         experience: lead.experienceLevel,
-        trainerSpecialty: lead.preferredSport
+        sport: lead.preferredSport,
+        trainerName: trainer.name
       })
-      personalizedMessage = aiResponse.draftMessage
     }
 
     // Send outreach message
