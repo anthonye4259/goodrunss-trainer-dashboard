@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
     // Calculate match scores for all leads
     const matches = mockLeadDatabase.map(lead => {
       const { score, reasons } = calculateMatchScore(trainer, lead)
-      
+
       return {
         id: crypto.randomUUID(),
         clientLeadId: lead.id,
@@ -201,29 +201,43 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Use AI to generate personalized outreach message if none provided
+    let personalizedMessage = message
+    if (!message) {
+      const { scoreLead } = await import('@/lib/gia/openai')
+      const aiResponse = await scoreLead({
+        goals: lead.fitnessGoals.join(', '),
+        budget: lead.budget,
+        urgency: 'high',
+        experience: lead.experienceLevel,
+        trainerSpecialty: lead.preferredSport
+      })
+      personalizedMessage = aiResponse.draftMessage
+    }
+
     // Send outreach message
     if (method === 'email') {
       await sendEmail({
         to: lead.email,
-        subject: `${trainer.name} wants to connect with you!`,
+        subject: `${trainer.name} wants to help you with ${lead.preferredSport}!`,
         html: `
           <h2>Hi ${lead.name}! 👋</h2>
-          <p>I'm ${trainer.name}, and I saw you're looking for ${lead.preferredSport} training.</p>
-          <p>${message || "I'd love to help you achieve your fitness goals! Let me know if you'd like to schedule a session."}</p>
+          <p>${personalizedMessage}</p>
           <p>Best regards,<br>${trainer.name}</p>
           <p><small>Reply to this email to get started!</small></p>
         `,
-        text: `Hi ${lead.name}! I'm ${trainer.name}, and I saw you're looking for ${lead.preferredSport} training. ${message || "I'd love to help you achieve your fitness goals!"}`
+        text: `Hi ${lead.name}! ${personalizedMessage} - ${trainer.name}`
       })
     } else if (method === 'sms') {
       // SMS would integrate with Twilio or similar
       // For now, log to console
-      console.log(`[SMS to ${lead.phone}] Hi ${lead.name}! I'm ${trainer.name}. ${message || "Let's train together!"}`)
+      console.log(`[SMS to ${lead.phone}] ${personalizedMessage}`)
     }
 
     return NextResponse.json({
       success: true,
-      message: `${method} sent to ${lead.name}`
+      message: `${method} sent to ${lead.name}`,
+      aiGeneratedMessage: !message // Flag if AI generated the message
     })
   } catch (error: any) {
     console.error('Error contacting lead:', error)

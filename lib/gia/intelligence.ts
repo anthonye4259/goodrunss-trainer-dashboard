@@ -213,5 +213,21 @@ export async function generateRecommendations(trainerId: string): Promise<Action
         })
     }
 
+    // Check for hot leads (mock data for now - in production would query leads table)
+    // This simulates checking the lead matching system
+    const hasHotLeads = true // In production: check leads table for high-score matches
+    const hotLeadsCount = 2 // In production: count of leads with score > 90
+
+    if (hasHotLeads) {
+        recommendations.push({
+            id: 'hot-leads',
+            priority: 'important',
+            title: `${hotLeadsCount} hot leads waiting`,
+            description: `Gia found ${hotLeadsCount} high-quality leads (90%+ match) ready to convert`,
+            actionUrl: '/dashboard/client-leads',
+            actionLabel: 'Contact Leads'
+        })
+    }
+
     return recommendations
 }
