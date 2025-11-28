@@ -42,6 +42,7 @@ import { EmptyClients } from "@/components/empty-states/empty-clients"
 import { EmptySessions } from "@/components/empty-states/empty-sessions"
 import { EmptyPrograms } from "@/components/empty-states/empty-programs"
 import { EmptyPayments } from "@/components/empty-states/empty-payments"
+import { DailyBriefing } from "@/components/gia/daily-briefing"
 
 interface DashboardStats {
   trainer: {
@@ -245,6 +246,9 @@ export function DashboardOverview() {
 
       {/* Booking Link Card - PROMINENT */}
       <BookingLinkCard />
+
+      {/* Gia's Daily Briefing - AI-Powered Insights */}
+      <DailyBriefing />
 
       {/* Onboarding Checklist - Show for new users or users with < 3 clients */}
       {stats.clients.total < 3 && (
