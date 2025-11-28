@@ -56,6 +56,35 @@ export async function getOrCreateUser() {
         updatedAt: new Date(),
       },
     })
+
+    // Create trainer profile for new user
+    try {
+      await prisma.trainer_profiles.create({
+        data: {
+          id: crypto.randomUUID(),
+          userId: user.id,
+          bio: null,
+          specialties: [],
+          certifications: [],
+          yearsExperience: null,
+          instagramHandle: null,
+          tiktokHandle: null,
+          youtubeChannel: null,
+          websiteUrl: null,
+          isVerified: false,
+          profilePhotoUrl: clerkUser.imageUrl || null,
+          coverPhotoUrl: null,
+          location: null,
+          hourlyRate: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      })
+      console.log('✅ Created trainer_profiles record for new user:', user.id)
+    } catch (error) {
+      console.error('❌ Failed to create trainer_profiles:', error)
+      // Don't fail user creation if profile creation fails
+    }
   } else {
     // Update name and email from Clerk on every login (in case they changed it)
     user = await prisma.users.update({
