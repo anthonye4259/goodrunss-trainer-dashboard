@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useRef, useEffect } from "react"
+import { useChat } from "ai/react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,33 +10,16 @@ import {
   X,
   Send,
   Minimize2,
-  Users,
-  Calendar,
-  TrendingUp,
   MessageCircle,
   Loader2,
   UserPlus,
   CalendarPlus,
-  BarChart3,
-  BookOpen,
+  TrendingUp,
   CheckCircle2,
   Mic
 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
 import ReactMarkdown from 'react-markdown'
-
-interface Message {
-  role: "user" | "assistant"
-  content: string
-  actions?: Action[]
-}
-
-interface Action {
-  type: "create_client" | "create_session" | "view_schedule" | "view_analytics"
-  label: string
-  data?: any
-}
 
 const quickActions = [
   {
@@ -67,14 +51,6 @@ const quickActions = [
 export function GiaChatbot() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "👋 **Hey there!** I'm Gia, your AI-powered assistant.\n\nI can help you:\n• ✨ Create custom session plans\n• 👥 Manage clients & schedules\n• 📈 Grow your business\n• 📱 Generate marketing content\n• 🎯 Optimize your coaching\n\n**What would you like to work on today?**",
-    },
-  ])
-  const [input, setInput] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(true)
   const [position, setPosition] = useState({ x: 0, y: 100 })
   const [isDragging, setIsDragging] = useState(false)
@@ -82,6 +58,20 @@ export function GiaChatbot() {
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
+
+  const { messages, input, handleInputChange, handleSubmit, isLoading, setInput, append } = useChat({
+    api: '/api/gia/chat',
+    initialMessages: [
+      {
+        id: 'welcome',
+        role: 'assistant',
+        content: "👋 **Hey there!** I'm Gia, your AI Business Partner.\n\nI can help you:\n• ✨ Create custom session plans\n• 👥 Manage clients & schedules\n• 📈 Grow your business\n• 📱 Generate marketing content\n• 🎯 Optimize your coaching\n\n**What would you like to work on today?**",
+      },
+    ],
+    onResponse: () => {
+      setShowSuggestions(false)
+    }
+  })
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -132,73 +122,10 @@ export function GiaChatbot() {
 
   const handleQuickAction = (prompt: string) => {
     setShowSuggestions(false)
-    handleSendMessage(prompt)
-  }
-
-  const handleSendMessage = async (message?: string) => {
-    const userMessage = message || input.trim()
-    if (!userMessage || isLoading) return
-
-    setInput("")
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }])
-    setIsLoading(true)
-    setShowSuggestions(false)
-
-    try {
-      const response = await fetch("/api/gia/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userMessage,
-          history: messages,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: data.message,
-            actions: data.actions
-          },
-        ])
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: data.message || "Sorry, I encountered an error. Please try again.",
-          },
-        ])
-      }
-    } catch (error) {
-      console.error("Chat error:", error)
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "🔌 I'm having trouble connecting right now. Please check your connection and try again.",
-        },
-      ])
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
-    }
-  }
-
-  const handleAction = (action: Action) => {
-    // Handle action execution
-    console.log("Executing action:", action)
-    // TODO: Implement action handlers
+    append({
+      role: 'user',
+      content: prompt
+    })
   }
 
   if (!isOpen) {
@@ -253,7 +180,7 @@ export function GiaChatbot() {
             <h3 className="font-bold text-white text-lg">Gia</h3>
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
-              <p className="text-xs text-green-400 font-medium">Online</p>
+              <p className="text-xs text-green-400 font-medium">Online • GPT-4o</p>
             </div>
           </div>
         </div>
@@ -314,29 +241,22 @@ export function GiaChatbot() {
                           >
                             {message.content}
                           </ReactMarkdown>
+
+                          {/* Show tool calls if any (optional, for debugging or transparency) */}
+                          {message.toolInvocations?.map((toolInvocation: any) => (
+                            <div key={toolInvocation.toolCallId} className="mt-2 text-xs bg-black/30 p-2 rounded border border-white/10">
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <span>Gia is {toolInvocation.toolName.replace(/_/g, ' ')}...</span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       ) : (
                         <p className="text-sm leading-relaxed">{message.content}</p>
                       )}
                     </div>
                   </div>
-
-                  {/* Action buttons */}
-                  {message.actions && message.actions.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2 justify-start ml-2">
-                      {message.actions.map((action, idx) => (
-                        <Button
-                          key={idx}
-                          size="sm"
-                          onClick={() => handleAction(action)}
-                          className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30"
-                        >
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          {action.label}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
                 </div>
               ))}
 
@@ -360,8 +280,8 @@ export function GiaChatbot() {
                 </div>
               )}
 
-              {/* Loading indicator */}
-              {isLoading && (
+              {/* Loading indicator (only when waiting for start of stream) */}
+              {isLoading && messages[messages.length - 1]?.role === 'user' && (
                 <div className="flex justify-start">
                   <div className="bg-[#1a1f2e] border border-primary/20 rounded-2xl px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -376,16 +296,16 @@ export function GiaChatbot() {
 
           {/* Input */}
           <div className="relative p-4 border-t border-border/30 bg-[#1a1f2e]">
-            <div className="flex gap-2">
+            <form onSubmit={handleSubmit} className="flex gap-2">
               <Input
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onChange={handleInputChange}
                 placeholder="Ask Gia anything..."
                 disabled={isLoading}
                 className="flex-1 bg-[#0f1419] border-primary/20 focus:border-primary/50 text-white placeholder:text-muted-foreground"
               />
               <Button
+                type="button"
                 variant="ghost"
                 size="icon"
                 className="hover:bg-white/10 text-muted-foreground hover:text-white"
@@ -394,17 +314,17 @@ export function GiaChatbot() {
                 <Mic className="h-4 w-4" />
               </Button>
               <Button
-                onClick={() => handleSendMessage()}
+                type="submit"
                 disabled={isLoading || !input.trim()}
                 size="icon"
                 className="bg-gradient-to-r from-primary via-accent to-primary hover:opacity-90 transition-opacity shadow-lg"
               >
                 <Send className="h-4 w-4 text-black" />
               </Button>
-            </div>
+            </form>
             <p className="text-[10px] text-muted-foreground mt-2 text-center flex items-center justify-center gap-1">
               <Sparkles className="h-3 w-3" />
-              Powered by Google Gemini 2.5 Flash
+              Powered by GPT-4o
             </p>
           </div>
         </>

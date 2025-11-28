@@ -33,7 +33,7 @@ Write a warm, personalized outreach message (2-3 sentences) that:
 Keep it under 100 words.`
 
     const completion = await openai.chat.completions.create({
-        model: 'gpt-4',
+        model: 'gpt-4o',
         messages: [
             { role: 'system', content: 'You are an expert fitness trainer who writes warm, personalized outreach messages.' },
             { role: 'user', content: prompt }

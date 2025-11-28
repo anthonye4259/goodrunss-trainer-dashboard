@@ -1,31 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { getOrCreateUser } from "@/lib/get-or-create-user"
-import OpenAI from 'openai'
-import { GIA_CORE_IDENTITY, SPECIALIZATION_PROMPTS, CONTEXT_ENHANCED_PROMPT } from '@/lib/gia/expert-prompts'
-import { parseGIAResponse } from '@/lib/gia/program-parser'
+import { openai } from '@ai-sdk/openai'
+import { streamText } from 'ai'
+import { SPECIALIZATION_PROMPTS, CONTEXT_ENHANCED_PROMPT } from '@/lib/gia/expert-prompts'
 import { prisma } from '@/lib/prisma'
-import { GIA_TOOLS } from '@/lib/gia/tools'
-import { executeToolCall } from '@/lib/gia/functions'
+import { getGiaTools } from '@/lib/gia/ai-tools'
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30
 
 export async function POST(request: NextRequest) {
   try {
     const authUser = await getOrCreateUser()
 
     if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return new Response('Unauthorized', { status: 401 })
     }
 
-    const body = await request.json()
-    const { messages, files, mode, clientId } = body
+    const { messages, files, mode, clientId } = await request.json()
 
     if (!messages || messages.length === 0) {
-      return NextResponse.json({ error: 'No messages provided' }, { status: 400 })
+      return new Response('No messages provided', { status: 400 })
     }
-
-    // Initialize OpenAI
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
 
     // Get trainer from database with clients
     const dbUser = await prisma.users.findUnique({
@@ -63,9 +59,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Get last user message
-    const lastUserMessage = messages[messages.length - 1]
-
     // Build file context
     let fileContext = ''
     if (files && files.length > 0) {
@@ -79,6 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Detect specialization from message content
+    const lastUserMessage = messages[messages.length - 1]
     const messageText = lastUserMessage.content.toLowerCase()
     let specialization: keyof typeof SPECIALIZATION_PROMPTS = 'sports' // Default to sports
 
@@ -140,98 +134,30 @@ export async function POST(request: NextRequest) {
       dbUser ? {
         specialty: dbUser.specialties?.[0],
         clientCount: dbUser.clients?.length || 0,
+        businessGoals: [], // Add if available in DB
       } : undefined
     )
 
-    // Call OpenAI with expert prompt and tools
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    // Inject file context and client hint into the last message
+    const coreMessages = messages.slice(0, -1)
+    const lastMessageContent = `${lastUserMessage.content}${fileContext}${clientContextHint}`
+
+    const result = streamText({
+      model: openai('gpt-4o'), // Upgraded to GPT-4o for "Legora" level intelligence
+      system: systemPrompt,
       messages: [
-        {
-          role: 'system',
-          content: systemPrompt
-        },
-        ...messages.slice(0, -1).map((m: any) => ({
-          role: m.role,
-          content: m.content
-        })),
-        {
-          role: 'user',
-          content: `${lastUserMessage.content}${fileContext}${clientContextHint}`
-        }
+        ...coreMessages,
+        { role: 'user', content: lastMessageContent }
       ],
-      tools: GIA_TOOLS as any,
-      tool_choice: 'auto',
-      max_tokens: 2048, // Increased for detailed responses
+      tools: getGiaTools(authUser.id),
+      maxSteps: 5, // Allow multi-step reasoning (e.g. get_leads -> generate_email)
       temperature: 0.7,
     })
 
-    const responseMessage = completion.choices[0]?.message
-    let aiResponse = responseMessage?.content || ''
+    return result.toDataStreamResponse()
 
-    // Handle Tool Calls
-    if (responseMessage?.tool_calls) {
-      const toolCalls = responseMessage.tool_calls
-
-      // Execute each tool
-      const toolOutputs = []
-      for (const toolCall of toolCalls) {
-        // Cast to any to avoid strict type issues with OpenAI SDK versions
-        const functionCall = (toolCall as any).function
-        if (!functionCall) continue
-
-        const functionName = functionCall.name
-        const functionArgs = JSON.parse(functionCall.arguments)
-
-        // Inject trainerId for security
-        const result = await executeToolCall(functionName, functionArgs, authUser.id)
-
-        toolOutputs.push({
-          tool_call_id: toolCall.id,
-          role: 'tool',
-          name: functionName,
-          content: JSON.stringify(result)
-        })
-      }
-
-      // Second call to OpenAI with tool outputs
-      const secondResponse = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages.slice(0, -1).map((m: any) => ({ role: m.role, content: m.content })),
-          { role: 'user', content: `${lastUserMessage.content}${fileContext}${clientContextHint}` },
-          responseMessage,
-          ...toolOutputs as any
-        ],
-      })
-
-      aiResponse = secondResponse.choices[0]?.message?.content || 'Action completed.'
-    }
-
-    // Parse response to check if it's a saveable program
-    const parsedProgram = parseGIAResponse(aiResponse, specialization)
-
-    return NextResponse.json({
-      success: true,
-      response: aiResponse,
-      program: parsedProgram, // Include parsed program data if available
-    })
   } catch (error: any) {
     console.error('[GIA Chat] Error:', error)
-
-    let errorMessage = `I'm having trouble connecting right now. 🤖\n\nError: ${error.message}`
-
-    // Check for specific error types
-    if (error.message?.includes('Tenant or user not found') || error.code === 'P1001') {
-      errorMessage = "⚠️ **Database Connection Error**\n\nIt looks like your Supabase database is paused or unreachable. Please check your Supabase dashboard and ensure the project is active."
-    } else if (error.message?.includes('OPENAI_API_KEY')) {
-      errorMessage = "⚠️ **Configuration Error**\n\nPlease check that OPENAI_API_KEY is set correctly in your Vercel environment variables."
-    }
-
-    return NextResponse.json({
-      success: true,
-      response: errorMessage,
-    })
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 })
   }
 }
