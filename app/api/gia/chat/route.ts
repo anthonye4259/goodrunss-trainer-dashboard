@@ -150,7 +150,6 @@ export async function POST(request: NextRequest) {
         { role: 'user', content: lastMessageContent }
       ],
       tools: getGiaTools(authUser.id),
-      maxSteps: 5, // Allow multi-step reasoning (e.g. get_leads -> generate_email)
       temperature: 0.7,
     })
 
