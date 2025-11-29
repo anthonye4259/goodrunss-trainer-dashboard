@@ -36,8 +36,7 @@ export async function POST(req: NextRequest) {
         status: 'SCHEDULED'
       },
       include: {
-        clients: true,
-        users: true
+        clients: true
       }
     });
 
@@ -51,8 +50,7 @@ export async function POST(req: NextRequest) {
         status: 'SCHEDULED'
       },
       include: {
-        clients: true,
-        users: true
+        clients: true
       }
     });
 
@@ -70,7 +68,7 @@ export async function POST(req: NextRequest) {
       try {
         if (!session.clients?.phone) continue;
 
-        const message = `Hi ${session.clients.name}! Reminder: You have a ${session.title || 'training'} session with ${session.users?.name || 'your trainer'} tomorrow at ${formatTime(session.scheduledAt)}. See you there! 💪`;
+        const message = `Hi ${session.clients.name}! Reminder: You have a ${session.title || 'training'} session tomorrow at ${formatTime(session.scheduledAt)}. See you there! 💪`;
 
         const phone = formatPhone(session.clients.phone);
 
@@ -100,7 +98,7 @@ export async function POST(req: NextRequest) {
       try {
         if (!session.clients?.phone) continue;
 
-        const message = `${session.clients.name}, your ${session.title || 'training'} session with ${session.users?.name || 'your trainer'} is in 1 hour! Don't forget water! 💧`;
+        const message = `${session.clients.name}, your ${session.title || 'training'} session is in 1 hour! Don't forget water! 💧`;
 
         const phone = formatPhone(session.clients.phone);
 
