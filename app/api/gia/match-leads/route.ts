@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
         goals: lead.fitnessGoals.join(', '),
         experience: lead.experienceLevel,
         sport: lead.preferredSport,
-        trainerName: trainer.name
+        trainerName: trainer.name || 'Trainer'
       })
     }
 
