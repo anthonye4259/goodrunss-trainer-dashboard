@@ -1,0 +1,197 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "GoodRunss Trainer API - Gia Assistant",
+    "description": "API for ChatGPT to help trainers manage their training business through Gia, the AI assistant.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://goodrunss-trainer-dashboard.vercel.app"
+    }
+  ],
+  "paths": {
+    "/api/gpt/session-plan": {
+      "post": {
+        "operationId": "generateSessionPlan",
+        "summary": "Generate AI training session plan",
+        "description": "Creates a complete training session plan with warm-up, drills, cooldown, and social media content",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["clientName", "clientLevel", "sport", "trainerId"],
+                "properties": {
+                  "clientName": {
+                    "type": "string",
+                    "description": "Client's name"
+                  },
+                  "clientAge": {
+                    "type": "integer",
+                    "description": "Client's age (optional)"
+                  },
+                  "clientLevel": {
+                    "type": "string",
+                    "enum": ["beginner", "intermediate", "advanced"],
+                    "description": "Client's skill level"
+                  },
+                  "sport": {
+                    "type": "string",
+                    "description": "Sport or activity (e.g., tennis, basketball, yoga)"
+                  },
+                  "trainerId": {
+                    "type": "string",
+                    "description": "Trainer's ID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session plan generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "plan": {
+                      "type": "object",
+                      "properties": {
+                        "warmup": { "type": "array", "items": { "type": "string" } },
+                        "drills": { "type": "array", "items": { "type": "object" } },
+                        "cooldown": { "type": "array", "items": { "type": "string" } },
+                        "duration": { "type": "integer" },
+                        "notes": { "type": "string" },
+                        "instagramPost": { "type": "string" },
+                        "messageToClient": { "type": "string" }
+                      }
+                    },
+                    "generationTime": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gpt/clients": {
+      "get": {
+        "operationId": "getClients",
+        "summary": "Get client list",
+        "description": "Retrieve the trainer's client list with their information and goals",
+        "parameters": [
+          {
+            "name": "trainerId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Trainer's ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client list retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "clients": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "name": { "type": "string" },
+                          "email": { "type": "string" },
+                          "phone": { "type": "string" },
+                          "sport": { "type": "string" },
+                          "level": { "type": "string" },
+                          "goals": { "type": "array", "items": { "type": "string" } },
+                          "status": { "type": "string" },
+                          "since": { "type": "string" }
+                        }
+                      }
+                    },
+                    "total": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gpt/schedule": {
+      "get": {
+        "operationId": "getSchedule",
+        "summary": "Get trainer schedule",
+        "description": "View the trainer's upcoming bookings and available time slots",
+        "parameters": [
+          {
+            "name": "trainerId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Trainer's ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Schedule retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "schedule": {
+                      "type": "object",
+                      "properties": {
+                        "week": { "type": "array", "items": { "type": "string" } },
+                        "upcomingBookings": { "type": "array", "items": { "type": "object" } },
+                        "availableSlots": { "type": "array", "items": { "type": "object" } }
+                      }
+                    },
+                    "trainerId": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ]
+}
+
+
+
+

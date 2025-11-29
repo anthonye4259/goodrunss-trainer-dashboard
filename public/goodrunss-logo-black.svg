@@ -1,0 +1,66 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  <!-- GoodRunss Chain Link Logo - Black Version -->
+  <g transform="translate(50, 80)">
+    <!-- G - Left curved chain link -->
+    <path d="M 0 20
+             C 0 5, 10 0, 30 0
+             L 60 0
+             C 75 0, 80 8, 80 20
+             L 80 22
+             L 40 22
+             L 40 35
+             L 80 35
+             L 80 40
+             C 80 55, 70 60, 50 60
+             L 20 60
+             C 5 60, 0 50, 0 40
+             L 0 20
+             Z
+             M 20 22
+             C 15 22, 13 25, 13 30
+             L 13 40
+             C 13 48, 18 50, 25 50
+             L 50 50
+             C 58 50, 67 48, 67 40
+             L 67 35
+             L 40 35
+             L 40 22
+             L 20 22
+             Z"
+          fill="#000000"/>
+    
+    <!-- Connecting piece between G and R -->
+    <rect x="67" y="28" width="28" height="20" rx="4" fill="#000000"/>
+    
+    <!-- R - Right chain link with extending leg -->
+    <path d="M 95 35
+             L 125 35
+             C 138 35, 145 42, 145 52
+             C 145 62, 138 69, 125 69
+             L 123 69
+             L 155 105
+             L 135 105
+             L 108 73
+             L 108 69
+             L 95 69
+             L 95 35
+             Z
+             M 108 47
+             L 108 57
+             L 125 57
+             C 130 57, 133 55, 133 52
+             C 133 49, 130 47, 125 47
+             L 108 47
+             Z"
+          fill="#000000"/>
+  </g>
+  
+  <!-- GOODRUNSS Text -->
+  <text x="200" y="310" 
+        font-family="Arial, Helvetica, sans-serif" 
+        font-size="38" 
+        font-weight="700" 
+        text-anchor="middle" 
+        letter-spacing="3"
+        fill="#000000">GOODRUNSS</text>
+</svg>
