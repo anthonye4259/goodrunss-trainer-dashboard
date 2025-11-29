@@ -107,8 +107,8 @@ async function getChurnRisk(args: any, trainerId: string) {
         },
         highRiskClients: highRisk.map(c => ({
             name: c.clientName,
-            reason: c.factors.join(', '),
-            lastActive: c.lastActiveDate
+            reason: c.reasons.join(', '),
+            riskScore: c.riskScore
         }))
     }
 }
