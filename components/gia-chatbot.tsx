@@ -1,7 +1,7 @@
+```
 "use client"
 
-import { useRef, useEffect } from "react"
-import { useChat } from "ai/react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -20,6 +20,11 @@ import {
 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import ReactMarkdown from 'react-markdown'
+
+interface Message {
+  role: "user" | "assistant"
+  content: string
+}
 
 const quickActions = [
   {
@@ -51,6 +56,14 @@ const quickActions = [
 export function GiaChatbot() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content: "👋 **Hey there!** I'm Gia, your AI Business Partner.\n\nI can help you:\n• ✨ Create custom session plans\n• 👥 Manage clients & schedules\n• 📈 Grow your business\n• 📱 Generate marketing content\n• 🎯 Optimize your coaching\n\n**What would you like to work on today?**",
+    },
+  ])
+  const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(true)
   const [position, setPosition] = useState({ x: 0, y: 100 })
   const [isDragging, setIsDragging] = useState(false)
@@ -58,20 +71,6 @@ export function GiaChatbot() {
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
-
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setInput, append } = useChat({
-    api: '/api/gia/chat',
-    initialMessages: [
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content: "👋 **Hey there!** I'm Gia, your AI Business Partner.\n\nI can help you:\n• ✨ Create custom session plans\n• 👥 Manage clients & schedules\n• 📈 Grow your business\n• 📱 Generate marketing content\n• 🎯 Optimize your coaching\n\n**What would you like to work on today?**",
-      },
-    ],
-    onResponse: () => {
-      setShowSuggestions(false)
-    }
-  })
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -122,10 +121,69 @@ export function GiaChatbot() {
 
   const handleQuickAction = (prompt: string) => {
     setShowSuggestions(false)
-    append({
-      role: 'user',
-      content: prompt
-    })
+    handleSendMessage(prompt)
+  }
+
+  const handleSendMessage = async (message?: string) => {
+    const userMessage = message || input.trim()
+    if (!userMessage || isLoading) return
+
+    setInput("")
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }])
+    setIsLoading(true)
+    setShowSuggestions(false)
+
+    try {
+      const response = await fetch("/api/gia/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMessage,
+          history: messages,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to get response')
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let assistantMessage = ""
+
+      if (reader) {
+        setMessages((prev) => [...prev, { role: "assistant", content: "" }])
+        
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          
+          const chunk = decoder.decode(value)
+          assistantMessage += chunk
+          
+          setMessages((prev) => {
+            const newMessages = [...prev]
+            newMessages[newMessages.length - 1] = {
+              role: "assistant",
+              content: assistantMessage
+            }
+            return newMessages
+          })
+        }
+      }
+    } catch (error) {
+      console.error("Chat error:", error)
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "🔌 I'm having trouble connecting right now. Please check your connection and try again.",
+        },
+      ])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (!isOpen) {
@@ -156,8 +214,8 @@ export function GiaChatbot() {
       ref={cardRef}
       className="fixed w-[450px] h-[650px] shadow-2xl z-50 flex flex-col bg-gradient-to-b from-[#1a1f2e] to-[#0f1419] border border-primary/30 backdrop-blur-xl"
       style={{
-        left: `${position.x}px`,
-        top: `${position.y}px`,
+        left: `${ position.x } px`,
+        top: `${ position.y } px`,
         cursor: isDragging ? 'grabbing' : 'default'
       }}
     >
@@ -220,13 +278,14 @@ export function GiaChatbot() {
               {messages.map((message, index) => (
                 <div key={index}>
                   <div
-                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                    className={`flex ${ message.role === "user" ? "justify-end" : "justify-start" } `}
                   >
                     <div
-                      className={`max-w-[90%] rounded-2xl px-4 py-3 ${message.role === "user"
-                        ? "bg-gradient-to-r from-primary via-accent to-primary text-black shadow-lg"
-                        : "bg-[#1a1f2e] text-white border border-primary/20"
-                        }`}
+                      className={`max - w - [90 %] rounded - 2xl px - 4 py - 3 ${
+  message.role === "user"
+    ? "bg-gradient-to-r from-primary via-accent to-primary text-black shadow-lg"
+    : "bg-[#1a1f2e] text-white border border-primary/20"
+} `}
                     >
                       {message.role === "assistant" ? (
                         <div className="prose prose-sm prose-invert max-w-none">
@@ -241,16 +300,6 @@ export function GiaChatbot() {
                           >
                             {message.content}
                           </ReactMarkdown>
-
-                          {/* Show tool calls if any (optional, for debugging or transparency) */}
-                          {message.toolInvocations?.map((toolInvocation: any) => (
-                            <div key={toolInvocation.toolCallId} className="mt-2 text-xs bg-black/30 p-2 rounded border border-white/10">
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                                <span>Gia is {toolInvocation.toolName.replace(/_/g, ' ')}...</span>
-                              </div>
-                            </div>
-                          ))}
                         </div>
                       ) : (
                         <p className="text-sm leading-relaxed">{message.content}</p>
@@ -272,7 +321,7 @@ export function GiaChatbot() {
                         onClick={() => handleQuickAction(action.prompt)}
                         className="h-auto py-4 flex flex-col items-start gap-2 bg-[#1a1f2e] hover:bg-[#252b3b] border-primary/20 hover:border-primary/40 transition-all group"
                       >
-                        <action.icon className={`h-5 w-5 ${action.color} group-hover:scale-110 transition-transform`} />
+                        <action.icon className={`h - 5 w - 5 ${ action.color } group - hover: scale - 110 transition - transform`} />
                         <span className="text-xs text-left font-medium text-white">{action.label}</span>
                       </Button>
                     ))}
@@ -296,10 +345,10 @@ export function GiaChatbot() {
 
           {/* Input */}
           <div className="relative p-4 border-t border-border/30 bg-[#1a1f2e]">
-            <form onSubmit={handleSubmit} className="flex gap-2">
+            <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex gap-2">
               <Input
                 value={input}
-                onChange={handleInputChange}
+                onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask Gia anything..."
                 disabled={isLoading}
                 className="flex-1 bg-[#0f1419] border-primary/20 focus:border-primary/50 text-white placeholder:text-muted-foreground"
