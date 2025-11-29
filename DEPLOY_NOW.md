@@ -1,189 +1,185 @@
-# 🚀 READY TO DEPLOY!
+# 🚀 Deploy to Vercel - Step by Step
 
-## ✅ ALL FEATURES COMPLETED
-
-All 8 critical and high-priority features have been successfully built and are ready for production!
-
----
-
-## 📋 FINAL DEPLOYMENT STEPS
-
-### 1. Push to GitHub (Do This Now!)
+## Step 1: Install Vercel CLI (if you don't have it)
 
 ```bash
-cd /Users/anthonyedwards/Downloads/dashboard
-git push origin main
+npm install -g vercel
 ```
 
-This will automatically trigger a Vercel deployment.
+## Step 2: Login to Vercel
 
----
-
-### 2. Add Environment Variables to Vercel
-
-Go to: **Vercel Dashboard → Your Project → Settings → Environment Variables**
-
-Add these new keys:
-
-#### Email Service (REQUIRED)
-```
-RESEND_API_KEY=re_xxxxx
-```
-Get your key at: https://resend.com/api-keys
-
-#### Google Calendar (REQUIRED)
-```
-GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=xxxxx
-GOOGLE_REDIRECT_URI=https://goodrunss-trainer-dashboard.vercel.app/api/auth/google/callback
-```
-Get credentials at: https://console.cloud.google.com/apis/credentials
-
-**Note:** `SENTRY_DSN` should already be configured.
-
----
-
-### 3. Verify Deployment
-
-After deployment completes:
-
-#### Test Email Service
 ```bash
-curl -X POST https://goodrunss-trainer-dashboard.vercel.app/api/test-email \
-  -H "Content-Type: application/json" \
-  -d '{"to": "your-email@example.com"}'
+vercel login
 ```
 
-#### Check Cron Job
-1. Go to: **Vercel Dashboard → Your Project → Cron Jobs**
-2. You should see: `POST /api/reminders?action=send` scheduled hourly
-3. If not visible, redeploy once more after adding env vars
+Follow the prompts to authenticate.
 
-#### Test Analytics
+---
+
+## Step 3: Deploy
+
 ```bash
-curl https://goodrunss-trainer-dashboard.vercel.app/api/analytics?range=30
+cd /Users/anthonyedwards/Downloads/goodrunss-apps/goodrunss-trainer-dashboard
+vercel --prod
 ```
 
-#### Test Reports (Download CSV)
+Vercel will ask you:
+1. **Set up and deploy?** → Yes
+2. **Which scope?** → Your account/team
+3. **Link to existing project?** → No (first time)
+4. **Project name?** → goodrunss-trainer-dashboard (or whatever you want)
+5. **Directory?** → Press Enter (current directory)
+6. **Override settings?** → No
+
+**Wait for deployment...** ⏳
+
+---
+
+## Step 4: Add Environment Variables
+
+Once deployed, you'll get a URL like: `https://goodrunss-trainer-dashboard.vercel.app`
+
+Now go to: https://vercel.com/dashboard
+
+1. Click on your project: **goodrunss-trainer-dashboard**
+2. Click **Settings** → **Environment Variables**
+3. Add ALL these variables (copy from your `.env` file):
+
 ```bash
-curl "https://goodrunss-trainer-dashboard.vercel.app/api/reports?type=financial&format=csv" \
-  --output financial_report.csv
+# Database
+DATABASE_URL=postgresql://postgres.akxwxsjoahopnplynzzb:Galagay1%24@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
+DIRECT_URL=postgresql://postgres:Galagay1%24@db.akxwxsjoahopnplynzzb.supabase.co:5432/postgres
+
+# Resend (Email)
+RESEND_API_KEY=re_f7VW2cJV_JiCGHj6RaJRH6n6QqZgHBGSz
+RESEND_FROM_EMAIL=GoodRunss <anthony@goodrunss.com>
+RESEND_REPLY_TO_EMAIL=anthony@goodrunss.com
+EMAIL_FROM=GoodRunss <anthony@goodrunss.com>
+EMAIL_REPLY_TO=anthony@goodrunss.com
+
+# AI (Claude)
+ANTHROPIC_API_KEY=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
+
+# Cron/Internal
+CRON_SECRET=4e336490c06a357f4efb23d3f9cb186ba3705f6a3e1eb433a8d58185d0fe30e4
+INTERNAL_API_KEY=7840c50cde1bdb7dc131257110a74eb64eb8cb7eaa30f92c2363d784b55f3e44
+
+# Stripe (Live Keys)
+STRIPE_SECRET_KEY=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
+STRIPE_PUBLISHABLE_KEY=pk_live_51Rfsym06I3eFkRUmipmmgFo6bqX8Al08OhJZm1N6b6UvO6ZnLUDuhOQpNNaSeJlbFAmETOt64P6oRMboXLsnm3tJ00ClGq74Lv
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_51Rfsym06I3eFkRUmipmmgFo6bqX8Al08OhJZm1N6b6UvO6ZnLUDuhOQpNNaSeJlbFAmETOt64P6oRMboXLsnm3tJ00ClGq74Lv
+
+# Stripe Price IDs
+STRIPE_PRICE_ID_3_MONTHS=price_1SSrQm06I3eFkRUm0XIIzC2u
+STRIPE_PRICE_ID_6_MONTHS=price_1SSrQ706I3eFkRUmALT3M9tM
+STRIPE_PRICE_ID_12_MONTHS=price_1SSrP106I3eFkRUm9qZHlG8K
+
+# Stripe Webhook (ADD AFTER STEP 5)
+STRIPE_WEBHOOK_SECRET=
+
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_c291Z2hoLXplYnUtNjYuY2xlcmsuYWNjb3VudHMuZGV2JA
+CLERK_SECRET_KEY=sk_test_uX1wPQMWEqEt5edG0rVLn3KMnkPquKsz17kYh1b3F5
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/onboarding
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/onboarding
+
+# App URL (UPDATE THIS!)
+NEXT_PUBLIC_APP_URL=https://goodrunss-trainer-dashboard.vercel.app
+
+# Firebase (Push Notifications)
+FIREBASE_PROJECT_ID=goodrunss-ai
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-fbsvc@goodrunss-ai.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQChjsAsDP8qfaWa\n0yMy/9AVbRwoq6U2d0Frj1OEhYe/hOmibXgz5L7oL23dh/TteOWlzd1lveW2+4OV\n/SLCIm8JkJkb7iqdDFeuo6vNfXTIbTYk4S/xFncSj9j4gs0zP7ykgpsLe+mTrlB6\ns/1245Jh90VO4kO5HKcZ+mAQLghUn8vHHRDUZ7wfEHph47uw5H61qvOG8ypiIWcO\nIkV2hRL6JiMy+oBTbW96dCzjixkNvornQuVJL5RZqxFM72HnupiDR2y00/xtH7cq\nab2s5BV4sc5pmneNzXjNISbTpd5SRQMh8lKjiqEDcgMzO2aHgovr3VMGEpzQ54HV\nFiw1cfqHAgMBAAECggEAD8+2wxjqiDAP2x063qzmopIxJVHXM4NsZah7VgbziCzr\n6LeqAforLPInYH0D3ZHtd9K0DlcNemEXOcCyfCl+kIMUWQVwKjqhAjiGge/7U/pM\nSEO5u3Claq2lYHz8tD1Sqw8VOYSBEbEHs1qWPeJ72xamM9g1JJLHT+WPLUY0DoQF\nPttizjMhhtuMpT2Soo0b8KHK5Z89kuCtCnAIWgYHXUNJI+/ucK2dQ38WLB3+W8tD\nmnlm5k3A7sHjmauQvkxo2zGXLcNZZVQtlthboT8bbGhJMqJGDwrnWBmoOtySeIBP\nR030hPFkwaD7tXD+fP1xZqWZyp6H+1fIT3jkekJIsQKBgQDX1eg5KvAOutxG+yEd\ni9SyA07xlC6iL/8r5FtHcf3KGK7mcyk6V0AWvWCt3tygXq/amC3En6CWYqHNTuTl\n8W0BZBX912J6vs4F+QeorShsExGn+1xcLA2+5pzhEtXboR8FpZn/ND19jbzcbYIR\n/osk7fLTQAYV4MPRj3Y1D620xQKBgQC/nx7nZ3RV5zv2s9zioUe80mFLfaiLn6To\nlE0lsEwolGiIiNrWXWb7nit0/fg2CcEK69HHqzV1XQUuI0XbmS5Ar9Ggs6xzhlf2\nM3XwiNf5FQN3+bf5AR8ukKoYtgEMyXbIQfGEkkSwY/8tD8Ya5tgD7MscOPwPIAtG\nnOfj3Rhe2wKBgAVV0Eu5d/2lONS4WHU2g6dy1Xy7QPvZW+Fl36vAcZmRSqF/r0E1\n7uug+sbRf3qnXIl2wYret0WAYqeEj7vvX9Zs9u4zaMfH96fGJB5TSXCCeClC2WGd\n5SkW4kHeCVNIhE/LbCcWz35PBqAcRN7U//OFvj7ikkPwLmb7uNxO6uhRAoGAYTf3\n0+uXCGZS8+15KbotzUzndAeC1aPfZOio43A4k3YIOw1ECfJFZ29uGOMpZTE5sbLH\nMghZDPxuvmPC85EZ+FO7hU7jNZF5Wz3snmavPH4+zkXx4vGAwn0+716X1cb47s0W\nHe6fzuZM9q3EEq3/9q3StrTqnTnivqaot+DalnUCgYBT7O6Xzd2zCP38JO2mLJr9\n3jolfLeloT+OXyacfHD6lCzzYgBb73IA3cdCb7yHtNqtASB8HKDDv39brzRXjUAC\nKNC/WiiWbgPc3vAW7MaJ1n3MoFmqjYWb8/rvQDkA231Wgg+oC5uclStwMXWUAMLX\nIxMpWsaCT39FCtuBvjYDyw==\n-----END PRIVATE KEY-----\n"
+
+# Sentry (Error Tracking)
+NEXT_PUBLIC_SENTRY_DSN=https://f320a431c501301055f4577a3d3554b7@o4510281815556096.ingest.us.sentry.io/4510281824796672
+SENTRY_ORG=goodrunss
+SENTRY_PROJECT=goodrunss-trainer-dashboard
 ```
 
----
+**Important:** For `NEXT_PUBLIC_APP_URL`, use your actual Vercel URL.
 
-## 📦 What Was Built
-
-### 🔴 Critical Features
-1. ✅ **Automated Reminders Cron Job** - Runs every hour automatically
-2. ✅ **Production Email Service** - Real emails via Resend
-3. ✅ **Trainer Services Migration** - Database-backed, production-ready
-
-### 🟡 High Priority Features
-4. ✅ **Google Calendar Integration** - Auto-sync sessions to calendar
-5. ✅ **Error Monitoring** - Sentry already configured
-
-### 🟢 Medium Priority Features
-6. ✅ **Analytics API** - Revenue, clients, sessions, growth metrics
-7. ✅ **Reports API** - Financial, client, session reports with CSV export
-8. ✅ **Video Library API** - Manage workout video library
-9. ✅ **AI Persona API** - Customize Gia's personality and responses
+4. Click **Save** after each variable
 
 ---
 
-## 📁 New Files Created
+## Step 5: Set Up Stripe Webhook
 
-```
-vercel.json                              ← Cron job configuration
-app/api/test-email/route.ts             ← Email testing endpoint
-app/api/analytics/route.ts               ← ✅ Analytics API (rebuilt)
-app/api/reports/route.ts                 ← ✅ Reports API (rebuilt)
-app/api/video-library/route.ts           ← ✅ Video Library API (rebuilt)
-app/api/ai-persona/route.ts              ← ✅ AI Persona API (rebuilt)
-lib/integrations/google-calendar.ts      ← ✅ Google Calendar (rebuilt)
-CRITICAL_FEATURES_COMPLETE.md            ← Full documentation
-DEPLOY_NOW.md                            ← This file
+1. Go to https://dashboard.stripe.com/webhooks
+2. Click **Add endpoint**
+3. Endpoint URL: `https://your-vercel-url.vercel.app/api/webhooks/stripe`
+4. Select events:
+   - `checkout.session.completed`
+   - `invoice.payment_succeeded`
+   - `customer.subscription.deleted`
+5. Click **Add endpoint**
+6. Click on the webhook you just created
+7. Copy the **Signing secret** (starts with `whsec_...`)
+8. Go back to Vercel → Settings → Environment Variables
+9. Add: `STRIPE_WEBHOOK_SECRET=whsec_your_secret_here`
+10. Click **Save**
+
+---
+
+## Step 6: Redeploy with New Variables
+
+After adding all environment variables:
+
+```bash
+vercel --prod
 ```
 
----
-
-## 📦 Packages Installed
-
-```json
-{
-  "googleapis": "^140.0.0",  // Google Calendar sync
-  "resend": "^4.0.3"         // Email service
-}
-```
+This will redeploy with all your environment variables.
 
 ---
 
-## 🎯 What Works Out of the Box
+## Step 7: Test Your Deployment
 
-### ✅ Already Working (No Setup Required)
-- Gia AI (38 tools)
-- Trial system (7-day card-locked)
-- Stripe payments
-- Booking links
-- Auto CRM
-- Lead matching
-- All 10 automation APIs
-- Database integration
-- Mobile responsive
-- Sport customization
-
-### ✅ Works After Adding API Keys
-- **Resend Key** → Email notifications work
-- **Google OAuth** → Calendar sync works
+1. Visit your deployment URL
+2. Go to `/welcome`
+3. Click "Get Early Access"
+4. Sign up with a test email
+5. Complete onboarding
+6. Select a pricing plan
+7. Use Stripe test card: `4242 4242 4242 4242`
+8. Verify you land on the dashboard
 
 ---
 
-## 🔥 PRODUCTION READINESS
+## 🎉 You're Live!
 
-### Before Today
-- ⚠️ No automated reminders
-- ⚠️ Emails logged to console
-- ❌ No calendar integration
-- ⚠️ Basic analytics only
-- ❌ No reports or exports
-- ❌ No video library
-- ⚠️ Generic AI responses
+Your dashboard is now deployed and ready to sell to trainers!
 
-### After Today ✅
-- ✅ **Automated hourly reminders** (Vercel Cron)
-- ✅ **Real email service** (Resend)
-- ✅ **Google Calendar sync** (googleapis)
-- ✅ **Comprehensive analytics** (revenue, clients, growth)
-- ✅ **Advanced reports** (JSON, CSV export)
-- ✅ **Video library management** (full CRUD)
-- ✅ **Customizable AI persona** (branded Gia)
+**Share this URL with trainers:** `https://your-vercel-url.vercel.app/welcome`
 
 ---
 
-## 🎉 SUMMARY
+## Optional: Custom Domain
 
-**100% OF CRITICAL FEATURES ARE NOW BUILT!**
+Want to use `dashboard.goodrunss.com`?
 
-The platform is **fully production-ready** for millions of users.
-
-### What You Need to Do:
-
-1. **Push to GitHub:** `git push origin main`
-2. **Add Resend API key** to Vercel (for emails)
-3. **Add Google OAuth credentials** to Vercel (for calendar sync)
-
-That's it! Everything else is **DONE** and **DEPLOYED** automatically! 🚀
+1. Go to Vercel Dashboard → Your Project → Settings → Domains
+2. Add domain: `dashboard.goodrunss.com`
+3. Update your DNS with the CNAME record Vercel provides
+4. Update `NEXT_PUBLIC_APP_URL` in Vercel env vars to your custom domain
+5. Redeploy: `vercel --prod`
 
 ---
 
-## 📞 Need Help?
+## Need Help?
 
-All APIs are documented in `CRITICAL_FEATURES_COMPLETE.md` with:
-- Full feature descriptions
-- API endpoints and usage examples
-- Setup instructions
-- Integration code samples
+If you run into any issues during deployment, let me know!
 
----
 
-**🎊 CONGRATULATIONS! Your trainer dashboard is now enterprise-grade and production-ready! 🎊**
+
+
+
+
+
+
+
+
+
+
