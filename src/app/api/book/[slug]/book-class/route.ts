@@ -89,23 +89,70 @@ export async function POST(
 
     // If using a package/pass, deduct credit and book
     if (usePackage && packageId) {
-      // TODO: Implement package credit deduction
-      // For now, just book directly
-      
-      await prisma.$queryRaw`
-        INSERT INTO group_class_bookings (class_id, client_id, client_name, client_email, client_phone, status, payment_status)
-        VALUES (${classId}, NULL, ${clientName}, ${clientEmail}, ${clientPhone || null}, 'confirmed', 'paid')
+      // Verify client has the package and it's valid
+      const clientPackage: any = await prisma.$queryRawUnsafe(`
+        SELECT * FROM client_packages
+        WHERE id = '${packageId}' AND client_email = '${clientEmail}'
+          AND is_active = true
+          AND (expires_at IS NULL OR expires_at > NOW())
+          AND (package_type = 'unlimited' OR remaining_credits > 0)
+        LIMIT 1
+      `)
+
+      if (!clientPackage || clientPackage.length === 0) {
+        return NextResponse.json(
+          { error: "Package not found or expired" },
+          { status: 400 }
+        )
+      }
+
+      const pkg = clientPackage[0]
+
+      // Book the class
+      const bookingResult: any = await prisma.$queryRaw`
+        INSERT INTO group_class_bookings (
+          class_id, client_name, client_email, client_phone, 
+          status, payment_status, package_id
+        )
+        VALUES (
+          ${classId}, ${clientName}, ${clientEmail}, ${clientPhone || null},
+          'confirmed', 'paid', ${packageId}
+        )
+        RETURNING id
       `
 
+      const bookingId = Array.isArray(bookingResult) ? bookingResult[0].id : bookingResult.id
+
+      // Deduct credit (if credit-based)
+      if (pkg.package_type === 'credit_based') {
+        await prisma.$queryRaw`
+          UPDATE client_packages
+          SET remaining_credits = remaining_credits - 1
+          WHERE id = ${packageId}
+        `
+      }
+
+      // Track usage
+      await prisma.$queryRaw`
+        INSERT INTO package_usage (client_package_id, class_booking_id, class_id)
+        VALUES (${packageId}, ${bookingId}, ${classId})
+      `
+
+      // Update class bookings count
       await prisma.$queryRaw`
         UPDATE group_classes
         SET current_bookings = current_bookings + 1
         WHERE id = ${classId}
       `
 
+      const creditsLeft = pkg.package_type === 'credit_based' 
+        ? pkg.remaining_credits - 1 
+        : 'Unlimited'
+
       return NextResponse.json({
         success: true,
-        message: "Booked successfully using class package!",
+        message: `✅ Booked using ${pkg.package_name}!\n${pkg.package_type === 'credit_based' ? `${creditsLeft} credits remaining` : 'Unlimited access'}`,
+        creditsRemaining: creditsLeft
       })
     }
 

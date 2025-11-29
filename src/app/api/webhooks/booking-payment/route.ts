@@ -29,6 +29,32 @@ export async function POST(req: Request) {
 
       console.log("✅ Payment successful for session:", session.id)
 
+      // Check if this is a class package purchase
+      if (session.metadata?.bookingType === 'class_package') {
+        const { packageId, packageType, credits, durationDays, clientEmail, trainerId } = session.metadata
+        
+        // Calculate expiration date
+        const expiresAt = new Date()
+        expiresAt.setDate(expiresAt.getDate() + parseInt(durationDays))
+
+        // Create client package
+        await prisma.$queryRaw`
+          INSERT INTO client_packages (
+            client_email, trainer_id, package_id, package_name, package_type,
+            total_credits, remaining_credits, expires_at, stripe_payment_intent_id
+          )
+          VALUES (
+            ${clientEmail}, ${trainerId}, ${packageId}, ${session.metadata.packageName}, ${packageType},
+            ${credits ? parseInt(credits) : null}, ${credits ? parseInt(credits) : null},
+            ${expiresAt}, ${session.payment_intent as string}
+          )
+        `
+
+        console.log("✅ Class package purchased:", packageId)
+        
+        return NextResponse.json({ success: true, packageId })
+      }
+
       // Check if this is a group class booking
       if (session.metadata?.bookingType === 'group_class') {
         const classId = session.metadata.classId

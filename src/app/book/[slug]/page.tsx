@@ -63,12 +63,25 @@ export default function BookingPage() {
   const [selectedClass, setSelectedClass] = useState<GroupClass | null>(null)
   const [activeTab, setActiveTab] = useState<string>("private")
   
+  // Packages state
+  const [packages, setPackages] = useState<any[]>([])
+  const [myPackages, setMyPackages] = useState<any[]>([])
+  const [selectedPackageForPurchase, setSelectedPackageForPurchase] = useState<any>(null)
+  const [selectedPackageForUse, setSelectedPackageForUse] = useState<any>(null)
+  
   const { toast } = useToast()
 
   useEffect(() => {
     fetchTrainerInfo()
     fetchGroupClasses()
+    fetchPackages()
   }, [slug])
+
+  useEffect(() => {
+    if (clientEmail && clientEmail.includes('@')) {
+      fetchMyPackages()
+    }
+  }, [clientEmail])
 
   useEffect(() => {
     if (selectedDate && selectedSession) {
@@ -119,6 +132,35 @@ export default function BookingPage() {
       }
     } catch (error) {
       console.error("Failed to load group classes:", error)
+    }
+  }
+
+  const fetchPackages = async () => {
+    try {
+      const res = await fetch(`/api/class-packages?slug=${slug}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          setPackages(data.packages || [])
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load packages:", error)
+    }
+  }
+
+  const fetchMyPackages = async () => {
+    if (!clientEmail) return
+    try {
+      const res = await fetch(`/api/class-packages/my-packages?email=${encodeURIComponent(clientEmail)}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          setMyPackages(data.packages || [])
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load my packages:", error)
     }
   }
 
@@ -173,6 +215,8 @@ export default function BookingPage() {
           clientName,
           clientEmail,
           clientPhone,
+          usePackage: !!selectedPackageForUse,
+          packageId: selectedPackageForUse?.id,
         }),
       })
 
