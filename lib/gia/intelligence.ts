@@ -257,3 +257,45 @@ export async function matchLeads(trainerId: string) {
         }
     ]
 }
+
+/**
+ * Get upcoming schedule for context
+ */
+export async function getUpcomingSchedule(trainerId: string, daysAhead: number = 7) {
+    const startDate = new Date()
+    const endDate = new Date()
+    endDate.setDate(endDate.getDate() + daysAhead)
+
+    const sessions = await prisma.sessions.findMany({
+        where: {
+            trainerId,
+            scheduledAt: {
+                gte: startDate,
+                lte: endDate
+            }
+        },
+        include: {
+            clients: {
+                select: { name: true }
+            }
+        },
+        orderBy: {
+            scheduledAt: 'asc'
+        }
+    })
+
+    const today = new Date()
+    const todayCount = sessions.filter(s =>
+        new Date(s.scheduledAt).getDate() === today.getDate() &&
+        new Date(s.scheduledAt).getMonth() === today.getMonth() &&
+        new Date(s.scheduledAt).getFullYear() === today.getFullYear()
+    ).length
+
+    const nextSession = sessions.find(s => new Date(s.scheduledAt) > new Date())
+
+    return {
+        sessions,
+        todayCount,
+        nextSession: nextSession ? `${nextSession.clients?.name} at ${nextSession.scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : undefined
+    }
+}

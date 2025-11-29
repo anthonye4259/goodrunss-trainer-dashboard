@@ -370,37 +370,14 @@ async function saveProgram(args: any, trainerId: string) {
 async function getUpcomingSessions(args: any, trainerId: string) {
     const { daysAhead = 7 } = args
 
-    const now = new Date()
-    const futureDate = new Date()
-    futureDate.setDate(now.getDate() + daysAhead)
-
-    const sessions = await prisma.trainer_sessions.findMany({
-        where: {
-            trainerId,
-            scheduledAt: {
-                gte: now,
-                lte: futureDate
-            },
-            status: {
-                not: 'CANCELLED'
-            }
-        },
-        include: {
-            clients: {
-                select: {
-                    name: true,
-                    sport: true
-                }
-            }
-        },
-        orderBy: { scheduledAt: 'asc' },
-        take: 20
-    })
+    // Import dynamically to avoid circular dependencies
+    const { getUpcomingSchedule } = await import('@/lib/gia/intelligence')
+    const schedule = await getUpcomingSchedule(trainerId, daysAhead)
 
     return {
         success: true,
-        message: `Found ${sessions.length} upcoming sessions in the next ${daysAhead} days`,
-        sessions: sessions.map(s => ({
+        message: `Found ${schedule.sessions.length} upcoming sessions in the next ${daysAhead} days`,
+        sessions: schedule.sessions.map(s => ({
             id: s.id,
             title: s.title,
             scheduledAt: s.scheduledAt,

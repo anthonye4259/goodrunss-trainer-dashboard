@@ -117,16 +117,40 @@ export function NotificationDropdown({
                                                 {notification.message}
                                             </p>
                                             {notification.actionLabel && (
-                                                <Button
-                                                    variant="link"
-                                                    className="h-auto p-0 mt-2 text-primary"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        handleAction(notification)
-                                                    }}
-                                                >
-                                                    {notification.actionLabel} →
-                                                </Button>
+                                                <div className="flex gap-2 mt-2">
+                                                    <Button
+                                                        variant="link"
+                                                        className="h-auto p-0 text-primary"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            handleAction(notification)
+                                                        }}
+                                                    >
+                                                        {notification.actionLabel} →
+                                                    </Button>
+
+                                                    {(notification.type === 'churn_risk' || notification.type === 'hot_lead') && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-6 text-xs px-2"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                onClose()
+                                                                const event = new CustomEvent('open-gia-chat', {
+                                                                    detail: {
+                                                                        prompt: notification.type === 'churn_risk'
+                                                                            ? `Draft a check-in message for these at-risk clients: ${notification.message}`
+                                                                            : `Draft an outreach message for these new leads: ${notification.message}`
+                                                                    }
+                                                                })
+                                                                window.dispatchEvent(event)
+                                                            }}
+                                                        >
+                                                            Draft Message
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                         <Button

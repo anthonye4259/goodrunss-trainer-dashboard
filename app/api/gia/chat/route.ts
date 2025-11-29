@@ -120,6 +120,37 @@ export async function POST(request: NextRequest) {
       specialization = mode as keyof typeof SPECIALIZATION_PROMPTS
     }
 
+    // Fetch deep business context in parallel
+    const [revenueContext, scheduleContext, riskContext, leadsContext] = await Promise.all([
+      import('@/lib/gia/intelligence').then(m => m.analyzeRevenue(dbUser.id)),
+      import('@/lib/gia/intelligence').then(m => m.getUpcomingSchedule(dbUser.id)),
+      import('@/lib/gia/intelligence').then(m => m.analyzeClientRisk(dbUser.id)),
+      import('@/lib/gia/intelligence').then(m => m.matchLeads(dbUser.id))
+    ])
+
+    // Process opportunities
+    const opportunities = []
+
+    // High risk clients
+    const highRiskClients = riskContext.filter(c => c.riskLevel === 'high')
+    if (highRiskClients.length > 0) {
+      opportunities.push({
+        type: 'churn_risk' as const,
+        count: highRiskClients.length,
+        details: `${highRiskClients.length} clients at high risk of churning: ${highRiskClients.map(c => c.clientName).join(', ')}`
+      })
+    }
+
+    // Hot leads
+    const hotLeads = leadsContext.filter(l => l.matchScore >= 90)
+    if (hotLeads.length > 0) {
+      opportunities.push({
+        type: 'hot_lead' as const,
+        count: hotLeads.length,
+        details: `${hotLeads.length} perfect match leads available: ${hotLeads.map(l => l.name).join(', ')}`
+      })
+    }
+
     // Build context-aware system prompt with client data
     const systemPrompt = CONTEXT_ENHANCED_PROMPT(
       specialization,
@@ -129,11 +160,23 @@ export async function POST(request: NextRequest) {
         injuries: clientContext.injuries,
         experience: clientContext.skillLevel || undefined,
         equipment: [], // Can add later from client preferences
+        lastInteraction: clientContext.lastSessionDate ? `Session on ${clientContext.lastSessionDate.toLocaleDateString()}` : undefined,
+        nextSession: scheduleContext.sessions.find(s => s.clients?.name === clientContext?.name)?.scheduledAt.toLocaleDateString()
       } : undefined,
       dbUser ? {
         specialty: dbUser.specialties?.[0],
         clientCount: dbUser.clients?.length || 0,
         businessGoals: [], // Add if available in DB
+        revenue: {
+          mrr: revenueContext.currentMRR,
+          growth: revenueContext.growth,
+          trend: revenueContext.growth > 0 ? 'up' : revenueContext.growth < 0 ? 'down' : 'stable'
+        },
+        schedule: {
+          todayCount: scheduleContext.todayCount,
+          nextSession: scheduleContext.nextSession
+        },
+        opportunities: opportunities
       } : undefined
     )
 

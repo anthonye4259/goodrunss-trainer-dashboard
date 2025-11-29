@@ -68,6 +68,8 @@ export function GiaChatbot() {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
 
+  const [thinkingStep, setThinkingStep] = useState<string | null>(null)
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
 
@@ -81,7 +83,7 @@ export function GiaChatbot() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages])
+  }, [messages, thinkingStep])
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (cardRef.current) {
@@ -118,6 +120,22 @@ export function GiaChatbot() {
     }
   }, [isDragging, dragOffset])
 
+  // Listen for external events to open chat
+  useEffect(() => {
+    const handleOpenChat = (e: CustomEvent) => {
+      setIsOpen(true)
+      setIsMinimized(false)
+      if (e.detail?.prompt) {
+        handleSendMessage(e.detail.prompt)
+      }
+    }
+
+    window.addEventListener('open-gia-chat' as any, handleOpenChat)
+    return () => {
+      window.removeEventListener('open-gia-chat' as any, handleOpenChat)
+    }
+  }, [])
+
   const handleQuickAction = (prompt: string) => {
     setShowSuggestions(false)
     handleSendMessage(prompt)
@@ -130,6 +148,7 @@ export function GiaChatbot() {
     setInput("")
     setMessages((prev) => [...prev, { role: "user", content: userMessage }])
     setIsLoading(true)
+    setThinkingStep("Analyzing business context...")
     setShowSuggestions(false)
 
     try {
