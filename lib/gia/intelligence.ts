@@ -231,3 +231,29 @@ export async function generateRecommendations(trainerId: string): Promise<Action
 
     return recommendations
 }
+
+/**
+ * Match leads with trainer profile
+ */
+export async function matchLeads(trainerId: string) {
+    // In a real implementation, this would query the leads table and use
+    // vector search or algorithm matching against trainer profile.
+    // For now, we'll return mock high-quality leads.
+
+    return [
+        {
+            id: 'lead-1',
+            name: 'Jessica Chen',
+            matchScore: 95,
+            sport: 'Tennis',
+            goals: ['Weight Loss', 'Strength']
+        },
+        {
+            id: 'lead-2',
+            name: 'Marcus Williams',
+            matchScore: 88,
+            sport: 'Golf',
+            goals: ['Flexibility', 'Core']
+        }
+    ]
+}
