@@ -27,41 +27,32 @@ export async function POST(req: NextRequest) {
     const in2Hours = new Date(now.getTime() + 2 * 60 * 60 * 1000); // Buffer
 
     // Find sessions in the next 24-25 hours (for 24hr reminders)
-    const sessions24hr = await prisma.session.findMany({
+    const sessions24hr = await prisma.trainer_sessions.findMany({
       where: {
-        startTime: {
+        scheduledAt: {
           gte: in24Hours,
           lte: in25Hours
         },
-        status: 'SCHEDULED',
-        // Don't send if already sent
-        metadata: {
-          path: ['reminder24hrSent'],
-          equals: undefined as any
-        }
+        status: 'SCHEDULED'
       },
       include: {
-        client: true,
-        trainer: true
+        clients: true,
+        users: true
       }
     });
 
     // Find sessions in the next 1-2 hours (for 1hr reminders)
-    const sessions1hr = await prisma.session.findMany({
+    const sessions1hr = await prisma.trainer_sessions.findMany({
       where: {
-        startTime: {
+        scheduledAt: {
           gte: in1Hour,
           lte: in2Hours
         },
-        status: 'SCHEDULED',
-        metadata: {
-          path: ['reminder1hrSent'],
-          equals: undefined as any
-        }
+        status: 'SCHEDULED'
       },
       include: {
-        client: true,
-        trainer: true
+        clients: true,
+        users: true
       }
     });
 
@@ -77,27 +68,23 @@ export async function POST(req: NextRequest) {
     // Send 24-hour reminders
     for (const session of sessions24hr) {
       try {
-        if (!session.client.phone) continue;
+        if (!session.clients?.phone) continue;
 
-        const message = `Hi ${session.client.name}! Reminder: You have a ${session.sessionType || 'training'} session with ${session.trainer.name} tomorrow at ${formatTime(session.startTime)}. See you there! 💪`;
+        const message = `Hi ${session.clients.name}! Reminder: You have a ${session.title || 'training'} session with ${session.users?.name || 'your trainer'} tomorrow at ${formatTime(session.scheduledAt)}. See you there! 💪`;
 
-        const phone = formatPhone(session.client.phone);
-        
+        const phone = formatPhone(session.clients.phone);
+
         await client.messages.create({
           body: message,
           from: process.env.TWILIO_PHONE_NUMBER,
           to: phone
         });
 
-        // Mark as sent
-        await prisma.session.update({
+        // Mark as sent (update notes field since we don't have metadata)
+        await prisma.trainer_sessions.update({
           where: { id: session.id },
           data: {
-            metadata: {
-              ...(session.metadata as any || {}),
-              reminder24hrSent: true,
-              reminder24hrSentAt: now.toISOString()
-            }
+            notes: `${session.notes || ''}\n[Reminder sent: 24hr at ${now.toISOString()}]`
           }
         });
 
@@ -111,27 +98,23 @@ export async function POST(req: NextRequest) {
     // Send 1-hour reminders
     for (const session of sessions1hr) {
       try {
-        if (!session.client.phone) continue;
+        if (!session.clients?.phone) continue;
 
-        const message = `${session.client.name}, your ${session.sessionType || 'training'} session with ${session.trainer.name} is in 1 hour! ${session.location ? `Location: ${session.location}` : ''} Don't forget water! 💧`;
+        const message = `${session.clients.name}, your ${session.title || 'training'} session with ${session.users?.name || 'your trainer'} is in 1 hour! Don't forget water! 💧`;
 
-        const phone = formatPhone(session.client.phone);
-        
+        const phone = formatPhone(session.clients.phone);
+
         await client.messages.create({
           body: message,
           from: process.env.TWILIO_PHONE_NUMBER,
           to: phone
         });
 
-        // Mark as sent
-        await prisma.session.update({
+        // Mark as sent (update notes field since we don't have metadata)
+        await prisma.trainer_sessions.update({
           where: { id: session.id },
           data: {
-            metadata: {
-              ...(session.metadata as any || {}),
-              reminder1hrSent: true,
-              reminder1hrSentAt: now.toISOString()
-            }
+            notes: `${session.notes || ''}\n[Reminder sent: 1hr at ${now.toISOString()}]`
           }
         });
 
