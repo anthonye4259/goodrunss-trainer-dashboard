@@ -15,13 +15,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Users, Plus, Calendar, Clock, Trash2, Edit } from 'lucide-react'
+import { Users, Plus, Calendar, Clock, Trash2, Edit, QrCode, Download } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 
 export default function GroupClassesPage() {
   const { toast } = useToast()
   const [classes, setClasses] = useState<any[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isQRDialogOpen, setIsQRDialogOpen] = useState(false)
+  const [selectedClassForQR, setSelectedClassForQR] = useState<any>(null)
   const [editingClass, setEditingClass] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(true)
@@ -444,6 +446,18 @@ export default function GroupClassesPage() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => {
+                          setSelectedClassForQR(cls)
+                          setIsQRDialogOpen(true)
+                        }}
+                        className="text-primary hover:text-primary hover:bg-primary/10"
+                        title="Show QR Code"
+                      >
+                        <QrCode className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleOpenDialog(cls)}
                         className="text-primary hover:text-primary hover:bg-primary/10"
                       >
@@ -466,6 +480,87 @@ export default function GroupClassesPage() {
           </div>
         )}
       </Card>
+
+      {/* QR Code Dialog */}
+      <Dialog open={isQRDialogOpen} onOpenChange={setIsQRDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Class Check-In QR Code</DialogTitle>
+            <DialogDescription>
+              Display this QR code at your class. Clients can scan to check in instantly!
+            </DialogDescription>
+          </DialogHeader>
+          {selectedClassForQR && (
+            <div className="space-y-4 py-4">
+              <div className="text-center">
+                <h3 className="font-semibold text-white mb-2">{selectedClassForQR.name}</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {new Date(selectedClassForQR.start_time).toLocaleDateString()} at{' '}
+                  {new Date(selectedClassForQR.start_time).toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </p>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg flex items-center justify-center">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
+                    `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/check-in/${selectedClassForQR.id}`
+                  )}`}
+                  alt="Check-in QR Code"
+                  className="w-full max-w-[300px]"
+                />
+              </div>
+
+              <div className="text-center space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Or share this link:
+                </p>
+                <code className="text-xs bg-muted px-2 py-1 rounded block overflow-x-auto">
+                  {`${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/check-in/${selectedClassForQR.id}`}
+                </code>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const link = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/check-in/${selectedClassForQR.id}`
+                    navigator.clipboard.writeText(link)
+                    toast({
+                      title: "Copied!",
+                      description: "Check-in link copied to clipboard",
+                    })
+                  }}
+                  className="flex-1"
+                >
+                  Copy Link
+                </Button>
+                <Button
+                  onClick={() => {
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(
+                      `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/check-in/${selectedClassForQR.id}`
+                    )}`
+                    const link = document.createElement('a')
+                    link.href = qrUrl
+                    link.download = `${selectedClassForQR.name}-QR.png`
+                    link.click()
+                    toast({
+                      title: "Downloaded!",
+                      description: "QR code saved to your device",
+                    })
+                  }}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-black"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download QR
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

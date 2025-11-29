@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { Calendar, Clock, DollarSign, User } from "lucide-react"
+import { Calendar, Clock, DollarSign, User, Users } from "lucide-react"
 
 interface SessionType {
   name: string
@@ -28,6 +29,21 @@ interface TimeSlot {
   available: boolean
 }
 
+interface GroupClass {
+  id: string
+  name: string
+  description: string | null
+  scheduledAt: string
+  duration: number
+  maxCapacity: number
+  pricePerPerson: number
+  location: string | null
+  level: string
+  currentBookings: number
+  spotsLeft: number
+  isFull: boolean
+}
+
 export default function BookingPage() {
   const params = useParams()
   const slug = params.slug as string
@@ -38,12 +54,20 @@ export default function BookingPage() {
   const [selectedTime, setSelectedTime] = useState<string>("")
   const [clientName, setClientName] = useState("")
   const [clientEmail, setClientEmail] = useState("")
+  const [clientPhone, setClientPhone] = useState("")
   const [loading, setLoading] = useState(true)
   const [booking, setBooking] = useState(false)
+  
+  // Group Classes state
+  const [groupClasses, setGroupClasses] = useState<GroupClass[]>([])
+  const [selectedClass, setSelectedClass] = useState<GroupClass | null>(null)
+  const [activeTab, setActiveTab] = useState<string>("private")
+  
   const { toast } = useToast()
 
   useEffect(() => {
     fetchTrainerInfo()
+    fetchGroupClasses()
   }, [slug])
 
   useEffect(() => {
@@ -84,6 +108,20 @@ export default function BookingPage() {
     }
   }
 
+  const fetchGroupClasses = async () => {
+    try {
+      const res = await fetch(`/api/book/${slug}/classes`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          setGroupClasses(data.classes || [])
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load group classes:", error)
+    }
+  }
+
   const handleBooking = async () => {
     if (!selectedSession || !selectedDate || !selectedTime || !clientName || !clientEmail) {
       toast({ title: "Error", description: "Please fill in all fields", variant: "destructive" })
@@ -114,6 +152,58 @@ export default function BookingPage() {
       }
     } catch (error) {
       toast({ title: "Error", description: "Failed to create booking", variant: "destructive" })
+    } finally {
+      setBooking(false)
+    }
+  }
+
+  const handleClassBooking = async () => {
+    if (!selectedClass || !clientName || !clientEmail) {
+      toast({ title: "Error", description: "Please fill in all fields", variant: "destructive" })
+      return
+    }
+
+    setBooking(true)
+    try {
+      const res = await fetch(`/api/book/${slug}/book-class`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          classId: selectedClass.id,
+          clientName,
+          clientEmail,
+          clientPhone,
+        }),
+      })
+
+      const data = await res.json()
+      
+      if (data.waitlisted) {
+        toast({ 
+          title: "Added to Waitlist", 
+          description: data.message,
+        })
+        setSelectedClass(null)
+        setClientName("")
+        setClientEmail("")
+        setClientPhone("")
+      } else if (res.ok && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl
+      } else if (data.success) {
+        toast({ 
+          title: "Success!", 
+          description: data.message,
+        })
+        setSelectedClass(null)
+        setClientName("")
+        setClientEmail("")
+        setClientPhone("")
+        fetchGroupClasses()
+      } else {
+        toast({ title: "Error", description: data.error || "Booking failed", variant: "destructive" })
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to book class", variant: "destructive" })
     } finally {
       setBooking(false)
     }
@@ -151,9 +241,15 @@ export default function BookingPage() {
         </Card>
 
         <Card className="p-8">
-          <h2 className="text-2xl font-bold text-white mb-6">Book a Session</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">Book Now</h2>
 
-          <div className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="private">Private Sessions</TabsTrigger>
+              <TabsTrigger value="classes">Group Classes</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="private" className="space-y-6">
             <div>
               <Label className="text-base font-semibold mb-3 block">Select Session Type</Label>
               <div className="grid gap-3">
@@ -268,7 +364,142 @@ export default function BookingPage() {
                 )}
               </>
             )}
-          </div>
+            </TabsContent>
+
+            <TabsContent value="classes" className="space-y-6">
+              {groupClasses.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No group classes available at this time</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {groupClasses.map((cls) => {
+                    const classDate = new Date(cls.scheduledAt)
+                    const fillPercentage = (cls.currentBookings / cls.maxCapacity) * 100
+
+                    return (
+                      <Card
+                        key={cls.id}
+                        className={`p-4 cursor-pointer transition-all ${
+                          selectedClass?.id === cls.id
+                            ? "border-primary bg-primary/5"
+                            : "hover:border-primary/50"
+                        }`}
+                        onClick={() => setSelectedClass(cls)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-white">{cls.name}</h3>
+                              {cls.isFull && <Badge variant="destructive">Full</Badge>}
+                              {cls.level && cls.level !== 'all_levels' && (
+                                <Badge variant="outline" className="capitalize">{cls.level}</Badge>
+                              )}
+                            </div>
+                            {cls.description && (
+                              <p className="text-sm text-muted-foreground mb-2">{cls.description}</p>
+                            )}
+                            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-3">
+                              <span className="flex items-center gap-1">
+                                <Calendar size={14} />
+                                {classDate.toLocaleDateString()} at {classDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock size={14} />
+                                {cls.duration} mins
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Users size={14} />
+                                {cls.currentBookings}/{cls.maxCapacity} {cls.isFull ? '(Waitlist Available)' : `(${cls.spotsLeft} spots left)`}
+                              </span>
+                              {cls.location && <span>📍 {cls.location}</span>}
+                              <span className="flex items-center gap-1">
+                                <DollarSign size={14} />
+                                ${cls.pricePerPerson}
+                              </span>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full ${
+                                  fillPercentage >= 100 ? 'bg-red-500' :
+                                  fillPercentage >= 75 ? 'bg-yellow-500' :
+                                  'bg-primary'
+                                }`}
+                                style={{ width: `${Math.min(fillPercentage, 100)}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    )
+                  })}
+
+                  {selectedClass && (
+                    <Card className="p-6 mt-6 bg-primary/5">
+                      <h3 className="font-semibold text-white mb-4">Complete Booking</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="class-name">Your Name</Label>
+                          <Input
+                            id="class-name"
+                            value={clientName}
+                            onChange={(e) => setClientName(e.target.value)}
+                            placeholder="John Doe"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="class-email">Email Address</Label>
+                          <Input
+                            id="class-email"
+                            type="email"
+                            value={clientEmail}
+                            onChange={(e) => setClientEmail(e.target.value)}
+                            placeholder="john@example.com"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="class-phone">Phone Number (Optional)</Label>
+                          <Input
+                            id="class-phone"
+                            type="tel"
+                            value={clientPhone}
+                            onChange={(e) => setClientPhone(e.target.value)}
+                            placeholder="+1 (555) 123-4567"
+                          />
+                        </div>
+
+                        <Card className="p-4 bg-background/50">
+                          <h4 className="font-semibold text-white mb-2">Booking Summary</h4>
+                          <div className="space-y-1 text-sm">
+                            <p><span className="text-muted-foreground">Class:</span> {selectedClass.name}</p>
+                            <p><span className="text-muted-foreground">Date:</span> {new Date(selectedClass.scheduledAt).toLocaleDateString()}</p>
+                            <p><span className="text-muted-foreground">Time:</span> {new Date(selectedClass.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                            <p><span className="text-muted-foreground">Duration:</span> {selectedClass.duration} minutes</p>
+                            {selectedClass.location && <p><span className="text-muted-foreground">Location:</span> {selectedClass.location}</p>}
+                            <p className="text-lg font-semibold mt-2">
+                              {selectedClass.isFull ? 'Join Waitlist (Free)' : `Total: $${selectedClass.pricePerPerson}`}
+                            </p>
+                          </div>
+                        </Card>
+
+                        <Button
+                          onClick={handleClassBooking}
+                          disabled={booking}
+                          className="w-full bg-primary text-black hover:bg-primary/90"
+                          size="lg"
+                        >
+                          {booking ? "Processing..." : selectedClass.isFull ? "Join Waitlist" : "Book & Pay Now"}
+                        </Button>
+                      </div>
+                    </Card>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </Card>
       </div>
     </div>

@@ -29,7 +29,32 @@ export async function POST(req: Request) {
 
       console.log("✅ Payment successful for session:", session.id)
 
-      // Find the booking by Stripe session ID
+      // Check if this is a group class booking
+      if (session.metadata?.bookingType === 'group_class') {
+        const classId = session.metadata.classId
+        
+        // Find and confirm the group class booking
+        await prisma.$queryRaw`
+          UPDATE group_class_bookings
+          SET status = 'confirmed', payment_status = 'paid'
+          WHERE stripe_session_id = ${session.id}
+        `
+
+        // Update class booking count
+        await prisma.$queryRaw`
+          UPDATE group_classes
+          SET current_bookings = current_bookings + 1
+          WHERE id = ${classId}
+        `
+
+        console.log("✅ Group class booking confirmed:", classId)
+        
+        // TODO: Send confirmation email
+        
+        return NextResponse.json({ success: true, classId })
+      }
+
+      // Handle regular 1-on-1 booking
       const booking = await prisma.publicBooking.findFirst({
         where: { stripeSessionId: session.id },
         include: {
