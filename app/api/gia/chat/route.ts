@@ -4,7 +4,6 @@ import { openai } from '@ai-sdk/openai'
 import { streamText } from 'ai'
 import { SPECIALIZATION_PROMPTS, CONTEXT_ENHANCED_PROMPT } from '@/lib/gia/expert-prompts'
 import { prisma } from '@/lib/prisma'
-import { getGiaTools } from '@/lib/gia/ai-tools'
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
@@ -149,7 +148,6 @@ export async function POST(request: NextRequest) {
         ...coreMessages,
         { role: 'user', content: lastMessageContent }
       ],
-      tools: getGiaTools(authUser.id),
       temperature: 0.7,
     })
 
