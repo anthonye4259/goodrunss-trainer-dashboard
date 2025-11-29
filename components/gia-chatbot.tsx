@@ -1,4 +1,3 @@
-```
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -154,14 +153,14 @@ export function GiaChatbot() {
 
       if (reader) {
         setMessages((prev) => [...prev, { role: "assistant", content: "" }])
-        
+
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
-          
+
           const chunk = decoder.decode(value)
           assistantMessage += chunk
-          
+
           setMessages((prev) => {
             const newMessages = [...prev]
             newMessages[newMessages.length - 1] = {
@@ -214,8 +213,8 @@ export function GiaChatbot() {
       ref={cardRef}
       className="fixed w-[450px] h-[650px] shadow-2xl z-50 flex flex-col bg-gradient-to-b from-[#1a1f2e] to-[#0f1419] border border-primary/30 backdrop-blur-xl"
       style={{
-        left: `${ position.x } px`,
-        top: `${ position.y } px`,
+        left: `${position.x} px`,
+        top: `${position.y} px`,
         cursor: isDragging ? 'grabbing' : 'default'
       }}
     >
@@ -278,14 +277,13 @@ export function GiaChatbot() {
               {messages.map((message, index) => (
                 <div key={index}>
                   <div
-                    className={`flex ${ message.role === "user" ? "justify-end" : "justify-start" } `}
+                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} `}
                   >
                     <div
-                      className={`max - w - [90 %] rounded - 2xl px - 4 py - 3 ${
-  message.role === "user"
-    ? "bg-gradient-to-r from-primary via-accent to-primary text-black shadow-lg"
-    : "bg-[#1a1f2e] text-white border border-primary/20"
-} `}
+                      className={`max - w - [90 %] rounded - 2xl px - 4 py - 3 ${message.role === "user"
+                        ? "bg-gradient-to-r from-primary via-accent to-primary text-black shadow-lg"
+                        : "bg-[#1a1f2e] text-white border border-primary/20"
+                        } `}
                     >
                       {message.role === "assistant" ? (
                         <div className="prose prose-sm prose-invert max-w-none">
@@ -321,7 +319,7 @@ export function GiaChatbot() {
                         onClick={() => handleQuickAction(action.prompt)}
                         className="h-auto py-4 flex flex-col items-start gap-2 bg-[#1a1f2e] hover:bg-[#252b3b] border-primary/20 hover:border-primary/40 transition-all group"
                       >
-                        <action.icon className={`h - 5 w - 5 ${ action.color } group - hover: scale - 110 transition - transform`} />
+                        <action.icon className={`h - 5 w - 5 ${action.color} group - hover: scale - 110 transition - transform`} />
                         <span className="text-xs text-left font-medium text-white">{action.label}</span>
                       </Button>
                     ))}
