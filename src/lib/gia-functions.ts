@@ -490,6 +490,58 @@ export const giaFunctions = [
   },
 
   // ═══════════════════════════════════════════════════════════════
+  // 📱 SMS/TEXT MESSAGING FUNCTIONS (NEW!)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    name: "send_sms",
+    description: "Send an SMS/text message to a client's phone number",
+    input_schema: {
+      type: "object",
+      properties: {
+        clientName: {
+          type: "string",
+          description: "Client's name (we'll look up their phone number)"
+        },
+        phoneNumber: {
+          type: "string",
+          description: "Client's phone number (if known, format: +1234567890)"
+        },
+        message: {
+          type: "string",
+          description: "The text message to send"
+        }
+      },
+      required: ["message"]
+    }
+  },
+  {
+    name: "send_whatsapp",
+    description: "Send a WhatsApp message to a client (FREE messaging, supports images/videos/voice)",
+    input_schema: {
+      type: "object",
+      properties: {
+        clientName: {
+          type: "string",
+          description: "Client's name (we'll look up their phone number)"
+        },
+        phoneNumber: {
+          type: "string",
+          description: "Client's WhatsApp phone number (if known, format: +1234567890)"
+        },
+        message: {
+          type: "string",
+          description: "The message to send"
+        },
+        mediaUrl: {
+          type: "string",
+          description: "URL of image/video to send (optional)"
+        }
+      },
+      required: ["message"]
+    }
+  },
+
+  // ═══════════════════════════════════════════════════════════════
   // 🤖 AI PERSONA FUNCTIONS
   // ═══════════════════════════════════════════════════════════════
   {

@@ -12,6 +12,8 @@ import {
   getRevenueStatsAction,
   createInvoiceAction,
   sendMessageAction,
+  sendSmsAction,
+  sendWhatsAppAction,
   generateWorkoutPlanAction,
   getPersonaEarningsAction
 } from "./gia-actions";
@@ -83,6 +85,12 @@ export async function executeGIAFunction(
       // Messaging functions
       case "send_message":
         return await sendMessageAction(paramsWithTrainer);
+      
+      case "send_sms":
+        return await sendSmsAction(paramsWithTrainer);
+      
+      case "send_whatsapp":
+        return await sendWhatsAppAction(paramsWithTrainer);
       
       case "send_bulk_message":
         // TODO: Implement

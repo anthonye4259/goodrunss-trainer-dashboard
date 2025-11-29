@@ -781,6 +781,192 @@ export async function sendMessageAction(params: {
   }
 }
 
+// 📱 WHATSAPP MESSAGING ACTION (NEW!)
+export async function sendWhatsAppAction(params: {
+  clientName?: string;
+  phoneNumber?: string;
+  message: string;
+  mediaUrl?: string;
+  trainerId: string;
+}) {
+  try {
+    const twilio = require('twilio');
+    const client = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+
+    let recipientPhone = params.phoneNumber;
+    let recipientName = params.clientName || 'Client';
+
+    // If client name provided, look up their phone number
+    if (params.clientName && !params.phoneNumber) {
+      const clientRecord = await prisma.client.findFirst({
+        where: {
+          name: { contains: params.clientName, mode: "insensitive" },
+          trainerId: params.trainerId
+        }
+      });
+
+      if (!clientRecord) {
+        return {
+          success: false,
+          error: `Client "${params.clientName}" not found. Please provide a phone number directly.`
+        };
+      }
+
+      recipientPhone = clientRecord.phone;
+      recipientName = clientRecord.name;
+
+      if (!recipientPhone) {
+        return {
+          success: false,
+          error: `${clientRecord.name} doesn't have a phone number on file. Please add it first.`
+        };
+      }
+    }
+
+    if (!recipientPhone) {
+      return {
+        success: false,
+        error: "Phone number required. Provide either clientName or phoneNumber."
+      };
+    }
+
+    // Format phone number for WhatsApp (ensure it has +1 for US)
+    if (!recipientPhone.startsWith('+')) {
+      recipientPhone = '+1' + recipientPhone.replace(/\D/g, '');
+    }
+
+    // WhatsApp requires whatsapp: prefix
+    const whatsappNumber = `whatsapp:${recipientPhone}`;
+    const fromNumber = `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_PHONE_NUMBER}`;
+
+    // Send WhatsApp message via Twilio
+    const messageData: any = {
+      body: params.message,
+      from: fromNumber,
+      to: whatsappNumber
+    };
+
+    // Add media if provided
+    if (params.mediaUrl) {
+      messageData.mediaUrl = [params.mediaUrl];
+    }
+
+    const message = await client.messages.create(messageData);
+
+    return {
+      success: true,
+      message: `✅ WhatsApp message sent to ${recipientName} (${recipientPhone})${params.mediaUrl ? ' with media' : ''}`,
+      data: {
+        messageSid: message.sid,
+        recipient: recipientName,
+        phone: recipientPhone,
+        status: message.status,
+        mediaIncluded: !!params.mediaUrl
+      }
+    };
+  } catch (error: any) {
+    console.error('WhatsApp Error:', error);
+    
+    // Provide helpful error messages
+    if (error.message?.includes('not a WhatsApp user')) {
+      return {
+        success: false,
+        error: `${params.clientName || 'This number'} doesn't have WhatsApp. Try SMS instead.`
+      };
+    }
+    
+    return {
+      success: false,
+      error: `Failed to send WhatsApp: ${error.message || 'Unknown error'}`
+    };
+  }
+}
+
+// 📱 SMS/TEXT MESSAGING ACTION (NEW!)
+export async function sendSmsAction(params: {
+  clientName?: string;
+  phoneNumber?: string;
+  message: string;
+  trainerId: string;
+}) {
+  try {
+    const twilio = require('twilio');
+    const client = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+
+    let recipientPhone = params.phoneNumber;
+    let recipientName = params.clientName || 'Client';
+
+    // If client name provided, look up their phone number
+    if (params.clientName && !params.phoneNumber) {
+      const clientRecord = await prisma.client.findFirst({
+        where: {
+          name: { contains: params.clientName, mode: "insensitive" },
+          trainerId: params.trainerId
+        }
+      });
+
+      if (!clientRecord) {
+        return {
+          success: false,
+          error: `Client "${params.clientName}" not found. Please provide a phone number directly.`
+        };
+      }
+
+      recipientPhone = clientRecord.phone;
+      recipientName = clientRecord.name;
+
+      if (!recipientPhone) {
+        return {
+          success: false,
+          error: `${clientRecord.name} doesn't have a phone number on file. Please add it first.`
+        };
+      }
+    }
+
+    if (!recipientPhone) {
+      return {
+        success: false,
+        error: "Phone number required. Provide either clientName or phoneNumber."
+      };
+    }
+
+    // Format phone number (ensure it has +1 for US)
+    if (!recipientPhone.startsWith('+')) {
+      recipientPhone = '+1' + recipientPhone.replace(/\D/g, '');
+    }
+
+    // Send SMS via Twilio
+    const message = await client.messages.create({
+      body: params.message,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: recipientPhone
+    });
+
+    return {
+      success: true,
+      message: `✅ Text message sent to ${recipientName} (${recipientPhone})`,
+      data: {
+        messageSid: message.sid,
+        recipient: recipientName,
+        phone: recipientPhone,
+        status: message.status
+      }
+    };
+  } catch (error: any) {
+    console.error('SMS Error:', error);
+    return {
+      success: false,
+      error: `Failed to send SMS: ${error.message || 'Unknown error'}`
+    };
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // 💪 WORKOUT ACTIONS
 // ═══════════════════════════════════════════════════════════════
