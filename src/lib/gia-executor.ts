@@ -24,7 +24,11 @@ import {
   trackNutritionProgressAction,
   analyzeFormVideoAction,
   giveTechniqueCorrectionAction,
-  assessMovementPatternsAction
+  assessMovementPatternsAction,
+  createGroupClassAction,
+  manageClassRosterAction,
+  takeAttendanceAction,
+  messageClassParticipantsAction
 } from "./gia-actions";
 
 export async function executeGIAFunction(
@@ -194,6 +198,19 @@ export async function executeGIAFunction(
       
       case "assess_movement_patterns":
         return await assessMovementPatternsAction(paramsWithTrainer);
+
+      // Group Class Management functions
+      case "create_group_class":
+        return await createGroupClassAction(paramsWithTrainer);
+      
+      case "manage_class_roster":
+        return await manageClassRosterAction(paramsWithTrainer);
+      
+      case "take_attendance":
+        return await takeAttendanceAction(paramsWithTrainer);
+      
+      case "message_class_participants":
+        return await messageClassParticipantsAction(paramsWithTrainer);
 
       default:
         return {

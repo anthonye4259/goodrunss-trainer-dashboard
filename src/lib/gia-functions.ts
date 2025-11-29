@@ -7,13 +7,13 @@ export const giaFunctions = [
   // ═══════════════════════════════════════════════════════════════
   {
     name: "create_calendar_event",
-    description: "Create a new calendar event/session with a client",
+    description: "Create a new calendar event/session - supports 1-on-1, small groups (3-5), medium classes (6-15), or large classes (16+)",
     input_schema: {
       type: "object",
       properties: {
         clientName: {
           type: "string",
-          description: "Client's name (first name or full name)"
+          description: "Client's name for 1-on-1 sessions (first name or full name)"
         },
         date: {
           type: "string",
@@ -29,7 +29,20 @@ export const giaFunctions = [
         },
         sessionType: {
           type: "string",
-          description: "Type of session (e.g., Tennis, Fitness, Yoga)"
+          description: "Type of session (e.g., Tennis, Fitness, Yoga, Pilates Class)"
+        },
+        sessionFormat: {
+          type: "string",
+          enum: ["private", "semi_private", "small_group", "class", "large_class"],
+          description: "Session format: private (1-on-1), semi_private (2-3), small_group (4-8), class (9-20), large_class (21+)"
+        },
+        maxCapacity: {
+          type: "number",
+          description: "Maximum number of participants (for groups/classes)"
+        },
+        pricePerPerson: {
+          type: "number",
+          description: "Price per person (for groups/classes)"
         },
         location: {
           type: "string",
@@ -38,9 +51,17 @@ export const giaFunctions = [
         notes: {
           type: "string",
           description: "Any additional notes"
+        },
+        recurring: {
+          type: "boolean",
+          description: "Is this a recurring class? (default: false)"
+        },
+        recurringPattern: {
+          type: "string",
+          description: "If recurring: 'weekly', 'biweekly', 'monthly', or custom pattern"
         }
       },
-      required: ["clientName", "date", "time"]
+      required: ["date", "time"]
     }
   },
   {
@@ -125,6 +146,144 @@ export const giaFunctions = [
         }
       },
       required: ["date"]
+    }
+  },
+  {
+    name: "create_group_class",
+    description: "Create a group class or large session (10+ people) with capacity management, waitlist, and pricing",
+    input_schema: {
+      type: "object",
+      properties: {
+        className: {
+          type: "string",
+          description: "Class name (e.g., 'Morning Boot Camp', 'Vinyasa Flow', 'Pilates Reformer')"
+        },
+        date: {
+          type: "string",
+          description: "Date in YYYY-MM-DD format"
+        },
+        time: {
+          type: "string",
+          description: "Time in HH:MM format"
+        },
+        duration: {
+          type: "number",
+          description: "Duration in minutes"
+        },
+        maxCapacity: {
+          type: "number",
+          description: "Maximum number of participants"
+        },
+        pricePerPerson: {
+          type: "number",
+          description: "Price per person in dollars"
+        },
+        location: {
+          type: "string",
+          description: "Class location"
+        },
+        description: {
+          type: "string",
+          description: "Class description for marketing"
+        },
+        level: {
+          type: "string",
+          enum: ["beginner", "intermediate", "advanced", "all_levels"],
+          description: "Class difficulty level"
+        },
+        recurring: {
+          type: "boolean",
+          description: "Is this a recurring class?"
+        },
+        recurringPattern: {
+          type: "string",
+          description: "Recurring pattern: 'every_monday', 'every_week', 'twice_weekly', etc."
+        }
+      },
+      required: ["className", "date", "time", "maxCapacity", "pricePerPerson"]
+    }
+  },
+  {
+    name: "manage_class_roster",
+    description: "View, add, or remove participants from a group class roster",
+    input_schema: {
+      type: "object",
+      properties: {
+        classId: {
+          type: "string",
+          description: "Class/session ID"
+        },
+        action: {
+          type: "string",
+          enum: ["view_roster", "add_participant", "remove_participant", "check_capacity"],
+          description: "What to do with the roster"
+        },
+        clientName: {
+          type: "string",
+          description: "Client name to add or remove (if action requires it)"
+        }
+      },
+      required: ["classId", "action"]
+    }
+  },
+  {
+    name: "take_attendance",
+    description: "Mark attendance for a group class - track who showed up, who was absent, who was late",
+    input_schema: {
+      type: "object",
+      properties: {
+        classId: {
+          type: "string",
+          description: "Class/session ID"
+        },
+        presentClients: {
+          type: "array",
+          items: { type: "string" },
+          description: "Names of clients who attended"
+        },
+        absentClients: {
+          type: "array",
+          items: { type: "string" },
+          description: "Names of clients who didn't show (optional)"
+        },
+        lateClients: {
+          type: "array",
+          items: { type: "string" },
+          description: "Names of clients who arrived late (optional)"
+        },
+        notes: {
+          type: "string",
+          description: "Any notes about the class"
+        }
+      },
+      required: ["classId", "presentClients"]
+    }
+  },
+  {
+    name: "message_class_participants",
+    description: "Send a message to all participants of a specific class (updates, reminders, cancellations)",
+    input_schema: {
+      type: "object",
+      properties: {
+        classId: {
+          type: "string",
+          description: "Class/session ID to message"
+        },
+        message: {
+          type: "string",
+          description: "Message to send to all participants"
+        },
+        channel: {
+          type: "string",
+          enum: ["email", "sms", "whatsapp"],
+          description: "Communication channel (default: email)"
+        },
+        includeWaitlist: {
+          type: "boolean",
+          description: "Also message waitlisted clients? (default: false)"
+        }
+      },
+      required: ["classId", "message"]
     }
   },
 

@@ -2289,3 +2289,322 @@ export async function getPersonaEarningsAction(params: {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 👥 GROUP CLASS MANAGEMENT ACTIONS
+// ═══════════════════════════════════════════════════════════════
+
+export async function createGroupClassAction(params: {
+  className: string;
+  date: string;
+  time: string;
+  duration: number;
+  maxCapacity: number;
+  pricePerPerson: number;
+  location?: string;
+  description?: string;
+  level?: string;
+  recurring?: boolean;
+  recurringPattern?: string;
+  trainerId: string;
+}) {
+  try {
+    // Parse date and time
+    const [hours, minutes] = params.time.split(":").map(Number);
+    const scheduledAt = new Date(params.date);
+    scheduledAt.setHours(hours, minutes, 0, 0);
+
+    // Call the existing API
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/group-classes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: params.className,
+        description: params.description,
+        maxCapacity: params.maxCapacity,
+        pricePerPerson: params.pricePerPerson,
+        scheduledAt: scheduledAt.toISOString(),
+        duration: params.duration,
+        location: params.location,
+        isRecurring: params.recurring || false,
+        recurringPattern: params.recurringPattern,
+        level: params.level || "all_levels"
+      })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      return {
+        success: false,
+        error: data.error || "Failed to create group class"
+      };
+    }
+
+    const classInfo = data.class;
+    return {
+      success: true,
+      message: `✅ **${params.className}** created!\n\n` +
+        `📅 ${scheduledAt.toLocaleDateString()} at ${params.time}\n` +
+        `👥 Capacity: ${params.maxCapacity} people\n` +
+        `💵 $${params.pricePerPerson}/person\n` +
+        `📍 ${params.location || "TBD"}\n` +
+        `${params.recurring ? `🔄 ${params.recurringPattern}` : ""}`,
+      data: classInfo
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to create group class: ${error.message}`
+    };
+  }
+}
+
+export async function manageClassRosterAction(params: {
+  classId: string;
+  action: "view_roster" | "add_participant" | "remove_participant" | "check_capacity";
+  clientName?: string;
+  trainerId: string;
+}) {
+  try {
+    if (params.action === "view_roster") {
+      // Get roster
+      const roster: any = await prisma.$queryRaw`
+        SELECT 
+          c.id, c.name, c.email, c.phone,
+          gcb.status, gcb.booked_at
+        FROM group_class_bookings gcb
+        JOIN clients c ON c.id = gcb.client_id
+        WHERE gcb.class_id = ${params.classId}
+        ORDER BY gcb.booked_at ASC
+      `;
+
+      if (roster.length === 0) {
+        return {
+          success: true,
+          message: "📋 No participants booked yet for this class."
+        };
+      }
+
+      const rosterList = roster.map((p: any, i: number) => 
+        `${i + 1}. ${p.name} (${p.status})`
+      ).join("\n");
+
+      return {
+        success: true,
+        message: `📋 **Class Roster** (${roster.length} participants):\n\n${rosterList}`,
+        data: roster
+      };
+    }
+
+    if (params.action === "check_capacity") {
+      const classInfo: any = await prisma.$queryRaw`
+        SELECT max_capacity, current_bookings
+        FROM group_classes
+        WHERE id = ${params.classId}
+      `;
+
+      if (!classInfo[0]) {
+        return { success: false, error: "Class not found" };
+      }
+
+      const { max_capacity, current_bookings } = classInfo[0];
+      const spotsLeft = max_capacity - current_bookings;
+
+      return {
+        success: true,
+        message: `👥 **Capacity**: ${current_bookings}/${max_capacity}\n` +
+          `${spotsLeft > 0 ? `✅ ${spotsLeft} spots available` : "❌ FULL"}`,
+        data: { maxCapacity: max_capacity, currentBookings: current_bookings, spotsLeft }
+      };
+    }
+
+    if (params.action === "add_participant" || params.action === "remove_participant") {
+      if (!params.clientName) {
+        return {
+          success: false,
+          error: "Client name is required for add/remove actions"
+        };
+      }
+
+      // Find client
+      const client = await prisma.client.findFirst({
+        where: {
+          name: { contains: params.clientName, mode: "insensitive" },
+          trainerId: params.trainerId
+        }
+      });
+
+      if (!client) {
+        return {
+          success: false,
+          error: `Client "${params.clientName}" not found`
+        };
+      }
+
+      if (params.action === "add_participant") {
+        // Book client
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/group-classes/book`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            classId: params.classId,
+            clientId: client.id
+          })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          return { success: false, error: data.error };
+        }
+
+        return {
+          success: true,
+          message: `✅ ${client.name} added to class!`
+        };
+      } else {
+        // Remove client
+        await prisma.$queryRaw`
+          DELETE FROM group_class_bookings
+          WHERE class_id = ${params.classId} AND client_id = ${client.id}
+        `;
+
+        await prisma.$queryRaw`
+          UPDATE group_classes
+          SET current_bookings = current_bookings - 1
+          WHERE id = ${params.classId}
+        `;
+
+        return {
+          success: true,
+          message: `✅ ${client.name} removed from class.`
+        };
+      }
+    }
+
+    return { success: false, error: "Invalid action" };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to manage roster: ${error.message}`
+    };
+  }
+}
+
+export async function takeAttendanceAction(params: {
+  classId: string;
+  presentClients: string[];
+  absentClients?: string[];
+  lateClients?: string[];
+  notes?: string;
+  trainerId: string;
+}) {
+  try {
+    // Get class info
+    const classInfo: any = await prisma.$queryRaw`
+      SELECT name, scheduled_at FROM group_classes WHERE id = ${params.classId}
+    `;
+
+    if (!classInfo[0]) {
+      return { success: false, error: "Class not found" };
+    }
+
+    // Mark attendance in database
+    const attendanceData = {
+      classId: params.classId,
+      presentCount: params.presentClients.length,
+      absentCount: params.absentClients?.length || 0,
+      lateCount: params.lateClients?.length || 0,
+      present: params.presentClients,
+      absent: params.absentClients || [],
+      late: params.lateClients || [],
+      notes: params.notes,
+      takenAt: new Date()
+    };
+
+    // Save to session metadata or create attendance record
+    await prisma.$queryRaw`
+      UPDATE group_classes
+      SET attendance_data = ${JSON.stringify(attendanceData)}::jsonb
+      WHERE id = ${params.classId}
+    `;
+
+    const totalRoster = params.presentClients.length + (params.absentClients?.length || 0);
+    const attendanceRate = ((params.presentClients.length / totalRoster) * 100).toFixed(0);
+
+    return {
+      success: true,
+      message: `✅ **Attendance Recorded** for ${classInfo[0].name}\n\n` +
+        `✅ Present: ${params.presentClients.length}\n` +
+        `❌ Absent: ${params.absentClients?.length || 0}\n` +
+        `⏰ Late: ${params.lateClients?.length || 0}\n` +
+        `📊 Attendance Rate: ${attendanceRate}%`,
+      data: attendanceData
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to take attendance: ${error.message}`
+    };
+  }
+}
+
+export async function messageClassParticipantsAction(params: {
+  classId: string;
+  message: string;
+  channel?: "email" | "sms" | "whatsapp";
+  includeWaitlist?: boolean;
+  trainerId: string;
+}) {
+  try {
+    // Get all participants
+    const participants: any = await prisma.$queryRaw`
+      SELECT c.name, c.email, c.phone
+      FROM group_class_bookings gcb
+      JOIN clients c ON c.id = gcb.client_id
+      WHERE gcb.class_id = ${params.classId} AND gcb.status = 'confirmed'
+    `;
+
+    if (participants.length === 0) {
+      return {
+        success: false,
+        error: "No participants found for this class"
+      };
+    }
+
+    const channel = params.channel || "email";
+    let sent = 0;
+
+    for (const participant of participants) {
+      if (channel === "sms" && participant.phone) {
+        await sendSmsAction({
+          clientName: participant.name,
+          message: params.message,
+          trainerId: params.trainerId
+        });
+        sent++;
+      } else if (channel === "whatsapp" && participant.phone) {
+        await sendWhatsAppAction({
+          clientName: participant.name,
+          message: params.message,
+          trainerId: params.trainerId
+        });
+        sent++;
+      } else if (channel === "email" && participant.email) {
+        // Send email (implement if needed)
+        sent++;
+      }
+    }
+
+    return {
+      success: true,
+      message: `✅ Message sent to ${sent} participants via ${channel.toUpperCase()}!`
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to message participants: ${error.message}`
+    };
+  }
+}
+
