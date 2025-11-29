@@ -2536,3 +2536,19 @@ model nurture_sequences {
   @@index([leadId])
   @@index([status])
 }
+
+model gia_notifications {
+  id        String   @id @default(uuid())
+  trainerId String
+  type      String
+  title     String
+  message   String
+  priority  String
+  actionUrl String?
+  actionLabel String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([trainerId])
+  @@index([isRead])
+}

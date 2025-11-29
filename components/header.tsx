@@ -3,6 +3,7 @@
 import { Bell, MessageSquare, HelpCircle, Globe, Crown, Star, Check } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { NotificationBell } from "@/components/gia/notification-bell"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -139,41 +140,7 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 transition-colors">
-              <Bell className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-              <span className="absolute right-1 top-1 md:right-1.5 md:top-1.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-80 bg-card border-primary/20" align="end">
-            <DropdownMenuLabel className="text-primary text-base font-semibold">Notifications</DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-primary/20" />
-
-            <DropdownMenuItem className="flex flex-col items-start py-3 px-4 hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
-              <div className="font-semibold text-primary">New client signed up</div>
-              <div className="text-sm text-primary/80 mt-0.5">Sarah Johnson joined your program</div>
-              <div className="text-xs text-primary/50 mt-1">2 hours ago</div>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem className="flex flex-col items-start py-3 px-4 hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
-              <div className="font-semibold text-primary">Session reminder</div>
-              <div className="text-sm text-primary/80 mt-0.5">Mike Chen - Tomorrow at 9:00 AM</div>
-              <div className="text-xs text-primary/50 mt-1">5 hours ago</div>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem className="flex flex-col items-start py-3 px-4 hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
-              <div className="font-semibold text-primary">Payment received</div>
-              <div className="text-sm text-primary/80 mt-0.5">$80 from Emily Davis</div>
-              <div className="text-xs text-primary/50 mt-1">1 day ago</div>
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator className="bg-primary/20" />
-            <DropdownMenuItem className="text-primary justify-center font-medium hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
-              View all notifications
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <NotificationBell />
 
         <div className="hidden sm:block">
           <DropdownMenu>
