@@ -2608,3 +2608,217 @@ export async function messageClassParticipantsAction(params: {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 📊 CLASS ANALYTICS & INSIGHTS ACTIONS
+// ═══════════════════════════════════════════════════════════════
+
+export async function getClassAnalyticsAction(params: {
+  period?: string;
+  classId?: string;
+  trainerId: string;
+}) {
+  try {
+    const periodDays = params.period || "30";
+    
+    // Call internal API
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/class-analytics?period=${periodDays}${params.classId ? `&classId=${params.classId}` : ''}`)
+    
+    const data = await response.json();
+
+    if (!data.success) {
+      return {
+        success: false,
+        error: data.error || "Failed to fetch analytics"
+      };
+    }
+
+    if (params.classId) {
+      const cls = data.class;
+      return {
+        success: true,
+        message: `📊 **${cls.name} Analytics**\n\n` +
+          `📅 ${new Date(cls.scheduledAt).toLocaleDateString()}\n` +
+          `👥 Bookings: ${cls.totalBookings}/${cls.maxCapacity}\n` +
+          `✅ Checked In: ${cls.checkedIn}\n` +
+          `❌ No-Shows: ${cls.noShows}\n` +
+          `📈 Attendance Rate: ${cls.attendanceRate}%\n` +
+          `💰 Revenue: $${cls.revenue.toFixed(2)}\n` +
+          `📊 Capacity Utilization: ${cls.capacityUtilization}%`,
+        data: cls
+      };
+    } else {
+      const { overview, topClasses } = data;
+      return {
+        success: true,
+        message: `📊 **Class Analytics (Last ${periodDays} days)**\n\n` +
+          `📅 Classes Held: ${overview.totalClasses}\n` +
+          `👥 Total Bookings: ${overview.totalBookings}\n` +
+          `✅ Total Checked In: ${overview.totalCheckedIn}\n` +
+          `❌ No-Shows: ${overview.totalNoShows} (${overview.noShowRate}%)\n` +
+          `📈 Avg Attendance Rate: ${overview.avgAttendanceRate}%\n` +
+          `💰 Revenue: $${overview.actualRevenue.toFixed(2)}\n\n` +
+          `🏆 **Top Classes:**\n` +
+          topClasses.slice(0, 5).map((cls: any, i: number) => 
+            `${i+1}. ${cls.name} - $${cls.revenue.toFixed(2)} (${cls.attendanceRate}% attendance)`
+          ).join('\n'),
+        data: { overview, topClasses, trends: data.trends }
+      };
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to fetch analytics: ${error.message}`
+    };
+  }
+}
+
+export async function getAttendanceInsightsAction(params: {
+  trainerId: string;
+}) {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/class-analytics/attendance-insights`);
+
+    const data = await response.json();
+
+    if (!data.success) {
+      return {
+        success: false,
+        error: data.error || "Failed to fetch insights"
+      };
+    }
+
+    const { insights, summary } = data;
+
+    return {
+      success: true,
+      message: `🔍 **Attendance Insights**\n\n` +
+        `👥 Total Active Clients: ${summary.totalActiveClients}\n` +
+        `⭐ Regulars (4+ classes, 75%+ rate): ${summary.regulars}\n` +
+        `🔄 Occasional (2-3 classes): ${summary.occasional}\n` +
+        `⚠️ At Risk (low attendance): ${summary.atRisk}\n` +
+        `📉 Dropoffs (inactive 30+ days): ${summary.dropoffs}\n` +
+        `🆕 New Clients: ${summary.newClients}\n` +
+        `📊 Retention Rate: ${summary.retentionRate}%\n\n` +
+        (summary.dropoffs > 0 ? `💡 **Action:** You have ${summary.dropoffs} clients who haven't attended in 30+ days. Should I send them a re-engagement message?\n\n` : '') +
+        (summary.atRisk > 0 ? `💡 **Action:** You have ${summary.atRisk} clients with low attendance rates. Should I check in with them?\n\n` : '') +
+        (summary.regulars > 0 ? `🎉 **Great!** You have ${summary.regulars} regular clients. Consider offering them a loyalty discount or special class!\n\n` : ''),
+      data: { insights, summary }
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to fetch insights: ${error.message}`
+    };
+  }
+}
+
+export async function reengageDropoffsAction(params: {
+  message?: string;
+  channel?: "sms" | "whatsapp" | "email";
+  trainerId: string;
+}) {
+  try {
+    // Get dropoffs
+    const insightsResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/class-analytics/attendance-insights`);
+
+    const insightsData = await insightsResponse.json();
+    const dropoffs = insightsData.insights.dropoffs.clients;
+
+    if (dropoffs.length === 0) {
+      return {
+        success: true,
+        message: "🎉 Great news! You have no dropoffs. All clients are engaged!"
+      };
+    }
+
+    const channel = params.channel || "sms";
+    let sent = 0;
+
+    for (const client of dropoffs) {
+      const personalizedMessage = params.message || 
+        `Hi ${client.name}! We haven't seen you in a while. We miss you at our classes! 🙌 We have some great new sessions coming up. Would love to see you back soon!`;
+
+      if (channel === "sms") {
+        await sendSmsAction({
+          clientName: client.name,
+          message: personalizedMessage,
+          trainerId: params.trainerId
+        });
+        sent++;
+      } else if (channel === "whatsapp") {
+        await sendWhatsAppAction({
+          clientName: client.name,
+          message: personalizedMessage,
+          trainerId: params.trainerId
+        });
+        sent++;
+      }
+    }
+
+    return {
+      success: true,
+      message: `✅ Re-engagement messages sent to ${sent} dropoff clients via ${channel.toUpperCase()}!`
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to re-engage dropoffs: ${error.message}`
+    };
+  }
+}
+
+export async function checkInAtRiskClientsAction(params: {
+  message?: string;
+  channel?: "sms" | "whatsapp" | "email";
+  trainerId: string;
+}) {
+  try {
+    // Get at-risk clients
+    const insightsResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/class-analytics/attendance-insights`);
+
+    const insightsData = await insightsResponse.json();
+    const atRiskClients = insightsData.insights.atRisk.clients;
+
+    if (atRiskClients.length === 0) {
+      return {
+        success: true,
+        message: "🎉 No at-risk clients! Everyone is attending regularly."
+      };
+    }
+
+    const channel = params.channel || "sms";
+    let sent = 0;
+
+    for (const client of atRiskClients) {
+      const personalizedMessage = params.message || 
+        `Hi ${client.name}! Just checking in - we've noticed you've missed a few classes recently. Everything okay? We're here if you need to adjust your schedule or have any questions! 😊`;
+
+      if (channel === "sms") {
+        await sendSmsAction({
+          clientName: client.name,
+          message: personalizedMessage,
+          trainerId: params.trainerId
+        });
+        sent++;
+      } else if (channel === "whatsapp") {
+        await sendWhatsAppAction({
+          clientName: client.name,
+          message: personalizedMessage,
+          trainerId: params.trainerId
+        });
+        sent++;
+      }
+    }
+
+    return {
+      success: true,
+      message: `✅ Check-in messages sent to ${sent} at-risk clients via ${channel.toUpperCase()}!`
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to check in with at-risk clients: ${error.message}`
+    };
+  }
+}
+

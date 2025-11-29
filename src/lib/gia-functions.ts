@@ -286,6 +286,72 @@ export const giaFunctions = [
       required: ["classId", "message"]
     }
   },
+  {
+    name: "get_class_analytics",
+    description: "Get comprehensive analytics for group classes - revenue, attendance rates, top performers, trends",
+    input_schema: {
+      type: "object",
+      properties: {
+        period: {
+          type: "string",
+          description: "Time period in days (default: 30)",
+          enum: ["7", "30", "60", "90"]
+        },
+        classId: {
+          type: "string",
+          description: "Get analytics for a specific class (optional)"
+        }
+      },
+      required: []
+    }
+  },
+  {
+    name: "get_attendance_insights",
+    description: "Get recurring attendance patterns - identify regulars, at-risk clients, dropoffs, and new clients",
+    input_schema: {
+      type: "object",
+      properties: {},
+      required: []
+    }
+  },
+  {
+    name: "reengage_dropoffs",
+    description: "Send personalized re-engagement messages to clients who haven't attended recently",
+    input_schema: {
+      type: "object",
+      properties: {
+        message: {
+          type: "string",
+          description: "Personalized message to send (optional, will generate if not provided)"
+        },
+        channel: {
+          type: "string",
+          enum: ["sms", "whatsapp", "email"],
+          description: "Communication channel (default: sms)"
+        }
+      },
+      required: []
+    }
+  },
+  {
+    name: "check_in_at_risk_clients",
+    description: "Send check-in messages to clients with low attendance rates (< 60%)",
+    input_schema: {
+      type: "object",
+      properties: {
+        message: {
+          type: "string",
+          description: "Check-in message (optional, will generate if not provided)"
+        },
+        channel: {
+          type: "string",
+          enum: ["sms", "whatsapp", "email"],
+          description: "Communication channel (default: sms)"
+        }
+      },
+      required: []
+    }
+  },
 
   // ═══════════════════════════════════════════════════════════════
   // 👥 CLIENT FUNCTIONS

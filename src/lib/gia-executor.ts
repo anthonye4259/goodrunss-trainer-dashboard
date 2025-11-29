@@ -28,7 +28,11 @@ import {
   createGroupClassAction,
   manageClassRosterAction,
   takeAttendanceAction,
-  messageClassParticipantsAction
+  messageClassParticipantsAction,
+  getClassAnalyticsAction,
+  getAttendanceInsightsAction,
+  reengageDropoffsAction,
+  checkInAtRiskClientsAction
 } from "./gia-actions";
 
 export async function executeGIAFunction(
@@ -211,6 +215,19 @@ export async function executeGIAFunction(
       
       case "message_class_participants":
         return await messageClassParticipantsAction(paramsWithTrainer);
+
+      // Class Analytics & Insights functions
+      case "get_class_analytics":
+        return await getClassAnalyticsAction(paramsWithTrainer);
+      
+      case "get_attendance_insights":
+        return await getAttendanceInsightsAction(paramsWithTrainer);
+      
+      case "reengage_dropoffs":
+        return await reengageDropoffsAction(paramsWithTrainer);
+      
+      case "check_in_at_risk_clients":
+        return await checkInAtRiskClientsAction(paramsWithTrainer);
 
       default:
         return {
