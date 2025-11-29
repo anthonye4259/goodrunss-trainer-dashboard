@@ -1,4 +1,10 @@
+'use client'
+
 import { SignUp } from '@clerk/nextjs'
+import dynamic from 'next/dynamic'
+
+// Prevent SSR hydration issues with Clerk
+export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (

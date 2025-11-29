@@ -47,7 +47,7 @@ export async function sendEmail(options: EmailOptions) {
     });
 
     console.log('Email sent:', response);
-    return { success: true, id: response.id };
+    return { success: true, id: (response as any).data?.id || (response as any).id };
   } catch (error: any) {
     console.error('Error sending email:', error);
     throw error;

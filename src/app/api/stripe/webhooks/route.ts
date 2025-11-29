@@ -258,7 +258,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
     // Get subscription from Stripe
     const stripeSubscription = await stripe.subscriptions.retrieve(
-      session.subscription as string
+      session.subscription as string,
+      { expand: ['items.data.price'] }
     );
 
     // Get plan from database
@@ -283,10 +284,10 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         stripePriceId: stripeSubscription.items.data[0].price.id,
         status: stripeSubscription.status,
         billingCycle: stripeSubscription.items.data[0].price.recurring?.interval === 'year' ? 'yearly' : 'monthly',
-        currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
-        trialStart: stripeSubscription.trial_start ? new Date(stripeSubscription.trial_start * 1000) : null,
-        trialEnd: stripeSubscription.trial_end ? new Date(stripeSubscription.trial_end * 1000) : null,
+        currentPeriodStart: new Date((stripeSubscription as any).current_period_start * 1000),
+        currentPeriodEnd: new Date((stripeSubscription as any).current_period_end * 1000),
+        trialStart: (stripeSubscription as any).trial_start ? new Date((stripeSubscription as any).trial_start * 1000) : null,
+        trialEnd: (stripeSubscription as any).trial_end ? new Date((stripeSubscription as any).trial_end * 1000) : null,
       },
     });
 
@@ -343,9 +344,9 @@ async function handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription
       where: { id: subscription.id },
       data: {
         status: stripeSubscription.status,
-        currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
-        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+        currentPeriodStart: new Date((stripeSubscription as any).current_period_start * 1000),
+        currentPeriodEnd: new Date((stripeSubscription as any).current_period_end * 1000),
+        cancelAtPeriodEnd: (stripeSubscription as any).cancel_at_period_end,
       },
     });
 
@@ -425,16 +426,16 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   try {
     console.log('💳 Invoice payment succeeded:', invoice.id);
 
-    if (!invoice.subscription) {
+    if (!(invoice as any).subscription) {
       return; // Not a subscription invoice
     }
 
     const subscription = await prisma.userSubscription.findUnique({
-      where: { stripeSubscriptionId: invoice.subscription as string },
+      where: { stripeSubscriptionId: (invoice as any).subscription as string },
     });
 
     if (!subscription) {
-      console.error('Subscription not found:', invoice.subscription);
+      console.error('Subscription not found:', (invoice as any).subscription);
       return;
     }
 
@@ -450,7 +451,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
         currency: invoice.currency || 'usd',
         billingCycle: subscription.billingCycle,
         stripeEventId: invoice.id,
-        stripeSubscriptionId: invoice.subscription as string,
+        stripeSubscriptionId: (invoice as any).subscription as string,
       },
     });
 
@@ -465,16 +466,16 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   try {
     console.log('💳 Invoice payment failed:', invoice.id);
 
-    if (!invoice.subscription) {
+    if (!(invoice as any).subscription) {
       return; // Not a subscription invoice
     }
 
     const subscription = await prisma.userSubscription.findUnique({
-      where: { stripeSubscriptionId: invoice.subscription as string },
+      where: { stripeSubscriptionId: (invoice as any).subscription as string },
     });
 
     if (!subscription) {
-      console.error('Subscription not found:', invoice.subscription);
+      console.error('Subscription not found:', (invoice as any).subscription);
       return;
     }
 

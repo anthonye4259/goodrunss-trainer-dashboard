@@ -118,7 +118,7 @@ const plans = [
 ]
 
 export default function BillingPage() {
-  const { t } = useLanguage()
+  const { language } = useLanguage()
   const [currentPlan, setCurrentPlan] = useState<string>("free")
   const [usage, setUsage] = useState({
     clients: 2,

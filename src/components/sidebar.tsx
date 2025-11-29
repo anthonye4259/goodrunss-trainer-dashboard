@@ -64,7 +64,7 @@ export function Sidebar() {
         </div>
       </Link>
 
-      <TooltipProvider delayDuration={300}>
+      <TooltipProvider>
         <nav className="flex-1 flex flex-col gap-1 overflow-y-auto overflow-x-visible w-full px-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
           {navigation.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(item.href + "/")

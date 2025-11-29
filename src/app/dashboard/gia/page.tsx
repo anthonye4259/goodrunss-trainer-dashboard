@@ -483,7 +483,7 @@ export default function GIAContentGeneratorPage() {
                   disabled={isChatLoading}
                 />
                 <Button
-                  onClick={handleSendMessage}
+                  onClick={() => handleSendMessage()}
                   disabled={isChatLoading || !chatInput.trim()}
                   className="bg-gradient-to-r from-primary to-accent hover:opacity-90 glow-primary"
                   size="lg"

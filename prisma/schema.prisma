@@ -75,6 +75,12 @@ model User {
   isAvailable    Boolean  @default(true) // NEW: Trainer availability status
   rating         Float? // NEW: Average rating
   totalSessions  Int      @default(0) // NEW: Session count
+  
+  // Stripe integration
+  stripeCustomerId String? // Stripe customer ID for payments
+  
+  // Firebase Cloud Messaging
+  fcmTokens String[] // FCM tokens for push notifications
 
   // Geolocation fields (for both trainers and clients)
   latitude          Float? // GPS latitude
@@ -473,6 +479,9 @@ model GiaContent {
   contentType      String // 'marketing', 'workout_plan', 'social_post', 'email_template'
   prompt           String   @db.Text
   generatedContent Json
+  tone             String?
+  length           String?
+  metadata         Json?
   usageCount       Int      @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -480,6 +489,35 @@ model GiaContent {
   @@index([userId])
   @@index([contentType])
   @@map("gia_content")
+}
+
+// AI Chat Conversations
+model AiConversation {
+  id        String      @id @default(uuid())
+  userId    String
+  title     String?
+  context   Json?
+  messages  Json        @default("[]")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  aiMessages AiMessage[]
+
+  @@index([userId])
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id              String         @id @default(uuid())
+  conversationId  String
+  conversation    AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            String         // user, assistant, system
+  content         String         @db.Text
+  metadata        Json?
+  createdAt       DateTime       @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("ai_messages")
 }
 
 // A/B Testing Models
@@ -562,10 +600,19 @@ model PremiumSubscription {
   id                   String    @id @default(uuid())
   userId               String    @unique
   plan                 String    @default("PREMIUM") // PREMIUM, BASIC, FREE
+  tier                 String?   // Subscription tier
   status               String    @default("ACTIVE") // ACTIVE, CANCELED, EXPIRED
   startDate            DateTime  @default(now())
   endDate              DateTime?
-  stripeSubscriptionId String?
+  canceledAt           DateTime? // When subscription was canceled
+  stripeCustomerId     String?   @unique // Stripe customer ID
+  stripeSubscriptionId String?   @unique // Stripe subscription ID
+  stripePriceId        String?   // Stripe price ID
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  trialStart           DateTime?
+  trialEnd             DateTime?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
@@ -575,17 +622,80 @@ model PremiumSubscription {
 }
 
 model PremiumTrial {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  startDate DateTime @default(now())
-  endDate   DateTime
-  status    String   @default("ACTIVE") // ACTIVE, USED, EXPIRED
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  tier        String?   // Trial tier
+  startDate   DateTime  @default(now())
+  startedAt   DateTime? // When trial was started
+  endDate     DateTime
+  endsAt      DateTime? // When trial ends
+  status      String    @default("ACTIVE") // ACTIVE, USED, EXPIRED
+  converted   Boolean   @default(false) // Whether trial was converted to paid
+  convertedAt DateTime? // When trial was converted
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([userId])
   @@index([status])
   @@map("premium_trials")
+}
+
+// Generic Booking Model (for AI actions and general booking management)
+model Booking {
+  id           String   @id @default(uuid())
+  trainerId    String
+  clientId     String
+  startTime    DateTime
+  endTime      DateTime
+  sessionType  String?
+  location     String?
+  status       String   @default("scheduled")
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([trainerId])
+  @@index([clientId])
+  @@index([startTime])
+  @@index([status])
+  @@map("bookings")
+}
+
+// Notification Preferences
+model NotificationPreference {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
+  pushEnabled            Boolean  @default(true)
+  emailEnabled           Boolean  @default(true)
+  smsEnabled             Boolean  @default(false)
+  sessionReminders       Boolean  @default(true)
+  paymentNotifications   Boolean  @default(true)
+  marketingNotifications Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([userId])
+  @@map("notification_preferences")
+}
+
+// Notifications History
+model Notification {
+  id             String   @id @default(uuid())
+  userId         String
+  type           String
+  title          String
+  body           String
+  data           Json?
+  read           Boolean  @default(false)
+  readAt         DateTime?
+  sentAt         DateTime  @default(now())
+  deliveryStatus String?  // delivered, failed, pending
+  createdAt      DateTime  @default(now())
+
+  @@index([userId])
+  @@index([read])
+  @@index([sentAt])
+  @@map("notifications")
 }
 
 // Email Logging for Resend Integration
@@ -2609,4 +2719,26 @@ model PublicBooking {
   @@index([status])
   @@index([clientEmail])
   @@map("public_bookings")
+}
+
+// GIA Memory System - Simple Table-Based Memory
+model GiaMemory {
+  id          String   @id @default(uuid())
+  userId      String
+  memoryType  String   // 'preference', 'client_fact', 'business_fact', 'workflow', 'pattern'
+  category    String   // 'communication', 'scheduling', 'pricing', 'clients', etc.
+  key         String   // Short key like 'preferred_tone', 'john_injury'
+  value       String   @db.Text // The actual memory content
+  importance  Int      @default(5) // 1-10, how important is this memory
+  source      String   @default("conversation") // 'conversation', 'inferred', 'explicit'
+  lastUsed    DateTime @default(now())
+  useCount    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, importance])
+  @@index([userId, memoryType])
+  @@unique([userId, memoryType, category, key]) // Prevent duplicates
+  @@map("gia_memory")
 }

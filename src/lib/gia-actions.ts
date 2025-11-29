@@ -91,27 +91,29 @@ export async function createCalendarEventAction(params: {
         location: params.location || "TBD",
         notes: params.notes,
         status: "confirmed"
-      },
-      include: {
-        client: true
       }
     });
 
     // 5. Send confirmation email
-    await sendEmail({
-      to: client.email,
-      subject: "Session Confirmed",
-      template: "session-confirmation",
-      data: {
-        clientName: client.name,
-        trainerName: params.trainerId, // Should get trainer name
-        date: params.date,
-        time: params.time,
-        duration: params.duration || 60,
-        sessionType: params.sessionType || "Session",
-        location: params.location || "TBD"
-      }
-    });
+    if (client.email) {
+      await sendEmail({
+        to: client.email,
+        subject: "Session Confirmed",
+        html: `
+          <h2>Session Confirmed!</h2>
+          <p>Hi ${client.name},</p>
+          <p>Your session has been confirmed:</p>
+          <ul>
+            <li><strong>Date:</strong> ${params.date}</li>
+            <li><strong>Time:</strong> ${params.time}</li>
+            <li><strong>Duration:</strong> ${params.duration || 60} minutes</li>
+            <li><strong>Type:</strong> ${params.sessionType || "Session"}</li>
+            <li><strong>Location:</strong> ${params.location || "TBD"}</li>
+          </ul>
+          <p>See you there!</p>
+        `
+      });
+    }
 
     return {
       success: true,
@@ -151,14 +153,6 @@ export async function getScheduleAction(params: {
         },
         status: { not: "cancelled" }
       },
-      include: {
-        client: {
-          select: {
-            name: true,
-            email: true
-          }
-        }
-      },
       orderBy: {
         startTime: "asc"
       }
@@ -175,7 +169,7 @@ export async function getScheduleAction(params: {
     const formattedBookings = bookings.map(b => ({
       id: b.id,
       time: b.startTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-      client: b.client.name,
+      client: b.clientId,
       sessionType: b.sessionType,
       location: b.location,
       duration: Math.round((b.endTime.getTime() - b.startTime.getTime()) / 60000)
@@ -285,9 +279,6 @@ export async function cancelEventAction(params: {
       where: {
         id: params.eventId,
         trainerId: params.trainerId
-      },
-      include: {
-        client: true
       }
     });
 
@@ -297,6 +288,11 @@ export async function cancelEventAction(params: {
         error: "Session not found"
       };
     }
+
+    // Fetch client details
+    const client = await prisma.user.findUnique({
+      where: { id: booking.clientId }
+    });
 
     // Update booking status
     await prisma.booking.update({
@@ -308,26 +304,29 @@ export async function cancelEventAction(params: {
     });
 
     // Notify client
-    if (params.notifyClient !== false) {
+    if (params.notifyClient !== false && client?.email) {
       await sendEmail({
-        to: booking.client.email,
+        to: client.email,
         subject: "Session Cancelled",
-        template: "session-cancellation",
-        data: {
-          clientName: booking.client.name,
-          date: booking.startTime.toLocaleDateString(),
-          time: booking.startTime.toLocaleTimeString(),
-          reason: params.reason || "No reason provided"
-        }
+        html: `
+          <h2>Session Cancelled</h2>
+          <p>Hi ${client.name || 'there'},</p>
+          <p>Your session has been cancelled:</p>
+          <ul>
+            <li><strong>Date:</strong> ${booking.startTime.toLocaleDateString()}</li>
+            <li><strong>Time:</strong> ${booking.startTime.toLocaleTimeString()}</li>
+            <li><strong>Reason:</strong> ${params.reason || "No reason provided"}</li>
+          </ul>
+        `
       });
     }
 
     return {
       success: true,
-      message: `✅ Session cancelled. ${params.notifyClient !== false ? `Cancellation email sent to ${booking.client.name}.` : ""}`,
+      message: `✅ Session cancelled. ${params.notifyClient !== false && client ? `Cancellation email sent to ${client.name}.` : ""}`,
       data: {
         bookingId: booking.id,
-        clientName: booking.client.name
+        clientName: client?.name || booking.clientId
       }
     };
   } catch (error: any) {
@@ -371,8 +370,7 @@ export async function createClientAction(params: {
         email: params.email,
         phone: params.phone,
         notes: params.notes,
-        trainerId: params.trainerId,
-        status: "active"
+        trainerId: params.trainerId
       }
     });
 

@@ -35,13 +35,19 @@ const specialties: Specialty[] = [
 
 interface SpecialtySelectorProps {
   selectedSpecialty?: string
-  onSelect: (specialtyId: string) => void
+  onSelect?: (specialtyId: string) => void
+  value?: string
+  onChange?: (specialtyId: string) => void
 }
 
 export function SpecialtySelector({
   selectedSpecialty,
   onSelect,
+  value,
+  onChange,
 }: SpecialtySelectorProps) {
+  const selected = value || selectedSpecialty
+  const handleSelect = onChange || onSelect || (() => {})
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {specialties.map((specialty) => (
@@ -49,10 +55,10 @@ export function SpecialtySelector({
           key={specialty.id}
           className={cn(
             "p-4 cursor-pointer transition-all hover:border-primary",
-            selectedSpecialty === specialty.id &&
+            selected === specialty.id &&
               "border-primary bg-primary/5"
           )}
-          onClick={() => onSelect(specialty.id)}
+          onClick={() => handleSelect(specialty.id)}
         >
           <div className="text-center">
             <div className="text-3xl mb-2">{specialty.emoji}</div>
@@ -65,6 +71,12 @@ export function SpecialtySelector({
     </div>
   )
 }
+
+
+
+
+
+
 
 
 

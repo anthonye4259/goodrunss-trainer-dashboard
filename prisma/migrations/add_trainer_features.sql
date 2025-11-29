@@ -235,3 +235,12 @@ CREATE TRIGGER update_retention_alerts_updated_at BEFORE UPDATE ON retention_ale
 
 
 
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,29 @@
+# Cache and build artifacts
+.next/cache
+.next/trace
+
+# Dependencies (Vercel installs these fresh)
+node_modules
+
+# Development files
+*.log
+.DS_Store
+.env*.local
+
+# Testing
+/coverage
+playwright-report
+test-results
+
+# Playwright browsers (these are huge!)
+/.cache/ms-playwright
+
+# IDE
+.vscode
+.idea
+
+# Git
+.git
+.gitignore
+
+

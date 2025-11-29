@@ -1,252 +1,297 @@
 /**
- * GIA Memory System Integration
- * Helper functions to make GIA remember everything about users
+ * GIA Memory System - Simple & Effective
+ * Makes GIA remember everything across conversations
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { prisma } from '@/lib/prisma';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// ═══════════════════════════════════════════════════════════════
+// SAVE MEMORY
+// ═══════════════════════════════════════════════════════════════
 
-/**
- * Get full context for GIA chat
- * This is what GIA "knows" about the user
- */
-export async function getGIAContext(userId: string) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/v1/gia/context?userId=${userId}`
-  );
-  
-  if (!response.ok) {
-    return null;
-  }
-  
-  const { context } = await response.json();
-  return context;
-}
-
-/**
- * Format context into prompt for GIA
- */
-export function formatContextForPrompt(context: any): string {
-  if (!context) return '';
-
-  const parts: string[] = [];
-
-  // User's preferences
-  if (context.favoriteSports?.length > 0) {
-    parts.push(`Favorite sports: ${context.favoriteSports.join(', ')}`);
-  }
-
-  if (context.skillLevels && Object.keys(context.skillLevels).length > 0) {
-    const skills = Object.entries(context.skillLevels)
-      .map(([sport, level]) => `${sport}: ${level}`)
-      .join(', ');
-    parts.push(`Skill levels: ${skills}`);
-  }
-
-  if (context.playingStyle) {
-    parts.push(`Playing style: ${context.playingStyle}`);
-  }
-
-  if (context.communicationStyle) {
-    parts.push(`Prefers ${context.communicationStyle} communication`);
-  }
-
-  // Current state
-  if (context.currentGoals?.length > 0) {
-    parts.push(`Current goals: ${context.currentGoals.join(', ')}`);
-  }
-
-  if (context.workingOn?.length > 0) {
-    parts.push(`Working on: ${context.workingOn.join(', ')}`);
-  }
-
-  // Recent activity
-  if (context.lastSport) {
-    parts.push(`Last played: ${context.lastSport}`);
-  }
-
-  if (context.lastFacility) {
-    parts.push(`Last facility: ${context.lastFacility}`);
-  }
-
-  // Key facts
-  if (context.keyFacts?.length > 0) {
-    const topFacts = context.keyFacts.slice(0, 5).map((f: any) => f.fact);
-    parts.push(`Key facts: ${topFacts.join('; ')}`);
-  }
-
-  // Patterns
-  if (context.observedPatterns?.length > 0) {
-    const patterns = context.observedPatterns
-      .slice(0, 3)
-      .map((p: any) => `${p.type} ${p.frequency}`)
-      .join(', ');
-    parts.push(`Patterns: ${patterns}`);
-  }
-
-  // Relationships
-  if (context.relationships?.length > 0) {
-    const relationships = context.relationships
-      .slice(0, 3)
-      .map((r: any) => `${r.type} with ${r.with}`)
-      .join(', ');
-    parts.push(`Relationships: ${relationships}`);
-  }
-
-  // Recent events
-  if (context.recentEvents?.length > 0) {
-    const events = context.recentEvents
-      .slice(0, 2)
-      .map((e: any) => e.event)
-      .join('; ');
-    parts.push(`Recent: ${events}`);
-  }
-
-  return parts.join('\n');
-}
-
-/**
- * Store memory from conversation
- */
-export async function storeMemory(params: {
+export async function saveMemory(params: {
   userId: string;
-  memoryType: string;
+  memoryType: 'preference' | 'client_fact' | 'business_fact' | 'workflow' | 'pattern';
   category: string;
   key: string;
   value: string;
-  source?: string;
   importance?: number;
+  source?: string;
 }) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/v1/gia/memory`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params),
-    }
-  );
+  try {
+    // Upsert: Update if exists, create if not
+    const memory = await prisma.giaMemory.upsert({
+      where: {
+        userId_memoryType_category_key: {
+          userId: params.userId,
+          memoryType: params.memoryType,
+          category: params.category,
+          key: params.key,
+        },
+      },
+      update: {
+        value: params.value,
+        importance: params.importance || 5,
+        lastUsed: new Date(),
+        useCount: { increment: 1 },
+        updatedAt: new Date(),
+      },
+      create: {
+        userId: params.userId,
+        memoryType: params.memoryType,
+        category: params.category,
+        key: params.key,
+        value: params.value,
+        importance: params.importance || 5,
+        source: params.source || 'conversation',
+      },
+    });
 
-  return response.json();
+    return { success: true, memory };
+  } catch (error) {
+    console.error('Error saving memory:', error);
+    return { success: false, error };
+  }
 }
 
-/**
- * Update user context after conversation
- */
-export async function updateContext(userId: string, updates: any) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/v1/gia/context`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, updates }),
-    }
-  );
+// ═══════════════════════════════════════════════════════════════
+// LOAD MEMORIES (For System Prompt)
+// ═══════════════════════════════════════════════════════════════
 
-  return response.json();
+export async function loadMemories(userId: string, limit: number = 30) {
+  try {
+    const memories = await prisma.giaMemory.findMany({
+      where: { userId },
+      orderBy: [
+        { importance: 'desc' },
+        { lastUsed: 'desc' },
+      ],
+      take: limit,
+    });
+
+    return memories;
+  } catch (error) {
+    console.error('Error loading memories:', error);
+    return [];
+  }
 }
 
-/**
- * Record activity pattern
- */
-export async function recordPattern(params: {
-  userId: string;
-  patternType: string;
-  patternData: any;
-  frequency?: string;
-}) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/v1/gia/patterns`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params),
-    }
-  );
+// ═══════════════════════════════════════════════════════════════
+// FORMAT MEMORIES FOR SYSTEM PROMPT
+// ═══════════════════════════════════════════════════════════════
 
-  return response.json();
-}
-
-/**
- * Extract and store learnings from conversation
- */
-export async function extractLearnings(userId: string, conversation: string) {
-  // Simple extraction (in production, use AI to extract)
-  const learnings: any[] = [];
-
-  // Extract sports mentions
-  const sports = ['tennis', 'pickleball', 'basketball', 'volleyball', 'badminton'];
-  sports.forEach(sport => {
-    if (conversation.toLowerCase().includes(sport)) {
-      learnings.push({
-        userId,
-        memoryType: 'preference',
-        category: 'sports',
-        key: `plays_${sport}`,
-        value: 'true',
-        source: 'inferred',
-        importance: 5,
-      });
-    }
-  });
-
-  // Extract time preferences
-  const timeWords = {
-    'morning': 'morning',
-    'afternoon': 'afternoon',
-    'evening': 'evening',
-    'early': 'morning',
-    'late': 'evening',
-  };
-
-  Object.entries(timeWords).forEach(([word, time]) => {
-    if (conversation.toLowerCase().includes(word)) {
-      learnings.push({
-        userId,
-        memoryType: 'preference',
-        category: 'schedule',
-        key: 'preferred_time',
-        value: time,
-        source: 'inferred',
-        importance: 6,
-      });
-    }
-  });
-
-  // Store all learnings
-  for (const learning of learnings) {
-    await storeMemory(learning);
+export function formatMemoriesForPrompt(memories: any[]): string {
+  if (memories.length === 0) {
+    return '';
   }
 
-  return learnings;
+  // Group memories by type
+  const grouped: { [key: string]: any[] } = {};
+  memories.forEach((m) => {
+    if (!grouped[m.memoryType]) {
+      grouped[m.memoryType] = [];
+    }
+    grouped[m.memoryType].push(m);
+  });
+
+  const sections: string[] = [];
+
+  // Preferences
+  if (grouped.preference) {
+    const prefs = grouped.preference.map((m) => `- ${m.key}: ${m.value}`).join('\n');
+    sections.push(`**PREFERENCES:**\n${prefs}`);
+  }
+
+  // Client Facts
+  if (grouped.client_fact) {
+    const facts = grouped.client_fact.map((m) => `- ${m.key}: ${m.value}`).join('\n');
+    sections.push(`**CLIENT FACTS:**\n${facts}`);
+  }
+
+  // Business Facts
+  if (grouped.business_fact) {
+    const facts = grouped.business_fact.map((m) => `- ${m.key}: ${m.value}`).join('\n');
+    sections.push(`**BUSINESS FACTS:**\n${facts}`);
+  }
+
+  // Workflows
+  if (grouped.workflow) {
+    const workflows = grouped.workflow.map((m) => `- ${m.key}: ${m.value}`).join('\n');
+    sections.push(`**YOUR WORKFLOWS:**\n${workflows}`);
+  }
+
+  // Patterns
+  if (grouped.pattern) {
+    const patterns = grouped.pattern.map((m) => `- ${m.key}: ${m.value}`).join('\n');
+    sections.push(`**PATTERNS I'VE NOTICED:**\n${patterns}`);
+  }
+
+  return sections.join('\n\n');
 }
 
-/**
- * Track booking behavior for pattern analysis
- */
-export async function trackBookingBehavior(userId: string, bookingData: any) {
-  // Record booking pattern
-  await recordPattern({
+// ═══════════════════════════════════════════════════════════════
+// EXTRACT MEMORIES FROM CONVERSATION (Auto-Learning)
+// ═══════════════════════════════════════════════════════════════
+
+export async function extractAndSaveMemories(
+  userId: string,
+  userMessage: string,
+  assistantMessage: string
+) {
+  const memories: any[] = [];
+
+  // Extract preferences (when user explicitly states them)
+  const prefPatterns = [
+    { regex: /I prefer (.*?)(?:\.|$)/i, key: 'communication_preference' },
+    { regex: /I like to (.*?)(?:\.|$)/i, key: 'preference' },
+    { regex: /I usually (.*?)(?:\.|$)/i, key: 'usual_behavior' },
+    { regex: /I always (.*?)(?:\.|$)/i, key: 'always_does' },
+  ];
+
+  for (const pattern of prefPatterns) {
+    const match = userMessage.match(pattern.regex);
+    if (match) {
+      await saveMemory({
+        userId,
+        memoryType: 'preference',
+        category: 'communication',
+        key: pattern.key,
+        value: match[1].trim(),
+        importance: 8,
+        source: 'explicit',
+      });
+    }
+  }
+
+  // Extract client facts (injuries, goals, notes)
+  const clientPatterns = [
+    { regex: /(.*?) has (?:a |an )?(.*? injury|bad .*?|problem with .*?)(?:\.|$)/i, type: 'injury' },
+    { regex: /(.*?) wants to (.*?)(?:\.|$)/i, type: 'goal' },
+    { regex: /(.*?) can't (.*?)(?:\.|$)/i, type: 'limitation' },
+  ];
+
+  for (const pattern of clientPatterns) {
+    const match = userMessage.match(pattern.regex);
+    if (match && match[1]) {
+      const clientName = match[1].trim().toLowerCase();
+      await saveMemory({
+        userId,
+        memoryType: 'client_fact',
+        category: clientName,
+        key: `${clientName}_${pattern.type}`,
+        value: match[2]?.trim() || match[0],
+        importance: 9,
+        source: 'conversation',
+      });
+    }
+  }
+
+  // Extract business patterns (pricing, scheduling)
+  if (userMessage.match(/\$\d+/)) {
+    const price = userMessage.match(/\$(\d+)/)?.[1];
+    if (price) {
+      await saveMemory({
+        userId,
+        memoryType: 'business_fact',
+        category: 'pricing',
+        key: 'typical_session_price',
+        value: `$${price}`,
+        importance: 6,
+        source: 'inferred',
+      });
+    }
+  }
+
+  // Extract time preferences
+  const timeMatch = userMessage.match(/(?:at |around |about )(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i);
+  if (timeMatch) {
+    await saveMemory({
+      userId,
+      memoryType: 'preference',
+      category: 'scheduling',
+      key: 'preferred_time',
+      value: timeMatch[1],
+      importance: 5,
+      source: 'inferred',
+    });
+  }
+
+  return memories;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MARK MEMORY AS USED (Updates lastUsed, increments useCount)
+// ═══════════════════════════════════════════════════════════════
+
+export async function markMemoryUsed(memoryId: string) {
+  try {
+    await prisma.giaMemory.update({
+      where: { id: memoryId },
+      data: {
+        lastUsed: new Date(),
+        useCount: { increment: 1 },
+      },
+    });
+  } catch (error) {
+    console.error('Error marking memory as used:', error);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// QUICK SAVE HELPERS (Convenience Functions)
+// ═══════════════════════════════════════════════════════════════
+
+export async function savePreference(userId: string, key: string, value: string, importance: number = 7) {
+  return saveMemory({
     userId,
-    patternType: 'booking',
-    patternData: {
-      sport: bookingData.sport,
-      time: bookingData.time,
-      day: new Date(bookingData.date).getDay(),
-      facility: bookingData.facilityId,
-      duration: bookingData.duration,
-    },
-    frequency: 'weekly', // Will be calculated based on observation count
-  });
-
-  // Update context
-  await updateContext(userId, {
-    last_booking_date: bookingData.date,
-    last_sport_played: bookingData.sport,
-    last_facility_visited: bookingData.facilityId,
+    memoryType: 'preference',
+    category: 'general',
+    key,
+    value,
+    importance,
   });
 }
 
+export async function saveClientFact(userId: string, clientName: string, key: string, value: string) {
+  return saveMemory({
+    userId,
+    memoryType: 'client_fact',
+    category: clientName.toLowerCase(),
+    key: `${clientName.toLowerCase()}_${key}`,
+    value,
+    importance: 9,
+  });
+}
+
+export async function saveBusinessFact(userId: string, category: string, key: string, value: string) {
+  return saveMemory({
+    userId,
+    memoryType: 'business_fact',
+    category,
+    key,
+    value,
+    importance: 6,
+  });
+}
+
+export async function saveWorkflow(userId: string, workflowName: string, steps: string) {
+  return saveMemory({
+    userId,
+    memoryType: 'workflow',
+    category: 'custom',
+    key: workflowName,
+    value: steps,
+    importance: 8,
+  });
+}
+
+export async function savePattern(userId: string, patternName: string, observation: string) {
+  return saveMemory({
+    userId,
+    memoryType: 'pattern',
+    category: 'observed',
+    key: patternName,
+    value: observation,
+    importance: 7,
+  });
+}

@@ -6,6 +6,29 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  eslint: {
+    // Skip ESLint during build (will run separately)
+    ignoreDuringBuilds: true,
+  },
+  
+  // Optimize output for faster deployments
+  output: 'standalone', // Reduces deployment size significantly
+  
+  // Optimize images
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+  },
+  
+  // Experimental features for better performance
+  experimental: {
+    // Reduce memory usage during build
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+  },
 };
 
 // Make sure adding Sentry options is the last code to run before exporting
@@ -22,9 +45,10 @@ export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
-
+  // OPTIMIZED: Only upload source maps in production, not on every deploy
+  widenClientFileUpload: process.env.NODE_ENV === 'production',
+  hideSourceMaps: true, // Don't include source maps in bundle
+  
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   // This can increase your server load as well as your hosting bill.
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
 import { giaFunctions } from "@/lib/gia-functions";
 import { executeGIAFunction, parseRelativeDate, parseTime } from "@/lib/gia-executor";
+import { loadMemories, formatMemoriesForPrompt, extractAndSaveMemories } from "@/lib/gia-memory";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -73,6 +74,10 @@ export async function POST(req: NextRequest) {
       ? specialties.join(', ') 
       : 'general fitness';
 
+    // 🧠 LOAD MEMORIES - GIA remembers everything about you!
+    const memories = await loadMemories(userId, 30);
+    const memoryContext = formatMemoriesForPrompt(memories);
+
     // Get conversation history (last 10 messages for context)
     const history = await prisma.aiMessage.findMany({
       where: { conversationId: conversation.id },
@@ -106,7 +111,7 @@ export async function POST(req: NextRequest) {
 - You are assisting a ${primarySpecialty} professional, so all responses, workout plans, content, and suggestions should be HIGHLY SPECIFIC to ${primarySpecialty}.
 ${getSpecialtyGuidance(primarySpecialty)}
 
-You are GIA (Generative Intelligent Assistant), an AI agent helping a ${primarySpecialty} instructor/coach manage their business.
+${memoryContext ? `**🧠 WHAT I REMEMBER ABOUT YOU:**\n${memoryContext}\n\nUSE THIS CONTEXT IN EVERY RESPONSE! This makes you more helpful and personal.\n\n` : ''}You are GIA (Generative Intelligent Assistant), an AI agent helping a ${primarySpecialty} instructor/coach manage their business.
 
 You have access to various functions to help the trainer with:
 - 📅 Calendar management (schedule, reschedule, cancel sessions)
@@ -232,6 +237,14 @@ Be helpful, efficient, and make the trainer's life easier! 🚀`;
       },
     });
 
+    // 🧠 EXTRACT & SAVE MEMORIES - Learn from this conversation!
+    try {
+      await extractAndSaveMemories(userId, message, finalResponse);
+    } catch (memoryError) {
+      console.error("Error saving memories:", memoryError);
+      // Don't fail the request if memory saving fails
+    }
+
     return NextResponse.json({
       success: true,
       response: finalResponse,
@@ -266,7 +279,7 @@ export async function GET(req: NextRequest) {
       const conversations = await prisma.aiConversation.findMany({
         where: { userId },
         include: {
-          messages: {
+          aiMessages: {
             orderBy: { createdAt: "asc" },
             take: 1,
           },
@@ -288,7 +301,7 @@ export async function GET(req: NextRequest) {
         userId,
       },
       include: {
-        messages: {
+        aiMessages: {
           orderBy: { createdAt: "asc" },
         },
       },

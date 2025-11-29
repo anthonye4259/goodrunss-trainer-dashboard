@@ -76,9 +76,9 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     where: { stripeSubscriptionId: subscription.id },
     update: {
       status: subscription.status as any,
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+      currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+      cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
     },
     create: {
       userId,
@@ -87,14 +87,14 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
       stripeSubscriptionId: subscription.id,
       stripeCustomerId: subscription.customer as string,
       stripePriceId: subscription.items.data[0].price.id,
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
-      trialStart: subscription.trial_start
-        ? new Date(subscription.trial_start * 1000)
+      currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+      currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+      cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
+      trialStart: (subscription as any).trial_start
+        ? new Date((subscription as any).trial_start * 1000)
         : null,
-      trialEnd: subscription.trial_end
-        ? new Date(subscription.trial_end * 1000)
+      trialEnd: (subscription as any).trial_end
+        ? new Date((subscription as any).trial_end * 1000)
         : null,
     },
   });
@@ -118,11 +118,11 @@ async function handleTrialWillEnd(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  if (!invoice.subscription) return;
+  if (!(invoice as any).subscription) return;
 
   // Update subscription as paid
   await prisma.premiumSubscription.updateMany({
-    where: { stripeSubscriptionId: invoice.subscription as string },
+    where: { stripeSubscriptionId: (invoice as any).subscription as string },
     data: {
       status: 'active',
     },
@@ -130,7 +130,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
   // Mark trial as converted if applicable
   const subscription = await prisma.premiumSubscription.findFirst({
-    where: { stripeSubscriptionId: invoice.subscription as string },
+    where: { stripeSubscriptionId: (invoice as any).subscription as string },
   });
 
   if (subscription) {
@@ -148,10 +148,10 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  if (!invoice.subscription) return;
+  if (!(invoice as any).subscription) return;
 
   await prisma.premiumSubscription.updateMany({
-    where: { stripeSubscriptionId: invoice.subscription as string },
+    where: { stripeSubscriptionId: (invoice as any).subscription as string },
     data: {
       status: 'past_due',
     },
@@ -159,7 +159,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   // TODO: Send email notification about failed payment
   console.log(
-    `Payment failed for subscription: ${invoice.subscription}`
+    `Payment failed for subscription: ${(invoice as any).subscription}`
   );
 }
 

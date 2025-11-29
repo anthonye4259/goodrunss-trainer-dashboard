@@ -25,7 +25,7 @@ export default function SuccessPage() {
 
     async function fetchSession() {
       try {
-        const data = await getCheckoutSession(sessionId)
+        const data = await getCheckoutSession(sessionId!)
         setSession(data)
       } catch (err) {
         console.error("Failed to fetch session:", err)
@@ -139,6 +139,14 @@ export default function SuccessPage() {
     </div>
   )
 }
+
+
+
+
+
+
+
+
 
 
 
