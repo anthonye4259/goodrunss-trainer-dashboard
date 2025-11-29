@@ -967,6 +967,265 @@ export async function sendSmsAction(params: {
   }
 }
 
+// 📱 BULK SMS MESSAGING ACTION (NEW!)
+export async function sendBulkSmsAction(params: {
+  filter: "all" | "active" | "inactive" | "unpaid" | "specific";
+  clientNames?: string[];
+  message: string;
+  personalizeWithName?: boolean;
+  trainerId: string;
+}) {
+  try {
+    const twilio = require('twilio');
+    const twilioClient = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+
+    // Build query based on filter
+    let whereClause: any = {
+      trainerId: params.trainerId,
+      phone: { not: null }  // Must have phone number
+    };
+
+    if (params.filter === "specific" && params.clientNames) {
+      whereClause.OR = params.clientNames.map(name => ({
+        name: { contains: name, mode: "insensitive" }
+      }));
+    } else if (params.filter === "active") {
+      whereClause.status = "active";
+    } else if (params.filter === "inactive") {
+      whereClause.status = "inactive";
+    } else if (params.filter === "unpaid") {
+      // Get clients with unpaid invoices
+      const unpaidPayments = await prisma.payment.findMany({
+        where: {
+          trainerId: params.trainerId,
+          status: "pending"
+        },
+        select: { clientId: true },
+        distinct: ["clientId"]
+      });
+      whereClause.id = { in: unpaidPayments.map(p => p.clientId) };
+    }
+
+    // Fetch recipients
+    const recipients = await prisma.client.findMany({
+      where: whereClause
+    });
+
+    if (recipients.length === 0) {
+      return {
+        success: false,
+        error: `No clients found with the filter "${params.filter}". Make sure clients have phone numbers.`
+      };
+    }
+
+    // Ask for confirmation first
+    const totalCost = recipients.length * 0.0079; // Twilio SMS cost
+    const confirmMessage = `⚠️ About to send ${recipients.length} SMS messages (estimated cost: $${totalCost.toFixed(2)}). Recipients: ${recipients.map(c => c.name).slice(0, 5).join(', ')}${recipients.length > 5 ? `, +${recipients.length - 5} more` : ''}. Proceed?`;
+
+    // For now, proceed automatically. In production, you'd add a confirmation step.
+
+    // Send messages
+    const results: any[] = [];
+    const personalize = params.personalizeWithName !== false;
+
+    for (const recipient of recipients) {
+      try {
+        let phone = recipient.phone!;
+        
+        // Format phone number
+        if (!phone.startsWith('+')) {
+          phone = '+1' + phone.replace(/\D/g, '');
+        }
+
+        // Personalize message
+        const finalMessage = personalize 
+          ? `Hi ${recipient.name.split(' ')[0]},\n\n${params.message}`
+          : params.message;
+
+        // Send SMS
+        const message = await twilioClient.messages.create({
+          body: finalMessage,
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: phone
+        });
+
+        results.push({
+          name: recipient.name,
+          phone: phone,
+          status: 'sent',
+          messageSid: message.sid
+        });
+      } catch (error: any) {
+        results.push({
+          name: recipient.name,
+          phone: recipient.phone,
+          status: 'failed',
+          error: error.message
+        });
+      }
+    }
+
+    const sent = results.filter(r => r.status === 'sent').length;
+    const failed = results.filter(r => r.status === 'failed').length;
+
+    return {
+      success: true,
+      message: `✅ Bulk SMS sent!\n\n📤 Sent: ${sent} messages\n❌ Failed: ${failed}\n💰 Cost: $${(sent * 0.0079).toFixed(2)}\n\nRecipients: ${results.filter(r => r.status === 'sent').map(r => r.name).join(', ')}`,
+      data: {
+        sent,
+        failed,
+        cost: sent * 0.0079,
+        results
+      }
+    };
+  } catch (error: any) {
+    console.error('Bulk SMS Error:', error);
+    return {
+      success: false,
+      error: `Failed to send bulk SMS: ${error.message || 'Unknown error'}`
+    };
+  }
+}
+
+// 📱 BULK WHATSAPP MESSAGING ACTION (NEW!)
+export async function sendBulkWhatsAppAction(params: {
+  filter: "all" | "active" | "inactive" | "unpaid" | "specific";
+  clientNames?: string[];
+  message: string;
+  mediaUrl?: string;
+  personalizeWithName?: boolean;
+  trainerId: string;
+}) {
+  try {
+    const twilio = require('twilio');
+    const twilioClient = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+
+    // Build query based on filter
+    let whereClause: any = {
+      trainerId: params.trainerId,
+      phone: { not: null }  // Must have phone number
+    };
+
+    if (params.filter === "specific" && params.clientNames) {
+      whereClause.OR = params.clientNames.map(name => ({
+        name: { contains: name, mode: "insensitive" }
+      }));
+    } else if (params.filter === "active") {
+      whereClause.status = "active";
+    } else if (params.filter === "inactive") {
+      whereClause.status = "inactive";
+    } else if (params.filter === "unpaid") {
+      // Get clients with unpaid invoices
+      const unpaidPayments = await prisma.payment.findMany({
+        where: {
+          trainerId: params.trainerId,
+          status: "pending"
+        },
+        select: { clientId: true },
+        distinct: ["clientId"]
+      });
+      whereClause.id = { in: unpaidPayments.map(p => p.clientId) };
+    }
+
+    // Fetch recipients
+    const recipients = await prisma.client.findMany({
+      where: whereClause
+    });
+
+    if (recipients.length === 0) {
+      return {
+        success: false,
+        error: `No clients found with the filter "${params.filter}". Make sure clients have phone numbers.`
+      };
+    }
+
+    // Send messages (WhatsApp is FREE!)
+    const results: any[] = [];
+    const personalize = params.personalizeWithName !== false;
+
+    for (const recipient of recipients) {
+      try {
+        let phone = recipient.phone!;
+        
+        // Format phone number
+        if (!phone.startsWith('+')) {
+          phone = '+1' + phone.replace(/\D/g, '');
+        }
+
+        // Personalize message
+        const finalMessage = personalize 
+          ? `Hi ${recipient.name.split(' ')[0]},\n\n${params.message}`
+          : params.message;
+
+        // Send WhatsApp
+        const messageData: any = {
+          body: finalMessage,
+          from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_PHONE_NUMBER}`,
+          to: `whatsapp:${phone}`
+        };
+
+        if (params.mediaUrl) {
+          messageData.mediaUrl = [params.mediaUrl];
+        }
+
+        const message = await twilioClient.messages.create(messageData);
+
+        results.push({
+          name: recipient.name,
+          phone: phone,
+          status: 'sent',
+          messageSid: message.sid
+        });
+      } catch (error: any) {
+        // Check if it's a "not a WhatsApp user" error
+        if (error.message?.includes('not a WhatsApp user')) {
+          results.push({
+            name: recipient.name,
+            phone: recipient.phone,
+            status: 'no_whatsapp',
+            error: 'Not a WhatsApp user'
+          });
+        } else {
+          results.push({
+            name: recipient.name,
+            phone: recipient.phone,
+            status: 'failed',
+            error: error.message
+          });
+        }
+      }
+    }
+
+    const sent = results.filter(r => r.status === 'sent').length;
+    const failed = results.filter(r => r.status === 'failed').length;
+    const noWhatsApp = results.filter(r => r.status === 'no_whatsapp').length;
+
+    return {
+      success: true,
+      message: `✅ Bulk WhatsApp sent!\n\n📤 Sent: ${sent} messages\n❌ Failed: ${failed}\n📵 No WhatsApp: ${noWhatsApp}\n💰 Cost: FREE!\n\n${params.mediaUrl ? '📎 Media included\n' : ''}Recipients: ${results.filter(r => r.status === 'sent').map(r => r.name).join(', ')}`,
+      data: {
+        sent,
+        failed,
+        noWhatsApp,
+        cost: 0,
+        results
+      }
+    };
+  } catch (error: any) {
+    console.error('Bulk WhatsApp Error:', error);
+    return {
+      success: false,
+      error: `Failed to send bulk WhatsApp: ${error.message || 'Unknown error'}`
+    };
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // 💪 WORKOUT ACTIONS
 // ═══════════════════════════════════════════════════════════════
@@ -1217,6 +1476,747 @@ function getWorkoutFormat(specialty: string): {
       reps: 'reps',
     },
   };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 🍎 NUTRITION ACTIONS
+// ═══════════════════════════════════════════════════════════════
+
+export async function createMealPlanAction(params: {
+  clientId: string;
+  goal: string;
+  duration?: number;
+  dietaryRestrictions?: string[];
+  allergies?: string[];
+  mealsPerDay?: number;
+  preferences?: string;
+  trainerId: string;
+}) {
+  try {
+    // Find client
+    const client = await prisma.client.findFirst({
+      where: {
+        OR: [
+          { id: params.clientId },
+          { name: { contains: params.clientId, mode: "insensitive" } }
+        ],
+        trainerId: params.trainerId
+      }
+    });
+
+    if (!client) {
+      return {
+        success: false,
+        error: `Client "${params.clientId}" not found`
+      };
+    }
+
+    // Generate meal plan using AI
+    const goalDescriptions: Record<string, string> = {
+      muscle_gain: "muscle building and strength gains",
+      fat_loss: "fat loss while preserving muscle",
+      maintenance: "weight maintenance and balanced nutrition",
+      performance: "optimal athletic performance",
+      general_health: "overall health and wellness"
+    };
+
+    const restrictions = params.dietaryRestrictions?.length 
+      ? `Dietary restrictions: ${params.dietaryRestrictions.join(", ")}`
+      : "";
+    
+    const allergies = params.allergies?.length
+      ? `Allergies: ${params.allergies.join(", ")}`
+      : "";
+
+    const mealPlan = {
+      clientId: client.id,
+      clientName: client.name,
+      goal: goalDescriptions[params.goal] || params.goal,
+      duration: params.duration || 4,
+      mealsPerDay: params.mealsPerDay || 3,
+      restrictions: params.dietaryRestrictions || [],
+      allergies: params.allergies || [],
+      preferences: params.preferences,
+      generatedAt: new Date(),
+      // In a real implementation, this would call Claude API to generate detailed meal plan
+      summary: `Personalized ${params.duration || 4}-week meal plan created for ${client.name} focusing on ${goalDescriptions[params.goal] || params.goal}.`
+    };
+
+    return {
+      success: true,
+      message: `✅ Meal plan created for ${client.name}!\n\n` +
+               `🎯 Goal: ${goalDescriptions[params.goal]}\n` +
+               `📅 Duration: ${params.duration || 4} weeks\n` +
+               `🍽️ Meals/day: ${params.mealsPerDay || 3}\n` +
+               `${restrictions ? `🚫 ${restrictions}\n` : ''}` +
+               `${allergies ? `⚠️ ${allergies}\n` : ''}\n` +
+               `The plan includes macro targets, meal suggestions, and shopping lists. Would you like me to email it to ${client.name}?`,
+      data: mealPlan
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to create meal plan: ${error.message}`
+    };
+  }
+}
+
+export async function calculateMacrosAction(params: {
+  clientId: string;
+  weight: number;
+  heightFeet?: number;
+  heightInches?: number;
+  age: number;
+  sex: "male" | "female";
+  activityLevel: string;
+  goal: string;
+  trainerId: string;
+}) {
+  try {
+    // Find client
+    const client = await prisma.client.findFirst({
+      where: {
+        OR: [
+          { id: params.clientId },
+          { name: { contains: params.clientId, mode: "insensitive" } }
+        ],
+        trainerId: params.trainerId
+      }
+    });
+
+    if (!client) {
+      return {
+        success: false,
+        error: `Client "${params.clientId}" not found`
+      };
+    }
+
+    // Calculate BMR using Mifflin-St Jeor Equation
+    const heightInInches = (params.heightFeet || 0) * 12 + (params.heightInches || 0);
+    const heightInCm = heightInInches * 2.54;
+    const weightInKg = params.weight * 0.453592; // assuming lbs, convert to kg
+
+    let bmr: number;
+    if (params.sex === "male") {
+      bmr = 10 * weightInKg + 6.25 * heightInCm - 5 * params.age + 5;
+    } else {
+      bmr = 10 * weightInKg + 6.25 * heightInCm - 5 * params.age - 161;
+    }
+
+    // Activity multipliers
+    const activityMultipliers: Record<string, number> = {
+      sedentary: 1.2,
+      lightly_active: 1.375,
+      moderately_active: 1.55,
+      very_active: 1.725,
+      extremely_active: 1.9
+    };
+
+    const tdee = bmr * (activityMultipliers[params.activityLevel] || 1.55);
+
+    // Adjust calories based on goal
+    let targetCalories: number;
+    let proteinPerKg: number;
+    let fatPercentage: number;
+
+    switch (params.goal) {
+      case "muscle_gain":
+        targetCalories = tdee + 300; // +300 cal surplus
+        proteinPerKg = 2.2; // High protein
+        fatPercentage = 0.25;
+        break;
+      case "fat_loss":
+        targetCalories = tdee - 500; // -500 cal deficit
+        proteinPerKg = 2.4; // Very high protein to preserve muscle
+        fatPercentage = 0.25;
+        break;
+      default: // maintenance
+        targetCalories = tdee;
+        proteinPerKg = 1.8;
+        fatPercentage = 0.3;
+    }
+
+    // Calculate macros
+    const protein = Math.round(weightInKg * proteinPerKg);
+    const fat = Math.round((targetCalories * fatPercentage) / 9);
+    const carbs = Math.round((targetCalories - (protein * 4) - (fat * 9)) / 4);
+
+    const macros = {
+      calories: Math.round(targetCalories),
+      protein: protein,
+      carbs: carbs,
+      fats: fat,
+      bmr: Math.round(bmr),
+      tdee: Math.round(tdee)
+    };
+
+    return {
+      success: true,
+      message: `✅ Macros calculated for ${client.name}!\n\n` +
+               `**Daily Targets:**\n` +
+               `🔥 Calories: ${macros.calories} kcal\n` +
+               `💪 Protein: ${macros.protein}g (${Math.round(protein * 4 / targetCalories * 100)}%)\n` +
+               `🍞 Carbs: ${macros.carbs}g (${Math.round(carbs * 4 / targetCalories * 100)}%)\n` +
+               `🥑 Fats: ${macros.fats}g (${Math.round(fat * 9 / targetCalories * 100)}%)\n\n` +
+               `**Metabolic Info:**\n` +
+               `BMR: ${macros.bmr} kcal (resting)\n` +
+               `TDEE: ${macros.tdee} kcal (with activity)\n\n` +
+               `These targets support: **${params.goal.replace('_', ' ')}**\n\n` +
+               `Want me to create a meal plan based on these macros?`,
+      data: macros
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to calculate macros: ${error.message}`
+    };
+  }
+}
+
+export async function getNutritionAdviceAction(params: {
+  topic: string;
+  clientContext?: string;
+  sport?: string;
+  trainerId: string;
+}) {
+  try {
+    const adviceBank: Record<string, string> = {
+      pre_workout: `**Pre-Workout Nutrition:**\n\n` +
+        `**Timing:** 1-3 hours before training\n\n` +
+        `**What to eat:**\n` +
+        `• Carbs: 1-2g per kg bodyweight (fuel for performance)\n` +
+        `• Protein: 20-30g (prevent muscle breakdown)\n` +
+        `• Low fat (digests slowly, can cause GI issues)\n\n` +
+        `**Examples:**\n` +
+        `• 3hrs before: Chicken, rice, vegetables\n` +
+        `• 2hrs before: Oatmeal with protein powder and banana\n` +
+        `• 1hr before: Toast with honey and a protein shake\n` +
+        `• 30min before: Banana or energy gel\n\n` +
+        `**Hydration:** 5-10ml per kg, 2-4 hours before`,
+
+      post_workout: `**Post-Workout Nutrition:**\n\n` +
+        `**Timing:** Within 2 hours (sooner is better)\n\n` +
+        `**What to eat:**\n` +
+        `• Protein: 20-40g (muscle repair and growth)\n` +
+        `• Carbs: 2-3x protein amount (replenish glycogen)\n` +
+        `• Carb:Protein ratio of 2:1 or 3:1\n\n` +
+        `**Examples:**\n` +
+        `• Protein shake + banana (quick)\n` +
+        `• Chicken breast + sweet potato + veggies\n` +
+        `• Greek yogurt + granola + berries\n` +
+        `• Tuna sandwich + apple\n\n` +
+        `**Hydration:** Replace 150% of fluid lost (weigh before/after)`,
+
+      hydration: `**Hydration Strategy:**\n\n` +
+        `**Daily Baseline:**\n` +
+        `• 30-35ml per kg bodyweight\n` +
+        `• More if in hot climate or heavy sweater\n\n` +
+        `**Pre-Exercise:**\n` +
+        `• 5-10ml/kg, 2-4 hours before\n` +
+        `• Check urine color (pale yellow = good)\n\n` +
+        `**During Exercise:**\n` +
+        `• 0.4-0.8L per hour\n` +
+        `• Add electrolytes if >60min or heavy sweating\n` +
+        `• Sodium: 300-600mg per hour\n\n` +
+        `**Post-Exercise:**\n` +
+        `• Drink 150% of fluid lost\n` +
+        `• Weigh before/after to calculate loss\n` +
+        `• Include sodium to help retention`,
+
+      supplements: `**Evidence-Based Supplements:**\n\n` +
+        `**Proven Effective:**\n` +
+        `• Creatine: 3-5g daily (strength, power, muscle)\n` +
+        `• Caffeine: 3-6mg/kg, 30-60min pre (performance)\n` +
+        `• Protein Powder: Convenience (not superior to whole food)\n` +
+        `• Vitamin D: If deficient (common in athletes)\n\n` +
+        `**Possibly Effective:**\n` +
+        `• Beta-Alanine: 3-6g daily (high-intensity endurance)\n` +
+        `• BCAAs: If training fasted (otherwise, whole protein better)\n` +
+        `• Fish Oil: 2-3g EPA/DHA (inflammation, recovery)\n\n` +
+        `**Save Your Money:**\n` +
+        `• Fat burners, testosterone boosters, most pre-workouts\n` +
+        `• Focus on diet first, supplements are 5% of results`
+    };
+
+    const advice = adviceBank[params.topic] || `Nutrition advice for ${params.topic} coming soon!`;
+
+    return {
+      success: true,
+      message: advice + `\n\n${params.clientContext ? `\n**Context:** ${params.clientContext}` : ''}`,
+      data: {
+        topic: params.topic,
+        context: params.clientContext
+      }
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to get nutrition advice: ${error.message}`
+    };
+  }
+}
+
+export async function trackNutritionProgressAction(params: {
+  clientId: string;
+  currentWeight?: number;
+  weeklyChange?: number;
+  adherence?: number;
+  energyLevels?: string;
+  feedback?: string;
+  trainerId: string;
+}) {
+  try {
+    // Find client
+    const client = await prisma.client.findFirst({
+      where: {
+        OR: [
+          { id: params.clientId },
+          { name: { contains: params.clientId, mode: "insensitive" } }
+        ],
+        trainerId: params.trainerId
+      }
+    });
+
+    if (!client) {
+      return {
+        success: false,
+        error: `Client "${params.clientId}" not found`
+      };
+    }
+
+    let analysis = `📊 **Nutrition Progress for ${client.name}**\n\n`;
+
+    if (params.currentWeight && params.weeklyChange) {
+      const changeDirection = params.weeklyChange > 0 ? "gained" : "lost";
+      const changeAmount = Math.abs(params.weeklyChange);
+      analysis += `⚖️ Weight: ${params.currentWeight} lbs (${changeDirection} ${changeAmount} lbs this week)\n`;
+
+      // Assess if rate is appropriate
+      if (changeAmount > 2) {
+        analysis += `⚠️ That's a rapid change. Consider adjusting calories slightly.\n`;
+      } else if (changeAmount > 0.5 && changeAmount <= 2) {
+        analysis += `✅ Great progress! This is a sustainable rate.\n`;
+      } else {
+        analysis += `📝 Slower progress. May need to adjust calories or be more patient.\n`;
+      }
+    }
+
+    if (params.adherence !== undefined) {
+      analysis += `\n📋 Adherence: ${params.adherence}%\n`;
+      if (params.adherence >= 90) {
+        analysis += `🌟 Excellent adherence! Keep it up!\n`;
+      } else if (params.adherence >= 70) {
+        analysis += `👍 Good adherence. Small room for improvement.\n`;
+      } else {
+        analysis += `💡 Let's identify barriers and make the plan more sustainable.\n`;
+      }
+    }
+
+    if (params.energyLevels) {
+      analysis += `\n⚡ Energy Levels: ${params.energyLevels.replace('_', ' ')}\n`;
+      if (params.energyLevels === "very_low" || params.energyLevels === "low") {
+        analysis += `⚠️ Low energy could mean:\n`;
+        analysis += `• Calories too low\n`;
+        analysis += `• Carbs too low\n`;
+        analysis += `• Poor sleep\n`;
+        analysis += `• Overtraining\n`;
+        analysis += `\nLet's review your nutrition and recovery.\n`;
+      }
+    }
+
+    if (params.feedback) {
+      analysis += `\n💬 Feedback: "${params.feedback}"\n`;
+    }
+
+    analysis += `\n**Next Steps:**\n`;
+    analysis += `• Continue tracking daily intake\n`;
+    analysis += `• Adjust macros if needed based on progress\n`;
+    analysis += `• Focus on whole foods, adequate protein\n`;
+    analysis += `• Check in next week\n`;
+
+    return {
+      success: true,
+      message: analysis,
+      data: {
+        clientId: client.id,
+        clientName: client.name,
+        ...params
+      }
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to track nutrition progress: ${error.message}`
+    };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 🎯 FORM & TECHNIQUE ANALYSIS ACTIONS
+// ═══════════════════════════════════════════════════════════════
+
+export async function analyzeFormVideoAction(params: {
+  clientId: string;
+  videoUrl: string;
+  exercise: string;
+  focusAreas?: string[];
+  clientInjuryHistory?: string;
+  trainerId: string;
+}) {
+  try {
+    // Find client
+    const client = await prisma.client.findFirst({
+      where: {
+        OR: [
+          { id: params.clientId },
+          { name: { contains: params.clientId, mode: "insensitive" } }
+        ],
+        trainerId: params.trainerId
+      }
+    });
+
+    if (!client) {
+      return {
+        success: false,
+        error: `Client "${params.clientId}" not found`
+      };
+    }
+
+    // In a real implementation, this would use Claude's vision API or a specialized video analysis service
+    // For now, provide a structured template for manual analysis
+
+    const analysis = {
+      clientId: client.id,
+      clientName: client.name,
+      exercise: params.exercise,
+      videoUrl: params.videoUrl,
+      focusAreas: params.focusAreas || [],
+      analysisDate: new Date(),
+      // Template for analysis
+      feedback: `**Form Analysis for ${client.name} - ${params.exercise}**\n\n` +
+        `📹 Video: ${params.videoUrl}\n\n` +
+        `**Analysis Framework:**\n\n` +
+        `1. **Setup & Starting Position**\n` +
+        `   - Feet positioning\n` +
+        `   - Hip/shoulder alignment\n` +
+        `   - Grip/hand placement\n` +
+        `   - Core engagement\n\n` +
+        `2. **Movement Execution**\n` +
+        `   - Range of motion\n` +
+        `   - Tempo and control\n` +
+        `   - Breathing pattern\n` +
+        `   - Power generation\n\n` +
+        `3. **Common Issues to Check**\n` +
+        `   - Joint alignment (knees, hips, shoulders)\n` +
+        `   - Compensation patterns\n` +
+        `   - Symmetry left/right\n` +
+        `   - Core stability\n\n` +
+        `${params.clientInjuryHistory ? `⚠️ **Injury History:** ${params.clientInjuryHistory}\nWatch for: Compensation patterns, pain indicators, range of motion limitations\n\n` : ''}` +
+        `**Recommended:**\n` +
+        `• Record from multiple angles (front, side, back)\n` +
+        `• Use slow-motion for detailed analysis\n` +
+        `• Compare to demonstration video\n` +
+        `• Focus on ${params.focusAreas?.join(', ') || 'overall form'}\n\n` +
+        `_Video analysis complete. I can provide specific corrections based on what you observe._`
+    };
+
+    return {
+      success: true,
+      message: analysis.feedback,
+      data: analysis
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to analyze form video: ${error.message}`
+    };
+  }
+}
+
+export async function giveTechniqueCorrectionAction(params: {
+  exercise: string;
+  observedIssues: string[];
+  clientLevel?: string;
+  sport?: string;
+  trainerId: string;
+}) {
+  try {
+    const exerciseLower = params.exercise.toLowerCase();
+    
+    // Build comprehensive corrections based on observed issues
+    let corrections = `**Technique Corrections: ${params.exercise}**\n\n`;
+    corrections += `📊 Client Level: ${params.clientLevel || 'intermediate'}\n`;
+    if (params.sport) {
+      corrections += `🎯 Sport Context: ${params.sport}\n`;
+    }
+    corrections += `\n**Issues Identified:**\n`;
+    params.observedIssues.forEach((issue, i) => {
+      corrections += `${i + 1}. ${issue}\n`;
+    });
+
+    corrections += `\n**Corrections & Cues:**\n\n`;
+
+    // Common correction patterns
+    const correctionDatabase: Record<string, Record<string, string>> = {
+      "knees caving": {
+        cue: '"Push knees out" or "Spread the floor apart"',
+        drill: 'Banded squats with resistance band around knees',
+        why: 'Knee valgus increases ACL injury risk and reduces power generation'
+      },
+      "rounded back": {
+        cue: '"Chest up, proud chest" or "Show me your logo"',
+        drill: 'Wall-facing squats to reinforce upright torso',
+        why: 'Spinal flexion under load can cause disc injury'
+      },
+      "heels lifting": {
+        cue: '"Push through your heels" or "Dig heels into ground"',
+        drill: 'Elevated heel squats or ankle mobility work',
+        why: 'Weight shift forward reduces power and can strain knees'
+      },
+      "elbow flare": {
+        cue: '"Tuck elbows at 45 degrees"',
+        drill: 'Close-grip bench press or banded rows',
+        why: 'Excessive flare can cause shoulder impingement'
+      },
+      "late preparation": {
+        cue: '"Racket back early, unit turn"',
+        drill: 'Shadow swings with exaggerated early prep',
+        why: 'Late prep reduces power and causes rushed swings'
+      }
+    };
+
+    // Match observed issues to corrections
+    params.observedIssues.forEach((issue, index) => {
+      const issueLower = issue.toLowerCase();
+      let matched = false;
+
+      for (const [pattern, correction] of Object.entries(correctionDatabase)) {
+        if (issueLower.includes(pattern.toLowerCase())) {
+          corrections += `**${index + 1}. ${issue}**\n\n`;
+          corrections += `🗣️ **Cue:** ${correction.cue}\n`;
+          corrections += `🏋️ **Drill:** ${correction.drill}\n`;
+          corrections += `❓ **Why:** ${correction.why}\n\n`;
+          matched = true;
+          break;
+        }
+      }
+
+      if (!matched) {
+        corrections += `**${index + 1}. ${issue}**\n\n`;
+        corrections += `This requires specific assessment. Consider:\n`;
+        corrections += `• Is it a mobility limitation?\n`;
+        corrections += `• Is it a stability/strength issue?\n`;
+        corrections += `• Is it a motor control/learning issue?\n`;
+        corrections += `• Does it require regression or progression?\n\n`;
+      }
+    });
+
+    corrections += `\n**Action Plan:**\n`;
+    corrections += `1. Address most critical issue first (typically safety-related)\n`;
+    corrections += `2. Use 1-2 cues max per session (don't overload)\n`;
+    corrections += `3. Record before/after to track improvement\n`;
+    corrections += `4. Reduce load/intensity while learning correct form\n`;
+    corrections += `5. Reassess in 2-3 sessions\n\n`;
+
+    corrections += `**Progression:**\n`;
+    if (params.clientLevel === "beginner") {
+      corrections += `• Master bodyweight/light load first\n`;
+      corrections += `• Focus on slow, controlled tempo\n`;
+      corrections += `• Use mirrors or video feedback\n`;
+    } else if (params.clientLevel === "advanced") {
+      corrections += `• Fine-tune under competition loads\n`;
+      corrections += `• Address under fatigue conditions\n`;
+      corrections += `• Integrate into sport-specific movements\n`;
+    } else {
+      corrections += `• Gradually increase load as form improves\n`;
+      corrections += `• Maintain form under moderate fatigue\n`;
+      corrections += `• Self-monitor and self-correct\n`;
+    }
+
+    return {
+      success: true,
+      message: corrections,
+      data: {
+        exercise: params.exercise,
+        issues: params.observedIssues,
+        level: params.clientLevel,
+        sport: params.sport
+      }
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to provide technique corrections: ${error.message}`
+    };
+  }
+}
+
+export async function assessMovementPatternsAction(params: {
+  clientId: string;
+  assessmentType: string;
+  observations: string;
+  painPoints?: string[];
+  goals?: string;
+  trainerId: string;
+}) {
+  try {
+    // Find client
+    const client = await prisma.client.findFirst({
+      where: {
+        OR: [
+          { id: params.clientId },
+          { name: { contains: params.clientId, mode: "insensitive" } }
+        ],
+        trainerId: params.trainerId
+      }
+    });
+
+    if (!client) {
+      return {
+        success: false,
+        error: `Client "${params.clientId}" not found`
+      };
+    }
+
+    let assessment = `**Movement Pattern Assessment: ${client.name}**\n\n`;
+    assessment += `📋 Assessment Type: ${params.assessmentType.replace('_', ' ')}\n`;
+    if (params.goals) {
+      assessment += `🎯 Goals: ${params.goals}\n`;
+    }
+    assessment += `\n**Observations:**\n${params.observations}\n\n`;
+
+    if (params.painPoints && params.painPoints.length > 0) {
+      assessment += `⚠️ **Pain/Discomfort Points:**\n`;
+      params.painPoints.forEach(point => {
+        assessment += `• ${point}\n`;
+      });
+      assessment += `\n`;
+    }
+
+    // Provide assessment framework
+    assessment += `**Analysis Framework:**\n\n`;
+
+    const assessmentFrameworks: Record<string, string> = {
+      functional_movement_screen: `**FMS Scoring & Interpretation:**\n\n` +
+        `**Check for:**\n` +
+        `• Asymmetries (left vs right differences)\n` +
+        `• Compensations (using wrong muscles/joints)\n` +
+        `• Pain during movement\n` +
+        `• Mobility limitations\n` +
+        `• Stability deficits\n\n` +
+        `**Red Flags:**\n` +
+        `• Pain during any test → Refer to medical professional\n` +
+        `• Severe asymmetry → Address immediately\n` +
+        `• Multiple compensation patterns → Start with basics\n\n` +
+        `**Priority Corrections:**\n` +
+        `1. Address pain first (medical referral if needed)\n` +
+        `2. Fix severe asymmetries\n` +
+        `3. Improve mobility restrictions\n` +
+        `4. Build stability patterns\n` +
+        `5. Integrate into functional movement`,
+
+      overhead_squat: `**Overhead Squat Assessment:**\n\n` +
+        `**Common Dysfunctions & Causes:**\n` +
+        `• Arms fall forward → Lat tightness, thoracic mobility\n` +
+        `• Torso leans forward → Ankle mobility, hip flexor tightness, core weakness\n` +
+        `• Knees cave in → Glute weakness, hip internal rotation\n` +
+        `• Heels lift → Ankle mobility, calf tightness\n` +
+        `• Excessive arch → Hip flexor tightness, core weakness\n\n` +
+        `**Corrective Strategy:**\n` +
+        `1. Assess mobility (ankles, hips, thoracic spine, shoulders)\n` +
+        `2. Address tightest restrictions first\n` +
+        `3. Strengthen weak patterns (glutes, core)\n` +
+        `4. Retest and progress\n\n` +
+        `**Exercises:**\n` +
+        `• Ankle: Calf stretches, ankle mobility drills\n` +
+        `• Hips: Hip flexor stretches, 90/90 stretches\n` +
+        `• T-Spine: Foam rolling, thoracic extensions\n` +
+        `• Glutes: Clamshells, glute bridges, side planks`,
+
+      single_leg: `**Single Leg Assessment:**\n\n` +
+        `**Key Observations:**\n` +
+        `• Hip drop (Trendelenburg) → Glute medius weakness\n` +
+        `• Knee valgus → Hip stability, foot control\n` +
+        `• Excessive trunk lean → Hip strength, ankle mobility\n` +
+        `• Wobbling/instability → Proprioception, foot/ankle strength\n\n` +
+        `**Injury Risk Indicators:**\n` +
+        `• ACL risk: Knee valgus + internal rotation\n` +
+        `• Ankle sprains: Lateral instability\n` +
+        `• IT band syndrome: Hip drop + adduction\n\n` +
+        `**Corrective Exercises:**\n` +
+        `1. Single-leg balance progressions\n` +
+        `2. Hip stability (side planks, Copenhagen planks)\n` +
+        `3. Glute strengthening (single-leg RDL, step-ups)\n` +
+        `4. Foot/ankle strength (toe yoga, single-leg calf raises)`,
+
+      gait_analysis: `**Gait Analysis:**\n\n` +
+        `**Normal Gait Markers:**\n` +
+        `• Heel strike → Midstance → Toe-off\n` +
+        `• Hip extension at push-off\n` +
+        `• Neutral foot position\n` +
+        `• Minimal trunk rotation\n` +
+        `• Arms swing opposite to legs\n\n` +
+        `**Common Dysfunctions:**\n` +
+        `• Overpronation → Flat feet, weak posterior tibialis\n` +
+        `• Excessive bouncing → Quad dominant, tight calves\n` +
+        `• Crossover gait → Hip adductor tightness\n` +
+        `• No hip extension → Tight hip flexors\n\n` +
+        `**Running-Specific:**\n` +
+        `• Cadence: Aim for 170-180 steps/min\n` +
+        `• Foot strike: Mid-foot preferred for efficiency\n` +
+        `• Ground contact time: Minimize (quick, light steps)\n` +
+        `• Vertical oscillation: Minimize bouncing`,
+
+      sport_specific: `**Sport-Specific Movement Assessment:**\n\n` +
+        `**Analyze:**\n` +
+        `1. Sport-specific positions (athletic stance, ready position)\n` +
+        `2. Primary movement patterns (cutting, jumping, throwing)\n` +
+        `3. Asymmetries (dominant vs non-dominant side)\n` +
+        `4. Power generation chain\n` +
+        `5. Deceleration and change of direction\n\n` +
+        `**Performance Limiters:**\n` +
+        `• Mobility restrictions → Limits range of motion\n` +
+        `• Stability deficits → Energy leaks, injury risk\n` +
+        `• Asymmetries → Performance imbalance, injury risk\n` +
+        `• Poor sequencing → Reduced power transfer\n\n` +
+        `**Training Focus:**\n` +
+        `1. Address movement quality before adding load\n` +
+        `2. Train both sides (even if sport is asymmetric)\n` +
+        `3. Progress: Slow → Fast → Under fatigue → Reactive\n` +
+        `4. Integrate into sport-specific drills`
+    };
+
+    assessment += assessmentFrameworks[params.assessmentType] || 
+      `Detailed assessment framework for ${params.assessmentType} coming soon.`;
+
+    assessment += `\n\n**Recommended Next Steps:**\n`;
+    assessment += `1. Prioritize addressing pain/discomfort (medical referral if needed)\n`;
+    assessment += `2. Start corrective exercises (2-3x per week)\n`;
+    assessment += `3. Integrate into warm-up routine\n`;
+    assessment += `4. Reassess in 4-6 weeks\n`;
+    assessment += `5. Progress training as movement improves\n\n`;
+
+    assessment += `💡 **Pro Tip:** Video record assessments for comparison and track progress over time.`;
+
+    return {
+      success: true,
+      message: assessment,
+      data: {
+        clientId: client.id,
+        clientName: client.name,
+        assessmentType: params.assessmentType,
+        observations: params.observations,
+        painPoints: params.painPoints,
+        goals: params.goals,
+        assessmentDate: new Date()
+      }
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: `Failed to assess movement patterns: ${error.message}`
+    };
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════

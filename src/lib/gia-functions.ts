@@ -540,6 +540,309 @@ export const giaFunctions = [
       required: ["message"]
     }
   },
+  {
+    name: "send_bulk_sms",
+    description: "Send SMS/text messages to multiple clients at once. Great for announcements, reminders, or group updates.",
+    input_schema: {
+      type: "object",
+      properties: {
+        filter: {
+          type: "string",
+          enum: ["all", "active", "inactive", "unpaid", "specific"],
+          description: "Which clients to message: 'all' (everyone), 'active' (active clients), 'inactive' (inactive clients), 'unpaid' (clients with unpaid invoices), 'specific' (specific list)"
+        },
+        clientNames: {
+          type: "array",
+          items: { type: "string" },
+          description: "Specific client names (only if filter is 'specific'). Example: ['John Smith', 'Jane Doe']"
+        },
+        message: {
+          type: "string",
+          description: "The message to send to all recipients"
+        },
+        personalizeWithName: {
+          type: "boolean",
+          description: "If true, adds 'Hi [Name],' to the start of each message (default: true)"
+        }
+      },
+      required: ["filter", "message"]
+    }
+  },
+  {
+    name: "send_bulk_whatsapp",
+    description: "Send WhatsApp messages to multiple clients at once (FREE!). Perfect for announcements, photos, videos, or voice messages to groups.",
+    input_schema: {
+      type: "object",
+      properties: {
+        filter: {
+          type: "string",
+          enum: ["all", "active", "inactive", "unpaid", "specific"],
+          description: "Which clients to message: 'all' (everyone), 'active' (active clients), 'inactive' (inactive clients), 'unpaid' (clients with unpaid invoices), 'specific' (specific list)"
+        },
+        clientNames: {
+          type: "array",
+          items: { type: "string" },
+          description: "Specific client names (only if filter is 'specific'). Example: ['John Smith', 'Jane Doe']"
+        },
+        message: {
+          type: "string",
+          description: "The message to send to all recipients"
+        },
+        mediaUrl: {
+          type: "string",
+          description: "URL of image/video/audio to send with the message (optional)"
+        },
+        personalizeWithName: {
+          type: "boolean",
+          description: "If true, adds 'Hi [Name],' to the start of each message (default: true)"
+        }
+      },
+      required: ["filter", "message"]
+    }
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🍎 NUTRITION FUNCTIONS
+  // ═══════════════════════════════════════════════════════════════
+  {
+    name: "create_meal_plan",
+    description: "Create a personalized meal plan for a client based on their goals, dietary preferences, and activity level",
+    input_schema: {
+      type: "object",
+      properties: {
+        clientId: {
+          type: "string",
+          description: "Client ID or name"
+        },
+        goal: {
+          type: "string",
+          enum: ["muscle_gain", "fat_loss", "maintenance", "performance", "general_health"],
+          description: "Primary nutrition goal"
+        },
+        duration: {
+          type: "number",
+          description: "Plan duration in weeks (default: 4)"
+        },
+        dietaryRestrictions: {
+          type: "array",
+          items: { type: "string" },
+          description: "Dietary restrictions (vegetarian, vegan, gluten-free, dairy-free, etc.)"
+        },
+        allergies: {
+          type: "array",
+          items: { type: "string" },
+          description: "Food allergies"
+        },
+        mealsPerDay: {
+          type: "number",
+          description: "Number of meals per day (default: 3)"
+        },
+        preferences: {
+          type: "string",
+          description: "Any food preferences or dislikes"
+        }
+      },
+      required: ["clientId", "goal"]
+    }
+  },
+  {
+    name: "calculate_macros",
+    description: "Calculate personalized macronutrient targets (protein, carbs, fats) for a client",
+    input_schema: {
+      type: "object",
+      properties: {
+        clientId: {
+          type: "string",
+          description: "Client ID or name"
+        },
+        weight: {
+          type: "number",
+          description: "Current body weight in lbs or kg"
+        },
+        heightFeet: {
+          type: "number",
+          description: "Height in feet (e.g., 5)"
+        },
+        heightInches: {
+          type: "number",
+          description: "Height in inches (e.g., 10)"
+        },
+        age: {
+          type: "number",
+          description: "Age in years"
+        },
+        sex: {
+          type: "string",
+          enum: ["male", "female"],
+          description: "Biological sex"
+        },
+        activityLevel: {
+          type: "string",
+          enum: ["sedentary", "lightly_active", "moderately_active", "very_active", "extremely_active"],
+          description: "Activity level: sedentary (1-2 days/week), lightly active (3-4), moderately (4-5), very (6-7), extremely (2x/day)"
+        },
+        goal: {
+          type: "string",
+          enum: ["muscle_gain", "fat_loss", "maintenance"],
+          description: "Nutrition goal"
+        }
+      },
+      required: ["clientId", "weight", "age", "sex", "activityLevel", "goal"]
+    }
+  },
+  {
+    name: "get_nutrition_advice",
+    description: "Get evidence-based nutrition advice for specific situations (pre-workout, post-workout, competition prep, recovery, etc.)",
+    input_schema: {
+      type: "object",
+      properties: {
+        topic: {
+          type: "string",
+          enum: ["pre_workout", "post_workout", "hydration", "supplements", "meal_timing", "competition_prep", "recovery", "weight_management", "energy_levels"],
+          description: "Nutrition topic to get advice on"
+        },
+        clientContext: {
+          type: "string",
+          description: "Any relevant client context (sport, goals, current situation)"
+        },
+        sport: {
+          type: "string",
+          description: "Client's sport or activity (optional)"
+        }
+      },
+      required: ["topic"]
+    }
+  },
+  {
+    name: "track_nutrition_progress",
+    description: "Track and analyze a client's nutrition progress, adherence, and make adjustments",
+    input_schema: {
+      type: "object",
+      properties: {
+        clientId: {
+          type: "string",
+          description: "Client ID or name"
+        },
+        currentWeight: {
+          type: "number",
+          description: "Current weight"
+        },
+        weeklyChange: {
+          type: "number",
+          description: "Weight change this week (positive = gain, negative = loss)"
+        },
+        adherence: {
+          type: "number",
+          description: "Adherence percentage (0-100)"
+        },
+        energyLevels: {
+          type: "string",
+          enum: ["very_low", "low", "normal", "high", "very_high"],
+          description: "Client's energy levels"
+        },
+        feedback: {
+          type: "string",
+          description: "Client's feedback or concerns"
+        }
+      },
+      required: ["clientId"]
+    }
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🎯 FORM & TECHNIQUE ANALYSIS FUNCTIONS
+  // ═══════════════════════════════════════════════════════════════
+  {
+    name: "analyze_form_video",
+    description: "Analyze a client's exercise form or technique from a video URL and provide detailed corrections",
+    input_schema: {
+      type: "object",
+      properties: {
+        clientId: {
+          type: "string",
+          description: "Client ID or name"
+        },
+        videoUrl: {
+          type: "string",
+          description: "URL of the video to analyze (YouTube, Vimeo, or direct video link)"
+        },
+        exercise: {
+          type: "string",
+          description: "Type of exercise or movement being performed (e.g., squat, deadlift, tennis serve, basketball shot)"
+        },
+        focusAreas: {
+          type: "array",
+          items: { type: "string" },
+          description: "Specific areas to focus on (optional): posture, alignment, timing, power generation, etc."
+        },
+        clientInjuryHistory: {
+          type: "string",
+          description: "Any relevant injury history to consider"
+        }
+      },
+      required: ["clientId", "videoUrl", "exercise"]
+    }
+  },
+  {
+    name: "give_technique_corrections",
+    description: "Provide specific technique corrections and cues for an exercise or sport skill",
+    input_schema: {
+      type: "object",
+      properties: {
+        exercise: {
+          type: "string",
+          description: "Exercise or skill name (e.g., 'squat', 'tennis serve', 'basketball free throw')"
+        },
+        observedIssues: {
+          type: "array",
+          items: { type: "string" },
+          description: "List of issues observed (e.g., 'knees caving in', 'rounded back', 'late racket preparation')"
+        },
+        clientLevel: {
+          type: "string",
+          enum: ["beginner", "intermediate", "advanced"],
+          description: "Client's skill level"
+        },
+        sport: {
+          type: "string",
+          description: "Sport/activity context (optional)"
+        }
+      },
+      required: ["exercise", "observedIssues"]
+    }
+  },
+  {
+    name: "assess_movement_patterns",
+    description: "Assess overall movement patterns and identify dysfunction, compensation, or injury risk",
+    input_schema: {
+      type: "object",
+      properties: {
+        clientId: {
+          type: "string",
+          description: "Client ID or name"
+        },
+        assessmentType: {
+          type: "string",
+          enum: ["functional_movement_screen", "overhead_squat", "single_leg", "gait_analysis", "sport_specific"],
+          description: "Type of movement assessment"
+        },
+        observations: {
+          type: "string",
+          description: "Describe what you observed during the assessment"
+        },
+        painPoints: {
+          type: "array",
+          items: { type: "string" },
+          description: "Any areas of pain or discomfort"
+        },
+        goals: {
+          type: "string",
+          description: "Client's goals or sport requirements"
+        }
+      },
+      required: ["clientId", "assessmentType", "observations"]
+    }
+  },
 
   // ═══════════════════════════════════════════════════════════════
   // 🤖 AI PERSONA FUNCTIONS

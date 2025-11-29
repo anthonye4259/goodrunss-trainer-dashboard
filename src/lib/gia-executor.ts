@@ -14,8 +14,17 @@ import {
   sendMessageAction,
   sendSmsAction,
   sendWhatsAppAction,
+  sendBulkSmsAction,
+  sendBulkWhatsAppAction,
   generateWorkoutPlanAction,
-  getPersonaEarningsAction
+  getPersonaEarningsAction,
+  createMealPlanAction,
+  calculateMacrosAction,
+  getNutritionAdviceAction,
+  trackNutritionProgressAction,
+  analyzeFormVideoAction,
+  giveTechniqueCorrectionAction,
+  assessMovementPatternsAction
 } from "./gia-actions";
 
 export async function executeGIAFunction(
@@ -92,11 +101,17 @@ export async function executeGIAFunction(
       case "send_whatsapp":
         return await sendWhatsAppAction(paramsWithTrainer);
       
+      case "send_bulk_sms":
+        return await sendBulkSmsAction(paramsWithTrainer);
+      
+      case "send_bulk_whatsapp":
+        return await sendBulkWhatsAppAction(paramsWithTrainer);
+      
       case "send_bulk_message":
-        // TODO: Implement
+        // TODO: Implement (email bulk messaging)
         return {
           success: false,
-          error: "Send bulk message not yet implemented"
+          error: "Send bulk message (email) not yet implemented"
         };
       
       case "get_recent_messages":
@@ -156,6 +171,29 @@ export async function executeGIAFunction(
           success: false,
           error: "Get persona stats not yet implemented"
         };
+
+      // Nutrition functions
+      case "create_meal_plan":
+        return await createMealPlanAction(paramsWithTrainer);
+      
+      case "calculate_macros":
+        return await calculateMacrosAction(paramsWithTrainer);
+      
+      case "get_nutrition_advice":
+        return await getNutritionAdviceAction(paramsWithTrainer);
+      
+      case "track_nutrition_progress":
+        return await trackNutritionProgressAction(paramsWithTrainer);
+
+      // Form & Technique Analysis functions
+      case "analyze_form_video":
+        return await analyzeFormVideoAction(paramsWithTrainer);
+      
+      case "give_technique_corrections":
+        return await giveTechniqueCorrectionAction(paramsWithTrainer);
+      
+      case "assess_movement_patterns":
+        return await assessMovementPatternsAction(paramsWithTrainer);
 
       default:
         return {
