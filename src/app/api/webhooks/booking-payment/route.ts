@@ -37,9 +37,9 @@ export async function POST(req: Request) {
         const expiresAt = new Date()
         expiresAt.setDate(expiresAt.getDate() + parseInt(durationDays))
 
-        // Create client package
+        // Create client class package
         await prisma.$queryRaw`
-          INSERT INTO client_packages (
+          INSERT INTO client_class_packages (
             client_email, trainer_id, package_id, package_name, package_type,
             total_credits, remaining_credits, expires_at, stripe_payment_intent_id
           )

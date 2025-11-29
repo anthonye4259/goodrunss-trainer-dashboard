@@ -91,7 +91,7 @@ export async function POST(
     if (usePackage && packageId) {
       // Verify client has the package and it's valid
       const clientPackage: any = await prisma.$queryRawUnsafe(`
-        SELECT * FROM client_packages
+        SELECT * FROM client_class_packages
         WHERE id = '${packageId}' AND client_email = '${clientEmail}'
           AND is_active = true
           AND (expires_at IS NULL OR expires_at > NOW())
@@ -126,7 +126,7 @@ export async function POST(
       // Deduct credit (if credit-based)
       if (pkg.package_type === 'credit_based') {
         await prisma.$queryRaw`
-          UPDATE client_packages
+          UPDATE client_class_packages
           SET remaining_credits = remaining_credits - 1
           WHERE id = ${packageId}
         `
@@ -134,7 +134,7 @@ export async function POST(
 
       // Track usage
       await prisma.$queryRaw`
-        INSERT INTO package_usage (client_package_id, class_booking_id, class_id)
+        INSERT INTO class_package_usage (client_package_id, class_booking_id, class_id)
         VALUES (${packageId}, ${bookingId}, ${classId})
       `
 

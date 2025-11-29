@@ -23,7 +23,7 @@ export async function GET(req: Request) {
         cp.*,
         pkg.name as package_name,
         pkg.description as package_description
-      FROM client_packages cp
+      FROM client_class_packages cp
       JOIN class_packages pkg ON cp.package_id = pkg.id
       WHERE cp.client_email = '${email}'
         AND cp.is_active = true
