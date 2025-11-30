@@ -12,13 +12,13 @@ export async function GET() {
         }
 
         // Find or create trainer profile
-        let profile = await prisma.trainer_profiles.findUnique({
+        let profile = await prisma.trainerProfile.findUnique({
             where: { userId }
         })
 
         if (!profile) {
             // Create default profile if it doesn't exist
-            profile = await prisma.trainer_profiles.create({
+            profile = await prisma.trainerProfile.create({
                 data: {
                     userId,
                     tier: "MEMBER",

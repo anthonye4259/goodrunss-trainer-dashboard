@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     if (sport) where.sportCategory = sport
 
     // Get programs
-    const programs = await prisma.gia_programs.findMany({
+    const programs = await prisma.giaProgram.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take: 50

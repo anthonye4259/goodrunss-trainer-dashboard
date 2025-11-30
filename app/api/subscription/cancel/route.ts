@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Log cancellation to history
-    await prisma.subscription_history.create({
+    await prisma.subscriptionHistory.create({
       data: {
         id: crypto.randomUUID(),
         userId: user.id,

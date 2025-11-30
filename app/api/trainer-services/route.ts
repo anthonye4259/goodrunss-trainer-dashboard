@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch trainer's services from database
-    const services = await prisma.trainer_services.findMany({
+    const services = await prisma.trainerService.findMany({
       where: {
         trainerId: trainer.id,
       },
@@ -53,13 +53,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Delete existing services
-    await prisma.trainer_services.deleteMany({
+    await prisma.trainerService.deleteMany({
       where: { trainerId: trainer.id },
     })
 
     // Create new services
     if (services.length > 0) {
-      await prisma.trainer_services.createMany({
+      await prisma.trainerService.createMany({
         data: services.map((service: any) => ({
           id: crypto.randomUUID(),
           trainerId: trainer.id,
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch and return the updated services
-    const updatedServices = await prisma.trainer_services.findMany({
+    const updatedServices = await prisma.trainerService.findMany({
       where: { trainerId: trainer.id },
       orderBy: { createdAt: 'desc' },
     })

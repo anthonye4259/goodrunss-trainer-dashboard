@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create program
-    const program = await prisma.gia_programs.create({
+    const program = await prisma.giaProgram.create({
       data: {
         id: nanoid(),
         instructorId: dbUser.id,

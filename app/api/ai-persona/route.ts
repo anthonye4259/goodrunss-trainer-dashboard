@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get AI persona from ai_personas table
-    const persona = await prisma.ai_personas.findFirst({
+    const persona = await prisma.aiPersona.findFirst({
       where: { trainerId: trainer.id }
     })
 
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     } = body
 
     // Check if persona already exists
-    const existingPersona = await prisma.ai_personas.findFirst({
+    const existingPersona = await prisma.aiPersona.findFirst({
       where: { trainerId: trainer.id }
     })
 
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     if (existingPersona) {
       // Update existing persona
-      persona = await prisma.ai_personas.update({
+      persona = await prisma.aiPersona.update({
         where: { id: existingPersona.id },
         data: {
           name: name || existingPersona.name,
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
       })
     } else {
       // Create new persona
-      persona = await prisma.ai_personas.create({
+      persona = await prisma.aiPersona.create({
         data: {
           id: crypto.randomUUID(),
           trainerId: trainer.id,
@@ -147,7 +147,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete custom persona
-    await prisma.ai_personas.deleteMany({
+    await prisma.aiPersona.deleteMany({
       where: { trainerId: trainer.id }
     })
 

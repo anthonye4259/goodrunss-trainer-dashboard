@@ -9,7 +9,7 @@ export async function GET(
     const { trainerId } = await params
     
     // Fetch trainer's services from database
-    const services = await prisma.trainer_services.findMany({
+    const services = await prisma.trainerService.findMany({
       where: {
         trainerId,
         isActive: true,
@@ -55,13 +55,13 @@ export async function POST(
     }
 
     // Delete existing services
-    await prisma.trainer_services.deleteMany({
+    await prisma.trainerService.deleteMany({
       where: { trainerId },
     })
 
     // Create new services
     if (services.length > 0) {
-      await prisma.trainer_services.createMany({
+      await prisma.trainerService.createMany({
         data: services.map((service: any) => ({
           id: crypto.randomUUID(),
           trainerId,

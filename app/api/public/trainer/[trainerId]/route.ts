@@ -31,7 +31,7 @@ export async function GET(
     }
 
     // Fetch real services from database
-    let services = await prisma.trainer_services.findMany({
+    let services = await prisma.trainerService.findMany({
       where: {
         trainerId,
         isActive: true,

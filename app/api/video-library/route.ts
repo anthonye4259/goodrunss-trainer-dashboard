@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get videos
-    const videos = await prisma.exercise_videos.findMany({
+    const videos = await prisma.exerciseVideo.findMany({
       where,
       orderBy: { created_at: 'desc' }
     })
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create video record
-    const video = await prisma.exercise_videos.create({
+    const video = await prisma.exerciseVideo.create({
       data: {
         trainer_id: trainer.id,
         title,
@@ -147,7 +147,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Verify ownership
-    const existingVideo = await prisma.exercise_videos.findFirst({
+    const existingVideo = await prisma.exerciseVideo.findFirst({
       where: {
         id: videoId,
         trainer_id: trainer.id
@@ -176,7 +176,7 @@ export async function PATCH(req: NextRequest) {
     if (updates.isPublic !== undefined) dbUpdates.is_public = updates.isPublic
 
     // Update video
-    const video = await prisma.exercise_videos.update({
+    const video = await prisma.exerciseVideo.update({
       where: { id: videoId },
       data: {
         ...dbUpdates,
@@ -220,7 +220,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Verify ownership
-    const existingVideo = await prisma.exercise_videos.findFirst({
+    const existingVideo = await prisma.exerciseVideo.findFirst({
       where: {
         id: videoId,
         trainer_id: trainer.id
@@ -235,7 +235,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete video
-    await prisma.exercise_videos.delete({
+    await prisma.exerciseVideo.delete({
       where: { id: videoId }
     })
 
