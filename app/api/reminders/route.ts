@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         }
       },
       include: {
-        clients: {
+        client: {
           select: {
             id: true,
             name: true,
@@ -107,7 +107,7 @@ async function sendAutomaticReminders(trainer: any) {
         }
       },
       include: {
-        clients: true
+        client: true
       }
     })
 
@@ -115,7 +115,7 @@ async function sendAutomaticReminders(trainer: any) {
     let sent24Hour = 0
 
     for (const session of sessionsNeedingReminders) {
-      if (!session.clients?.email) continue
+      if (!session.client?.email) continue
 
       const timeUntil = session.scheduledAt.getTime() - now.getTime()
       const hoursUntil = timeUntil / (1000 * 60 * 60)
@@ -123,10 +123,10 @@ async function sendAutomaticReminders(trainer: any) {
       // 1-hour reminder
       if (hoursUntil <= 1.5 && hoursUntil >= 0.5) {
         await sendEmail({
-          to: session.clients.email,
+          to: session.client.email,
           subject: `Reminder: Session in ${Math.round(hoursUntil * 60)} minutes! ⏰`,
           html: `
-            <h2>Hi ${session.clients.name}!</h2>
+            <h2>Hi ${session.client.name}!</h2>
             <p><strong>Your session is coming up soon!</strong></p>
             <p><strong>Time:</strong> ${session.scheduledAt.toLocaleTimeString()}<br>
             <strong>Duration:</strong> ${session.duration} minutes<br>
@@ -134,17 +134,17 @@ async function sendAutomaticReminders(trainer: any) {
             <p>See you soon! 💪</p>
             <p>${trainer.name}</p>
           `,
-          text: `Hi ${session.clients.name}! Your session is in ${Math.round(hoursUntil * 60)} minutes at ${session.scheduledAt.toLocaleTimeString()}. See you soon!`
+          text: `Hi ${session.client.name}! Your session is in ${Math.round(hoursUntil * 60)} minutes at ${session.scheduledAt.toLocaleTimeString()}. See you soon!`
         })
         sentOneHour++
       }
       // 24-hour reminder
       else if (hoursUntil <= 25 && hoursUntil >= 20) {
         await sendEmail({
-          to: session.clients.email,
+          to: session.client.email,
           subject: `Tomorrow: Training Session with ${trainer.name} 📅`,
           html: `
-            <h2>Hi ${session.clients.name}!</h2>
+            <h2>Hi ${session.client.name}!</h2>
             <p><strong>Reminder: You have a session tomorrow!</strong></p>
             <p><strong>Date:</strong> ${session.scheduledAt.toLocaleDateString()}<br>
             <strong>Time:</strong> ${session.scheduledAt.toLocaleTimeString()}<br>
@@ -152,7 +152,7 @@ async function sendAutomaticReminders(trainer: any) {
             <p>Looking forward to it! 🎯</p>
             <p>${trainer.name}</p>
           `,
-          text: `Hi ${session.clients.name}! Reminder: Session tomorrow at ${session.scheduledAt.toLocaleTimeString()}. Looking forward to it!`
+          text: `Hi ${session.client.name}! Reminder: Session tomorrow at ${session.scheduledAt.toLocaleTimeString()}. Looking forward to it!`
         })
         sent24Hour++
       }
@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
         trainerId: trainer.id
       },
       include: {
-        clients: true
+        client: true
       }
     })
 
@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
 
-    if (!session.clients?.email) {
+    if (!session.client?.email) {
       return NextResponse.json({ error: 'Client has no email' }, { status: 400 })
     }
 
@@ -215,16 +215,16 @@ export async function POST(request: NextRequest) {
     const message = customMessage || `Reminder: You have a session ${hoursUntil > 0 ? `in ${hoursUntil} hours` : 'coming up'}!`
 
     await sendEmail({
-      to: session.clients.email,
+      to: session.client.email,
       subject: `Session Reminder from ${trainer.name}`,
-      html: `<h2>Hi ${session.clients.name}!</h2><p>${message}</p><p><strong>Time:</strong> ${session.scheduledAt.toLocaleString()}<br><strong>Duration:</strong> ${session.duration} minutes</p><p>${trainer.name}</p>`,
-      text: `Hi ${session.clients.name}! ${message} Time: ${session.scheduledAt.toLocaleString()}`
+      html: `<h2>Hi ${session.client.name}!</h2><p>${message}</p><p><strong>Time:</strong> ${session.scheduledAt.toLocaleString()}<br><strong>Duration:</strong> ${session.duration} minutes</p><p>${trainer.name}</p>`,
+      text: `Hi ${session.client.name}! ${message} Time: ${session.scheduledAt.toLocaleString()}`
     })
 
     return NextResponse.json({
       success: true,
       message: 'Manual reminder sent',
-      to: session.clients.email
+      to: session.client.email
     })
   } catch (error) {
     console.error('Error creating reminder:', error)

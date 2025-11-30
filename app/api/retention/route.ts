@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
         type: 'RE_ENGAGE',
         title: `Re-engage ${atRiskClients.length} at-risk clients`,
         action: 'Send personalized check-in messages',
-        clients: atRiskClients.slice(0, 5).map(c => c.name)
+        client: atRiskClients.slice(0, 5).map(c => c.name)
       })
     }
     
@@ -135,7 +135,7 @@ export async function GET(req: NextRequest) {
         type: 'WIN_BACK',
         title: `Win back ${churnedClients.length} churned clients`,
         action: 'Send special comeback offer',
-        clients: churnedClients.slice(0, 5).map(c => c.name)
+        client: churnedClients.slice(0, 5).map(c => c.name)
       })
     }
     
@@ -156,7 +156,7 @@ export async function GET(req: NextRequest) {
         churnRate: Math.round(churnRate),
         avgSessionsPerClient: Math.round(avgSessionsPerClient * 10) / 10
       },
-      clients: {
+      client: {
         total: totalClients,
         active: activeClients.length,
         atRisk: atRiskClients.length,

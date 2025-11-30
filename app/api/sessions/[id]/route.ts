@@ -27,7 +27,7 @@ export async function GET(
         trainerId: trainer.id,
       },
       include: {
-        clients: true,
+        client: true,
       },
     })
 
@@ -89,7 +89,7 @@ export async function PUT(
         ...(status && { status }),
       },
       include: {
-        clients: {
+        client: {
           select: {
             id: true,
             name: true,

@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
         }
       },
       include: {
-        clients: {
+        client: {
           select: {
             id: true,
             name: true,
@@ -60,9 +60,9 @@ export async function GET(req: NextRequest) {
               {
                 id: session1.id,
                 title: session1.title,
-                client: session1.clients?.name || 'Unknown',
+                client: session1.client?.name || 'Unknown',
                 clientId: session1.clientId,
-                clientEmail: session1.clients?.email,
+                clientEmail: session1.client?.email,
                 scheduledAt: session1.scheduledAt,
                 duration: session1.duration,
                 location: session1.location
@@ -70,9 +70,9 @@ export async function GET(req: NextRequest) {
               {
                 id: session2.id,
                 title: session2.title,
-                client: session2.clients?.name || 'Unknown',
+                client: session2.client?.name || 'Unknown',
                 clientId: session2.clientId,
-                clientEmail: session2.clients?.email,
+                clientEmail: session2.client?.email,
                 scheduledAt: session2.scheduledAt,
                 duration: session2.duration,
                 location: session2.location
@@ -107,13 +107,13 @@ export async function GET(req: NextRequest) {
           sessions: [
             {
               id: session1.id,
-              client: session1.clients?.name,
+              client: session1.client?.name,
               scheduledAt: session1.scheduledAt,
               duration: session1.duration
             },
             {
               id: session2.id,
-              client: session2.clients?.name,
+              client: session2.client?.name,
               scheduledAt: session2.scheduledAt,
               duration: session2.duration
             }
@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
         trainerId: trainer.id
       },
       include: {
-        clients: true
+        client: true
       }
     })
 
@@ -181,9 +181,9 @@ export async function POST(req: NextRequest) {
       })
 
       // Notify client
-      if (session.clients?.email) {
+      if (session.client?.email) {
         await sendEmail({
-          to: session.clients.email,
+          to: session.client.email,
           subject: 'Session Cancelled',
           html: `<h2>Session Cancelled</h2><p>Your session on ${session.scheduledAt.toLocaleString()} has been cancelled due to a scheduling conflict.</p><p>We apologize for the inconvenience. Please contact us to reschedule.</p>`,
           text: `Your session on ${session.scheduledAt.toLocaleString()} has been cancelled. Please contact us to reschedule.`
@@ -208,9 +208,9 @@ export async function POST(req: NextRequest) {
       })
 
       // Notify client
-      if (session.clients?.email) {
+      if (session.client?.email) {
         await sendEmail({
-          to: session.clients.email,
+          to: session.client.email,
           subject: 'Session Rescheduled',
           html: `<h2>Session Rescheduled</h2><p>Your session has been rescheduled to:</p><p><strong>${newDateTime.toLocaleString()}</strong></p><p>See you then!</p>`,
           text: `Your session has been rescheduled to ${newDateTime.toLocaleString()}`

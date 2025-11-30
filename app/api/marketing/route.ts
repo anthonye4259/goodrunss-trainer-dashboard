@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get target audience
-    let clients: any[] = []
+    let client: any[] = []
 
     if (audience === 'all') {
       clients = await prisma.client.findMany({

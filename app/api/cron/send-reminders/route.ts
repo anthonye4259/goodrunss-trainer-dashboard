@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         status: 'SCHEDULED'
       },
       include: {
-        clients: true
+        client: true
       }
     });
 
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         status: 'SCHEDULED'
       },
       include: {
-        clients: true
+        client: true
       }
     });
 
@@ -66,11 +66,11 @@ export async function POST(req: NextRequest) {
     // Send 24-hour reminders
     for (const session of sessions24hr) {
       try {
-        if (!session.clients?.phone) continue;
+        if (!session.client?.phone) continue;
 
-        const message = `Hi ${session.clients.name}! Reminder: You have a ${session.title || 'training'} session tomorrow at ${formatTime(session.scheduledAt)}. See you there! 💪`;
+        const message = `Hi ${session.client.name}! Reminder: You have a ${session.title || 'training'} session tomorrow at ${formatTime(session.scheduledAt)}. See you there! 💪`;
 
-        const phone = formatPhone(session.clients.phone);
+        const phone = formatPhone(session.client.phone);
 
         await client.messages.create({
           body: message,
@@ -96,11 +96,11 @@ export async function POST(req: NextRequest) {
     // Send 1-hour reminders
     for (const session of sessions1hr) {
       try {
-        if (!session.clients?.phone) continue;
+        if (!session.client?.phone) continue;
 
-        const message = `${session.clients.name}, your ${session.title || 'training'} session is in 1 hour! Don't forget water! 💧`;
+        const message = `${session.client.name}, your ${session.title || 'training'} session is in 1 hour! Don't forget water! 💧`;
 
-        const phone = formatPhone(session.clients.phone);
+        const phone = formatPhone(session.client.phone);
 
         await client.messages.create({
           body: message,

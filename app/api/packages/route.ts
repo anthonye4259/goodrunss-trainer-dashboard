@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
         clientId: clientId || undefined
       },
       include: {
-        clients: {
+        client: {
           select: {
             id: true,
             name: true,
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
 
       return {
         id: pkg.id,
-        client: pkg.clients,
+        client: pkg.client,
         sessions: details.sessions,
         used: details.used,
         remaining: details.remaining,

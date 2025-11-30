@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     const payments = await prisma.payment.findMany({
       where,
       include: {
-        clients: {
+        client: {
           select: {
             id: true,
             name: true,
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('[API] Error fetching payments:', error)
+    console.error('[API] Error fetching payment:', error)
     return NextResponse.json(
       { error: 'Failed to fetch payments', details: error.message },
       { status: 500 }
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
       },
       include: {
-        clients: {
+        client: {
           select: {
             id: true,
             name: true,

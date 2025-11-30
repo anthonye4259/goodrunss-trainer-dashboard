@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       include: {
         _count: {
           select: { 
-            clients: true,
+            client: true,
             trainerSessions: true
           }
         }

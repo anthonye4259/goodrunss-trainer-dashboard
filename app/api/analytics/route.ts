@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
         sessions: {
           where: { scheduledAt: { gte: startDate } }
         },
-        payments: {
+        payment: {
           where: { createdAt: { gte: startDate } }
         }
       }
@@ -139,7 +139,7 @@ export async function GET(req: NextRequest) {
         id: client.id,
         name: client.name,
         email: client.email,
-        totalRevenue: client.payments
+        totalRevenue: client.payment
           .filter(p => p.status === 'COMPLETED')
           .reduce((sum, p) => sum + Number(p.amount), 0),
         sessionCount: client.sessions.length
@@ -207,7 +207,7 @@ export async function GET(req: NextRequest) {
         },
 
         // Client metrics
-        clients: {
+        client: {
           total: totalClients,
           new: newClients,
           active: activeClients,

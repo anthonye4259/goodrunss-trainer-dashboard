@@ -105,7 +105,7 @@ export async function GET() {
         createdAt: { lt: sevenDaysAgo },
       },
       include: {
-        clients: {
+        client: {
           select: {
             name: true,
             email: true,
@@ -155,7 +155,7 @@ export async function GET() {
         forecast: thisMonthRevenue * 1.14, // 14% projected growth
         totalTransactions: paymentsThisMonth._count,
       },
-      clients: {
+      client: {
         total: totalClients,
         active: totalClients,
         inactive: allClients.length - totalClients,
@@ -171,12 +171,12 @@ export async function GET() {
         lowEngagement: Math.floor(totalClients * 0.08),
         ltv: clientLTV,
       },
-      payments: {
+      payment: {
         overdue: overduePayments.length,
         overdueTotal: overdueTotal,
         overdueList: overduePayments.map(p => ({
           id: p.id,
-          client: p.clients?.name || 'Unknown',
+          client: p.client?.name || 'Unknown',
           amount: p.amount,
           createdAt: p.createdAt,
         })),

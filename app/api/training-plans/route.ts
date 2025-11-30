@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     // Attach client info to plans
     const plansWithClients = plans.map(plan => ({
       ...plan,
-      clients: clientMap.get(plan.clientId) || null
+      client: clientMap.get(plan.clientId) || null
     }))
 
     // Calculate stats
@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
     
     const planWithClient = {
       ...plan,
-      clients: client
+      client: client
     }
 
     console.log('✅ Training plan created:', plan.id)
@@ -255,7 +255,7 @@ export async function PATCH(req: NextRequest) {
     
     const planWithClient = {
       ...plan,
-      clients: client
+      client: client
     }
 
     console.log('✅ Training plan updated:', plan.id)

@@ -89,7 +89,7 @@ async function generateFinancialReport(trainerId: string, startDate: Date, endDa
       createdAt: { gte: startDate, lte: endDate }
     },
     include: {
-      clients: {
+      client: {
         select: { name: true, email: true }
       }
     },
@@ -129,8 +129,8 @@ async function generateFinancialReport(trainerId: string, startDate: Date, endDa
       const clientId = p.clientId
       if (clientId) {
         const existing = clientRevenue.get(clientId) || { 
-          name: p.clients?.name || 'Unknown', 
-          email: p.clients?.email || null,
+          name: p.client?.name || 'Unknown', 
+          email: p.client?.email || null,
           total: 0 
         }
         existing.total += Number(p.amount)
@@ -157,8 +157,8 @@ async function generateFinancialReport(trainerId: string, startDate: Date, endDa
     transactions: payments.map(p => ({
       id: p.id,
       date: p.createdAt,
-      client: p.clients?.name || 'Unknown',
-      email: p.clients?.email,
+      client: p.client?.name || 'Unknown',
+      email: p.client?.email,
       amount: p.amount,
       method: p.method,
       status: p.status,
@@ -176,7 +176,7 @@ async function generateClientReport(trainerId: string, startDate: Date, endDate:
       sessions: {
         where: { scheduledAt: { gte: startDate, lte: endDate } }
       },
-      payments: {
+      payment: {
         where: { createdAt: { gte: startDate, lte: endDate } }
       }
     },
@@ -197,7 +197,7 @@ async function generateClientReport(trainerId: string, startDate: Date, endDate:
 
   const clientList = clients.map(client => {
     const sessionCount = client.sessions.length
-    const totalRevenue = client.payments
+    const totalRevenue = client.payment
       .filter(p => p.status === 'COMPLETED')
       .reduce((sum, p) => sum + Number(p.amount), 0)
     
@@ -244,7 +244,7 @@ async function generateSessionReport(trainerId: string, startDate: Date, endDate
       scheduledAt: { gte: startDate, lte: endDate }
     },
     include: {
-      clients: {
+      client: {
         select: { name: true, email: true }
       }
     },
@@ -307,8 +307,8 @@ async function generateSessionReport(trainerId: string, startDate: Date, endDate
     sessionList: sessions.map(s => ({
       id: s.id,
       title: s.title,
-      client: s.clients?.name || 'Unknown',
-      email: s.clients?.email,
+      client: s.client?.name || 'Unknown',
+      email: s.client?.email,
       date: s.scheduledAt,
       duration: s.duration,
       type: s.type,
@@ -329,7 +329,7 @@ async function generateSummaryReport(trainerId: string, startDate: Date, endDate
 
   return {
     financial: financial.summary,
-    clients: clients.summary,
+    client: clients.summary,
     sessions: sessions.summary,
     topClients: financial.topPayingClients.slice(0, 5),
     upcomingHighlights: {

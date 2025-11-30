@@ -44,7 +44,7 @@ export async function GET(
     // Attach client to plan
     const planWithClient = {
       ...plan,
-      clients: client
+      client: client
     }
 
     // Calculate progress metrics
@@ -138,7 +138,7 @@ export async function POST(
           success: true,
           plan: {
             ...activatedPlan,
-            clients: activatedClient
+            client: activatedClient
           },
           message: 'Training plan activated'
         })
@@ -188,7 +188,7 @@ export async function POST(
           success: true,
           plan: {
             ...clonedPlan,
-            clients: clonedClient
+            client: clonedClient
           },
           message: 'Training plan cloned successfully'
         })
@@ -217,7 +217,7 @@ export async function POST(
           success: true,
           plan: {
             ...completedPlan,
-            clients: completedClient
+            client: completedClient
           },
           message: 'Training plan marked as completed'
         })
@@ -269,7 +269,7 @@ export async function POST(
           success: true,
           plan: {
             ...updatedPlan,
-            clients: updatedClient
+            client: updatedClient
           },
           message: 'Progress updated'
         })

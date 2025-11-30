@@ -45,7 +45,7 @@ export async function PATCH(
                 updatedAt: new Date(),
             },
             include: {
-                clients: {
+                client: {
                     select: {
                         id: true,
                         name: true,

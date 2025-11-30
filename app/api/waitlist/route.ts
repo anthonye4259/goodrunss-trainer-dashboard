@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
         title: { startsWith: 'Waitlist:' }
       },
       include: {
-        clients: {
+        client: {
           select: {
             id: true,
             name: true,
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
 
       return {
         id: entry.id,
-        client: entry.clients,
+        client: entry.client,
         requestedDate: entry.scheduledAt,
         duration: entry.duration,
         notes: entry.notes,
@@ -178,7 +178,7 @@ export async function PATCH(req: NextRequest) {
         title: { startsWith: 'Waitlist:' }
       },
       include: {
-        clients: true
+        client: true
       }
     })
 
@@ -198,11 +198,11 @@ export async function PATCH(req: NextRequest) {
       })
 
       // Send notification email
-      if (entry.clients?.email) {
+      if (entry.client?.email) {
         await sendEmail({
-          to: entry.clients.email,
+          to: entry.client.email,
           subject: "A Spot Opened Up! 🎉",
-          html: `<h2>Great News, ${entry.clients.name}!</h2><p>A spot has opened up for ${entry.scheduledAt.toLocaleDateString()} at ${entry.scheduledAt.toLocaleTimeString()}!</p><p>Reply to this email or contact us ASAP to confirm your booking.</p><p>${trainer.name}</p>`,
+          html: `<h2>Great News, ${entry.client.name}!</h2><p>A spot has opened up for ${entry.scheduledAt.toLocaleDateString()} at ${entry.scheduledAt.toLocaleTimeString()}!</p><p>Reply to this email or contact us ASAP to confirm your booking.</p><p>${trainer.name}</p>`,
           text: `Great news! A spot opened up for ${entry.scheduledAt.toLocaleString()}. Contact us ASAP to book!`
         })
       }
@@ -226,11 +226,11 @@ export async function PATCH(req: NextRequest) {
       })
 
       // Send confirmation
-      if (entry.clients?.email) {
+      if (entry.client?.email) {
         await sendEmail({
-          to: entry.clients.email,
+          to: entry.client.email,
           subject: "Session Confirmed! ✅",
-          html: `<h2>You're Booked, ${entry.clients.name}!</h2><p>Your session is confirmed for:</p><p><strong>${entry.scheduledAt.toLocaleString()}</strong></p><p>Duration: ${entry.duration} minutes</p><p>See you then!<br>${trainer.name}</p>`,
+          html: `<h2>You're Booked, ${entry.client.name}!</h2><p>Your session is confirmed for:</p><p><strong>${entry.scheduledAt.toLocaleString()}</strong></p><p>Duration: ${entry.duration} minutes</p><p>See you then!<br>${trainer.name}</p>`,
           text: `Session confirmed for ${entry.scheduledAt.toLocaleString()}. ${entry.duration} minutes. See you then!`
         })
       }
