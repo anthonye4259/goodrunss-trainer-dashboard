@@ -1,82 +1,67 @@
 "use client"
 
-import * as React from "react"
-import { Card } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Sparkles } from "lucide-react"
 
-interface Specialty {
-  id: string
-  name: string
-  emoji: string
-}
-
-const specialties: Specialty[] = [
-  { id: "basketball", name: "Basketball", emoji: "🏀" },
-  { id: "pickleball", name: "Pickleball", emoji: "🏓" },
-  { id: "tennis", name: "Tennis", emoji: "🎾" },
-  { id: "volleyball", name: "Volleyball", emoji: "🏐" },
-  { id: "yoga", name: "Yoga", emoji: "🧘‍♀️" },
-  { id: "pilates", name: "Pilates", emoji: "🤸‍♀️" },
-  { id: "barre", name: "Barre", emoji: "💃" },
-  { id: "strength_training", name: "Strength Training", emoji: "💪" },
-  { id: "hiit", name: "HIIT", emoji: "⚡" },
-  { id: "crossfit", name: "CrossFit", emoji: "🏋️‍♀️" },
-  { id: "running", name: "Running", emoji: "🏃‍♀️" },
-  { id: "cycling", name: "Cycling", emoji: "🚴‍♀️" },
-  { id: "swimming", name: "Swimming", emoji: "🏊‍♀️" },
-  { id: "martial_arts", name: "Martial Arts", emoji: "🥋" },
-  { id: "boxing", name: "Boxing", emoji: "🥊" },
-  { id: "dance", name: "Dance", emoji: "💃" },
-  { id: "soccer", name: "Soccer", emoji: "⚽" },
-  { id: "golf", name: "Golf", emoji: "⛳" },
-  { id: "nutrition", name: "Nutrition", emoji: "🥗" },
-  { id: "wellness", name: "Wellness", emoji: "🌿" },
+const specialties = [
+  { value: "basketball", label: "Basketball Coach", emoji: "🏀" },
+  { value: "pickleball", label: "Pickleball Instructor", emoji: "🏓" },
+  { value: "tennis", label: "Tennis Instructor", emoji: "🎾" },
+  { value: "volleyball", label: "Volleyball Coach", emoji: "🏐" },
+  { value: "yoga", label: "Yoga Instructor", emoji: "🧘‍♀️" },
+  { value: "pilates", label: "Pilates Instructor", emoji: "🤸‍♀️" },
+  { value: "barre", label: "Barre Instructor", emoji: "💃" },
+  { value: "strength", label: "Strength & Conditioning", emoji: "💪" },
+  { value: "hiit", label: "HIIT Trainer", emoji: "⚡" },
+  { value: "crossfit", label: "CrossFit Coach", emoji: "🏋️‍♀️" },
+  { value: "running", label: "Running Coach", emoji: "🏃‍♀️" },
+  { value: "cycling", label: "Cycling Coach", emoji: "🚴‍♀️" },
+  { value: "swimming", label: "Swimming Coach", emoji: "🏊‍♀️" },
+  { value: "martial-arts", label: "Martial Arts Instructor", emoji: "🥋" },
+  { value: "boxing", label: "Boxing Coach", emoji: "🥊" },
+  { value: "dance", label: "Dance Instructor", emoji: "💃" },
+  { value: "soccer", label: "Soccer Coach", emoji: "⚽" },
+  { value: "golf", label: "Golf Instructor", emoji: "⛳" },
+  { value: "nutrition", label: "Nutrition Coach", emoji: "🥗" },
+  { value: "wellness", label: "Wellness Coach", emoji: "🌿" },
+  { value: "performance", label: "Sports Performance", emoji: "🎯" },
+  { value: "general", label: "General Fitness Trainer", emoji: "💪" },
 ]
 
 interface SpecialtySelectorProps {
-  selectedSpecialty?: string
-  onSelect?: (specialtyId: string) => void
-  value?: string
-  onChange?: (specialtyId: string) => void
+  value: string
+  onValueChange: (value: string) => void
 }
 
-export function SpecialtySelector({
-  selectedSpecialty,
-  onSelect,
-  value,
-  onChange,
-}: SpecialtySelectorProps) {
-  const selected = value || selectedSpecialty
-  const handleSelect = onChange || onSelect || (() => {})
+export function SpecialtySelector({ value, onValueChange }: SpecialtySelectorProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      {specialties.map((specialty) => (
-        <Card
-          key={specialty.id}
-          className={cn(
-            "p-4 cursor-pointer transition-all hover:border-primary",
-            selected === specialty.id &&
-              "border-primary bg-primary/5"
-          )}
-          onClick={() => handleSelect(specialty.id)}
-        >
-          <div className="text-center">
-            <div className="text-3xl mb-2">{specialty.emoji}</div>
-            <div className="text-sm font-medium text-foreground">
-              {specialty.name}
-            </div>
-          </div>
-        </Card>
-      ))}
+    <div className="space-y-2">
+      <Label>Your Specialty</Label>
+      <p className="text-sm text-muted-foreground">
+        Select your primary training focus. This helps GIA generate content specific to your sport.
+      </p>
+
+      <Select value={value} onValueChange={onValueChange}>
+        <SelectTrigger className="h-12">
+          <SelectValue placeholder="Select your specialty..." />
+        </SelectTrigger>
+        <SelectContent className="max-h-[300px]">
+          {specialties.map((spec) => (
+            <SelectItem key={spec.value} value={spec.value}>
+              <span className="flex items-center gap-2">
+                <span>{spec.emoji}</span>
+                <span>{spec.label}</span>
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
+        <Sparkles className="h-3 w-3" />
+        <span>This affects all AI-generated content, workouts, and suggestions</span>
+      </div>
     </div>
   )
 }
-
-
-
-
-
-
-
-
-

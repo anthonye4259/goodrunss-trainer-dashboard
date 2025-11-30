@@ -1,82 +1,61 @@
-"use client"
+'use client'
 
-import * as React from "react"
+import * as React from 'react'
+import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 
-interface TooltipProps {
-  children: React.ReactNode
-}
+import { cn } from '@/lib/utils'
 
-interface TooltipTriggerProps {
-  children: React.ReactNode
-  asChild?: boolean
-}
-
-interface TooltipContentProps {
-  children: React.ReactNode
-  side?: "top" | "right" | "bottom" | "left"
-  align?: "start" | "center" | "end"
-  className?: string
-}
-
-const TooltipContext = React.createContext<{ open: boolean; setOpen: (open: boolean) => void } | undefined>(undefined)
-
-export function TooltipProvider({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
-}
-
-export function Tooltip({ children }: TooltipProps) {
-  const [open, setOpen] = React.useState(false)
-  
+function TooltipProvider({
+  delayDuration = 0,
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
   return (
-    <TooltipContext.Provider value={{ open, setOpen }}>
-      <div className="relative inline-block">
+    <TooltipPrimitive.Provider
+      data-slot="tooltip-provider"
+      delayDuration={delayDuration}
+      {...props}
+    />
+  )
+}
+
+function Tooltip({
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
+  return (
+    <TooltipProvider>
+      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+    </TooltipProvider>
+  )
+}
+
+function TooltipTrigger({
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
+  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+}
+
+function TooltipContent({
+  className,
+  sideOffset = 0,
+  children,
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+  return (
+    <TooltipPrimitive.Portal>
+      <TooltipPrimitive.Content
+        data-slot="tooltip-content"
+        sideOffset={sideOffset}
+        className={cn(
+          'bg-foreground text-background animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance',
+          className,
+        )}
+        {...props}
+      >
         {children}
-      </div>
-    </TooltipContext.Provider>
+        <TooltipPrimitive.Arrow className="bg-foreground fill-foreground z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" />
+      </TooltipPrimitive.Content>
+    </TooltipPrimitive.Portal>
   )
 }
 
-export function TooltipTrigger({ children, asChild }: TooltipTriggerProps) {
-  const context = React.useContext(TooltipContext)
-  
-  const handleMouseEnter = () => {
-    context?.setOpen(true)
-  }
-  
-  const handleMouseLeave = () => {
-    context?.setOpen(false)
-  }
-  
-  return (
-    <div
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className="inline-block"
-    >
-      {children}
-    </div>
-  )
-}
-
-export function TooltipContent({ children, side = "top", align = "center", className = "" }: TooltipContentProps) {
-  const context = React.useContext(TooltipContext)
-  
-  if (!context?.open) return null
-  
-  const positionClasses = {
-    top: "-top-2 -translate-y-full left-1/2 -translate-x-1/2",
-    bottom: "-bottom-2 translate-y-full left-1/2 -translate-x-1/2",
-    left: "top-1/2 -translate-y-1/2 -left-2 -translate-x-full",
-    right: "top-1/2 -translate-y-1/2 -right-2 translate-x-full",
-  }
-  
-  return (
-    <div
-      className={`absolute z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 ${positionClasses[side]} ${className}`}
-      role="tooltip"
-    >
-      {children}
-    </div>
-  )
-}
-
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }

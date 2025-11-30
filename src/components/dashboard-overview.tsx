@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
@@ -26,34 +26,154 @@ import {
   Share2,
   Trophy,
   Award,
-  Dumbbell,
-  FileText,
-  Layers,
-  Bell,
-  Zap,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ShareToSocial } from "@/components/share-to-social"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { BookingLinkCard } from "@/components/booking-link-card"
+import { SportSelectorModal } from "@/components/sport-selector-modal"
+import { useSport } from "@/contexts/sport-context"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { ShareableStatsCard } from "@/components/analytics/shareable-stats-card"
+import { OnboardingChecklist } from "@/components/onboarding-checklist"
+import { EmptyClients } from "@/components/empty-states/empty-clients"
+import { EmptySessions } from "@/components/empty-states/empty-sessions"
+import { EmptyPrograms } from "@/components/empty-states/empty-programs"
+import { EmptyPayments } from "@/components/empty-states/empty-payments"
+import { DailyBriefing } from "@/components/gia/daily-briefing"
+
+interface DashboardStats {
+  trainer: {
+    name: string
+    rating: number
+    totalSessions: number
+  }
+  revenue: {
+    thisMonth: number
+    lastMonth: number
+    change: number
+    forecast: number
+  }
+  clients: {
+    total: number
+    atRisk: number
+    atRiskList: Array<{ id: string; name: string }>
+    highEngagement: number
+    mediumEngagement: number
+    ltv: number
+  }
+  payments: {
+    overdue: number
+    overdueTotal: number
+    overdueList: Array<{ id: string; amount: number; client: { name: string } | null }>
+  }
+  sessions: {
+    thisWeek: number
+    completed: number
+    utilization: number
+  }
+  churn: {
+    rate: number
+    previousRate: number
+  }
+  referrals: {
+    totalInvites: number
+    activeReferrals: number
+    creditsEarned: number
+    freeMonthsEarned: number
+  }
+}
 
 export function DashboardOverview() {
+  const { terminology, getSportDisplayName } = useSport()
   const [copied, setCopied] = useState(false)
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/dashboard/stats')
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard stats')
+        }
+
+        const data = await response.json()
+
+        if (data.error) {
+          throw new Error(data.error)
+        }
+
+        if (!data.trainer) {
+          throw new Error('Invalid data format')
+        }
+
+        setStats(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred')
+        console.error('Error fetching dashboard stats:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
+
+  // Use stats or default values
   const referralLink = "goodrunss.com/ref/coach-mike"
-  const referralStats = {
-    totalInvites: 12,
-    activeReferrals: 8,
-    creditsEarned: 120,
-    freeMonthsEarned: 3,
+  const referralStats = stats?.referrals || {
+    totalInvites: 0,
+    activeReferrals: 0,
+    creditsEarned: 0,
+    freeMonthsEarned: 0,
   }
 
   const milestones = [
     { count: 5, reward: '"Pro Verified" Badge', achieved: true },
-    { count: 10, reward: "10% Lifetime Discount", achieved: false, progress: 8 },
-    { count: 25, reward: "Free Annual Plan", achieved: false, progress: 8 },
+    { count: 10, reward: "10% Lifetime Discount", achieved: false, progress: referralStats.activeReferrals },
+    { count: 25, reward: "Free Annual Plan", achieved: false, progress: referralStats.activeReferrals },
   ]
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="max-w-[1600px] mx-auto space-y-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-white/60">Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state - but with empty data instead of error
+  if (error) {
+    // Return empty stats instead of showing error
+    const emptyStats = {
+      trainer: { name: "Trainer", rating: 5.0, totalSessions: 0 },
+      revenue: { thisMonth: 0, lastMonth: 0, change: 0, forecast: 0 },
+      clients: { total: 0, atRisk: 0, atRiskList: [], highEngagement: 0, mediumEngagement: 0, ltv: 0 },
+      payments: { overdue: 0, overdueTotal: 0, overdueList: [] },
+      sessions: { thisWeek: 0, completed: 0, utilization: 0 },
+      churn: { rate: 0, previousRate: 0 },
+      referrals: { totalInvites: 0, activeReferrals: 0, creditsEarned: 0, freeMonthsEarned: 0 }
+    }
+    setStats(emptyStats)
+    setError(null)
+  }
+
+  // No stats available
+  if (!stats) {
+    return null
+  }
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(`https://${referralLink}`)
@@ -81,161 +201,146 @@ export function DashboardOverview() {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8 p-6 md:p-8">
+    <div className="max-w-[1600px] mx-auto space-y-8">
+      <SportSelectorModal />
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
-            Welcome back, <span className="text-primary">Coach Alex</span>
+            Welcome back, <span className="text-primary">{stats.trainer.name}</span>
           </h1>
           <div className="mt-3 flex items-center gap-2">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
               <Star className="h-4 w-4 fill-primary text-primary" />
-              <span className="text-sm font-semibold text-primary">4.7 Rating</span>
+              <span className="text-sm font-semibold text-primary">{stats.trainer.rating.toFixed(1)} Rating • {getSportDisplayName()}</span>
             </div>
           </div>
         </div>
-        <Select defaultValue="7days">
-          <SelectTrigger className="w-full sm:w-[180px] bg-card/50 border-border/50 backdrop-blur-sm">
-            <SelectValue placeholder="Select period" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7days">Last 7 Days</SelectItem>
-            <SelectItem value="30days">Last 30 Days</SelectItem>
-            <SelectItem value="90days">Last 90 Days</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-3">
-        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-orange-400" />
-          Action Required
-        </h2>
-        <div className="grid gap-3">
-          <Card className="bg-gradient-to-r from-red-500/10 to-red-600/5 border-red-500/20 hover:border-red-500/40 transition-colors">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                  <XCircle className="h-5 w-5 text-red-400" />
-                </div>
-                <div>
-                  <p className="font-semibold text-white">5 clients haven't booked in 2+ weeks</p>
-                  <p className="text-sm text-white/60">At risk of churning - reach out today</p>
-                </div>
-              </div>
-              <Button size="sm" className="bg-red-500 hover:bg-red-600 text-white">
-                View Clients
-                <ArrowRight className="ml-2 h-4 w-4" />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white">
+                <Share2 className="mr-2 h-4 w-4" />
+                Share Impact
               </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-r from-orange-500/10 to-orange-600/5 border-orange-500/20 hover:border-orange-500/40 transition-colors">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                  <DollarSign className="h-5 w-5 text-orange-400" />
-                </div>
-                <div>
-                  <p className="font-semibold text-white">3 payments overdue ($450 total)</p>
-                  <p className="text-sm text-white/60">Send payment reminders to collect revenue</p>
-                </div>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] bg-white border-none p-0 overflow-hidden">
+              <div className="p-6">
+                <ShareableStatsCard />
               </div>
-              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
-                Send Reminders
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
+            </DialogContent>
+          </Dialog>
 
-          <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 transition-colors">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold text-white">"HIIT Bootcamp" has 92% completion rate</p>
-                  <p className="text-sm text-white/60">Your best performing program - promote it more</p>
-                </div>
-              </div>
-              <Button size="sm" className="bg-primary hover:bg-primary/90 text-black">
-                View Program
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
+          <Select defaultValue="7days">
+            <SelectTrigger className="w-full sm:w-[180px] bg-card/50 border-border/50 backdrop-blur-sm">
+              <SelectValue placeholder="Select period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7days">Last 7 Days</SelectItem>
+              <SelectItem value="30days">Last 30 Days</SelectItem>
+              <SelectItem value="90days">Last 90 Days</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="space-y-3">
-        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-          <Zap className="h-5 w-5 text-primary" />
-          Quick Actions
-        </h2>
-        <Card className="glass border-border/50">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Button
-                variant="outline"
-                className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-primary/10 hover:border-primary transition-all"
-                onClick={() => window.location.href = '/dashboard/workouts/new'}
-              >
-                <div className="p-3 rounded-xl bg-primary/20">
-                  <Dumbbell className="h-6 w-6 text-primary" />
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold">New Workout</p>
-                  <p className="text-xs text-muted-foreground mt-1">Create workout plan</p>
-                </div>
-              </Button>
+      {/* Booking Link Card - PROMINENT */}
+      <BookingLinkCard />
 
-              <Button
-                variant="outline"
-                className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-blue-500/10 hover:border-blue-500 transition-all"
-                onClick={() => window.location.href = '/dashboard/training-plans'}
-              >
-                <div className="p-3 rounded-xl bg-blue-500/20">
-                  <FileText className="h-6 w-6 text-blue-500" />
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold">Training Plans</p>
-                  <p className="text-xs text-muted-foreground mt-1">View all plans</p>
-                </div>
-              </Button>
+      {/* Gia's Daily Briefing - AI-Powered Insights */}
+      <DailyBriefing />
 
-              <Button
-                variant="outline"
-                className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-green-500/10 hover:border-green-500 transition-all"
-                onClick={() => window.location.href = '/dashboard/programs'}
-              >
-                <div className="p-3 rounded-xl bg-green-500/20">
-                  <Layers className="h-6 w-6 text-green-500" />
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold">Programs</p>
-                  <p className="text-xs text-muted-foreground mt-1">Manage programs</p>
-                </div>
-              </Button>
+      {/* Onboarding Checklist - Show for new users or users with < 3 clients */}
+      {stats.clients.total < 3 && (
+        <OnboardingChecklist />
+      )}
 
-              <Button
-                variant="outline"
-                className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-orange-500/10 hover:border-orange-500 transition-all"
-                onClick={() => window.location.href = '/dashboard/reminders'}
-              >
-                <div className="p-3 rounded-xl bg-orange-500/20">
-                  <Bell className="h-6 w-6 text-orange-500" />
+      {/* Action Required Section - Show only if there are actual actions */}
+      {(stats.clients.atRisk > 0 || stats.payments.overdue > 0) && (
+        <div className="space-y-3">
+          <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-orange-400" />
+            Action Required
+          </h2>
+          <div className="grid gap-3 stagger-fade-in">
+            {stats.clients.atRisk > 0 && (
+              <Card className="bg-gradient-to-r from-red-500/10 to-red-600/5 border-red-500/20 hover:border-red-500/40 transition-colors hover-lift-subtle">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                      <XCircle className="h-5 w-5 text-red-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">{stats.clients.atRisk} {terminology.clientPlural.toLowerCase()} haven't booked in 2+ weeks</p>
+                      <p className="text-sm text-white/60">At risk of churning - reach out today</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-red-500 hover:bg-red-600 text-white"
+                    onClick={() => window.location.href = '/dashboard/clients?filter=at-risk'}
+                  >
+                    View Clients
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {stats.payments.overdue > 0 && (
+              <Card className="bg-gradient-to-r from-orange-500/10 to-orange-600/5 border-orange-500/20 hover:border-orange-500/40 transition-colors hover-lift-subtle">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                      <DollarSign className="h-5 w-5 text-orange-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">{stats.payments.overdue} payments overdue (${stats.payments.overdueTotal.toFixed(0)} total)</p>
+                      <p className="text-sm text-white/60">Send payment reminders to collect revenue</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                    onClick={() => {
+                      // Open GIA with pre-filled prompt
+                      const event = new CustomEvent('openGIA', {
+                        detail: { prompt: 'Send payment reminders to overdue clients' }
+                      })
+                      window.dispatchEvent(event)
+                    }}
+                  >
+                    Send Reminders
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 transition-colors hover-lift-subtle">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">"HIIT Bootcamp" has 92% completion rate</p>
+                    <p className="text-sm text-white/60">Your best performing program - promote it more</p>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <p className="font-semibold">Reminders</p>
-                  <p className="text-xs text-muted-foreground mt-1">Set reminders</p>
-                </div>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-black"
+                  onClick={() => window.location.href = '/dashboard/programs?highlight=hiit-bootcamp'}
+                >
+                  View Program
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -246,11 +351,11 @@ export function DashboardOverview() {
           <ShareToSocial
             data={{
               title: "Monthly Recurring Revenue",
-              value: "$12,450",
-              subtitle: "+18% vs last month",
+              value: `$${stats.revenue.thisMonth.toFixed(0)}`,
+              subtitle: `${stats.revenue.change >= 0 ? '+' : ''}${stats.revenue.change.toFixed(1)}% vs last month`,
               gradient: "bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600",
             }}
-            platform="both"
+            platform="all"
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -262,14 +367,18 @@ export function DashboardOverview() {
                 <TrendingUp className="h-4 w-4 text-white/60" />
               </div>
               <div>
-                <p className="text-4xl font-bold text-white">$12,450</p>
+                <p className="text-4xl font-bold text-white">${stats.revenue.thisMonth.toFixed(0)}</p>
                 <div className="flex items-center gap-1 mt-2">
-                  <TrendingUp className="h-3 w-3 text-white" />
-                  <p className="text-sm text-white/90">+18% vs last month</p>
+                  {stats.revenue.change >= 0 ? (
+                    <TrendingUp className="h-3 w-3 text-white" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 text-white" />
+                  )}
+                  <p className="text-sm text-white/90">{stats.revenue.change >= 0 ? '+' : ''}{stats.revenue.change.toFixed(1)}% vs last month</p>
                 </div>
               </div>
               <div className="pt-2 border-t border-white/20">
-                <p className="text-xs text-white/70">Forecast: $14,200 next month</p>
+                <p className="text-xs text-white/70">Forecast: ${stats.revenue.forecast.toFixed(0)} next month</p>
               </div>
             </CardContent>
           </Card>
@@ -282,10 +391,14 @@ export function DashboardOverview() {
                 <TrendingDown className="h-4 w-4 text-white/60" />
               </div>
               <div>
-                <p className="text-4xl font-bold text-white">3.2%</p>
+                <p className="text-4xl font-bold text-white">{stats.churn.rate.toFixed(1)}%</p>
                 <div className="flex items-center gap-1 mt-2">
-                  <TrendingDown className="h-3 w-3 text-white" />
-                  <p className="text-sm text-white/90">+0.8% vs last month</p>
+                  {(stats.churn.rate - stats.churn.previousRate) >= 0 ? (
+                    <TrendingUp className="h-3 w-3 text-white" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 text-white" />
+                  )}
+                  <p className="text-sm text-white/90">{(stats.churn.rate - stats.churn.previousRate) >= 0 ? '+' : ''}{(stats.churn.rate - stats.churn.previousRate).toFixed(1)}% vs last month</p>
                 </div>
               </div>
               <div className="pt-2 border-t border-white/20">
@@ -302,10 +415,10 @@ export function DashboardOverview() {
                 <Users className="h-4 w-4 text-white/60" />
               </div>
               <div>
-                <p className="text-4xl font-bold text-white">$2,840</p>
+                <p className="text-4xl font-bold text-white">${stats.clients.ltv.toFixed(0)}</p>
                 <div className="flex items-center gap-1 mt-2">
                   <TrendingUp className="h-3 w-3 text-white" />
-                  <p className="text-sm text-white/90">+12% vs last quarter</p>
+                  <p className="text-sm text-white/90">Based on current data</p>
                 </div>
               </div>
               <div className="pt-2 border-t border-white/20">
@@ -322,10 +435,10 @@ export function DashboardOverview() {
                 <AlertTriangle className="h-4 w-4 text-white/60" />
               </div>
               <div>
-                <p className="text-4xl font-bold text-white">$450</p>
+                <p className="text-4xl font-bold text-white">${stats.payments.overdueTotal.toFixed(0)}</p>
                 <div className="flex items-center gap-1 mt-2">
                   <Clock className="h-3 w-3 text-white" />
-                  <p className="text-sm text-white/90">3 clients overdue</p>
+                  <p className="text-sm text-white/90">{stats.payments.overdue} clients overdue</p>
                 </div>
               </div>
               <div className="pt-2 border-t border-white/20">
@@ -535,8 +648,8 @@ export function DashboardOverview() {
                 <CheckCircle2 className="h-4 w-4 text-white/60" />
               </div>
               <div>
-                <p className="text-5xl font-bold text-white">42</p>
-                <p className="text-sm text-white/70 mt-2">Clients (68% of total)</p>
+                <p className="text-5xl font-bold text-white">{stats.clients.highEngagement}</p>
+                <p className="text-sm text-white/70 mt-2">Clients ({stats.clients.total > 0 ? ((stats.clients.highEngagement / stats.clients.total) * 100).toFixed(0) : 0}% of total)</p>
               </div>
               <div className="pt-2 border-t border-white/20 space-y-1">
                 <p className="text-xs text-white/70">• 3+ sessions/week</p>
@@ -554,8 +667,8 @@ export function DashboardOverview() {
                 <AlertTriangle className="h-4 w-4 text-white/60" />
               </div>
               <div>
-                <p className="text-5xl font-bold text-white">15</p>
-                <p className="text-sm text-white/70 mt-2">Clients (24% of total)</p>
+                <p className="text-5xl font-bold text-white">{stats.clients.mediumEngagement}</p>
+                <p className="text-sm text-white/70 mt-2">Clients ({stats.clients.total > 0 ? ((stats.clients.mediumEngagement / stats.clients.total) * 100).toFixed(0) : 0}% of total)</p>
               </div>
               <div className="pt-2 border-t border-white/20 space-y-1">
                 <p className="text-xs text-white/70">• 1-2 sessions/week</p>
@@ -573,8 +686,8 @@ export function DashboardOverview() {
                 <XCircle className="h-4 w-4 text-white/60" />
               </div>
               <div>
-                <p className="text-5xl font-bold text-white">5</p>
-                <p className="text-sm text-white/70 mt-2">Clients (8% of total)</p>
+                <p className="text-5xl font-bold text-white">{stats.clients.atRisk}</p>
+                <p className="text-sm text-white/70 mt-2">Clients ({stats.clients.total > 0 ? ((stats.clients.atRisk / stats.clients.total) * 100).toFixed(0) : 0}% of total)</p>
               </div>
               <div className="pt-2 border-t border-white/20 space-y-1">
                 <p className="text-xs text-white/70">• No sessions in 2+ weeks</p>
@@ -602,11 +715,11 @@ export function DashboardOverview() {
               </div>
               <div className="space-y-2">
                 <div className="relative h-2 w-full bg-white/20 rounded-full overflow-hidden">
-                  <div className="absolute inset-y-0 left-0 bg-white rounded-full" style={{ width: "87%" }}></div>
+                  <div className="absolute inset-y-0 left-0 bg-white rounded-full" style={{ width: `${stats.sessions.utilization}%` }}></div>
                 </div>
-                <p className="text-5xl font-bold text-white">87%</p>
+                <p className="text-5xl font-bold text-white">{stats.sessions.utilization.toFixed(0)}%</p>
               </div>
-              <p className="text-sm font-medium text-white/80">42/48 slots filled</p>
+              <p className="text-sm font-medium text-white/80">{stats.sessions.completed}/{stats.sessions.thisWeek} slots filled</p>
             </CardContent>
           </Card>
 

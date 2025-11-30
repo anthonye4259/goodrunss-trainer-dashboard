@@ -1,100 +1,264 @@
 "use client"
 
-import { Bell, MessageSquare, HelpCircle, LogOut, User } from 'lucide-react'
+import { Bell, MessageSquare, HelpCircle, Globe, Crown, Star, Check } from "lucide-react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { NotificationBell } from "@/components/gia/notification-bell"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useUser, useClerk } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/contexts/language-context"
+import { useUser } from "@clerk/nextjs"
+import { useEffect, useState } from "react"
 
 export function Header() {
-  const { user, isLoaded } = useUser()
-  const { signOut } = useClerk()
   const router = useRouter()
+  const { toast } = useToast()
+  const { language, setLanguage } = useLanguage()
+  const { user, isLoaded } = useUser()
+  const [userEmail, setUserEmail] = useState<string>("")
+  const [userName, setUserName] = useState<string>("")
+  const [trainerProfile, setTrainerProfile] = useState<any>(null)
 
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/sign-in')
+  useEffect(() => {
+    if (isLoaded && user) {
+      setUserEmail(user.primaryEmailAddress?.emailAddress || "")
+      setUserName(user.fullName || user.firstName || "Trainer")
+
+      // Fetch trainer profile for status badge
+      fetch("/api/trainer/profile")
+        .then(res => res.json())
+        .then(data => setTrainerProfile(data))
+        .catch(err => console.error("Failed to fetch profile", err))
+    }
+  }, [isLoaded, user])
+
+  const handleLogout = () => {
+    localStorage.removeItem("trainer_authenticated")
+    localStorage.removeItem("trainer_email")
+    toast({
+      title: "Logged out",
+      description: "You've been successfully logged out.",
+    })
+    router.push("/login")
   }
 
-  if (!isLoaded) {
-    return (
-      <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-6">
-        <div className="flex items-center gap-4">
-          <div className="h-6 w-32 bg-muted animate-pulse rounded" />
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
-        </div>
-      </header>
-    )
-  }
+  const languages = [
+    { code: "en", name: "English", native: "English" },
+    { code: "es", name: "Spanish", native: "Español" },
+    { code: "fr", name: "French", native: "Français" },
+    { code: "pt", name: "Portuguese", native: "Português" },
+    { code: "ar", name: "Arabic", native: "عربي" },
+    { code: "zh", name: "Chinese", native: "中国人" },
+    { code: "hi", name: "Hindi", native: "हिंदी" },
+    { code: "bn", name: "Bengali", native: "বাংলা" },
+    { code: "ru", name: "Russian", native: "Русский" },
+    { code: "ur", name: "Urdu", native: "اردو" },
+  ]
 
-  if (!user) {
-    return (
-      <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-6">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold text-foreground">GoodRunss Manager</h1>
-        </div>
-        <Button onClick={() => router.push('/sign-in')}>
-          Sign In
-        </Button>
-      </header>
-    )
+  const getTierBadge = (tier: string) => {
+    switch (tier) {
+      case "LEGEND":
+        return <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none"><Crown className="w-3 h-3 mr-1" /> LEGEND</Badge>
+      case "ELITE":
+        return <Badge className="bg-gradient-to-r from-amber-400 to-yellow-600 text-black border-none"><Star className="w-3 h-3 mr-1 fill-black" /> ELITE</Badge>
+      case "PRO":
+        return <Badge className="bg-blue-500 text-white border-none"><Check className="w-3 h-3 mr-1" /> PRO</Badge>
+      default:
+        return <Badge variant="outline" className="text-slate-400 border-slate-700">MEMBER</Badge>
+    }
   }
 
   return (
-    <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-6">
-      <div className="flex items-center gap-4">
-        <h1 className="text-xl font-semibold text-foreground">GoodRunss Manager</h1>
+    <header className="flex h-16 items-center justify-between border-b border-border bg-card/95 backdrop-blur-sm px-4 md:px-8 flex-shrink-0">
+      <div className="flex items-center gap-2 md:gap-3">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-lg blur-md opacity-50" />
+          <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-lg bg-white flex items-center justify-center p-1">
+            <Image
+              src="/goodrunss-logo-green.svg"
+              alt="GoodRunss"
+              width={40}
+              height={40}
+              className="object-contain w-full h-full"
+              priority
+              quality={100}
+            />
+          </div>
+        </div>
+
+        <div className="relative">
+          <h1 className="text-lg md:text-2xl font-bold tracking-tighter bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient-shift">
+            GOODRUNSS
+          </h1>
+          <div className="flex items-center gap-2 -mt-1">
+            <div className="text-[10px] md:text-xs font-semibold tracking-widest text-primary/60 uppercase">
+              Trainer Dashboard
+            </div>
+            {trainerProfile && trainerProfile.tier !== "MEMBER" && (
+              <div className="hidden md:block transform scale-75 origin-left">
+                {getTierBadge(trainerProfile.tier)}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
-        </Button>
-
-        <Button variant="ghost" size="icon">
-          <MessageSquare className="w-5 h-5" />
-        </Button>
-
+      <div className="flex items-center gap-1 md:gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <HelpCircle className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-colors">
+              <Globe className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Help Center</DropdownMenuItem>
-            <DropdownMenuItem>Documentation</DropdownMenuItem>
-            <DropdownMenuItem>Contact Support</DropdownMenuItem>
+          <DropdownMenuContent className="w-56 bg-card border-primary/20" align="end">
+            <DropdownMenuLabel className="text-primary text-base font-semibold">Language</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-primary/20" />
+            {languages.map((lang) => (
+              <DropdownMenuItem
+                key={lang.code}
+                onClick={() => setLanguage(lang.code as any)}
+                className={`cursor-pointer focus:bg-primary/10 ${language === lang.code ? "bg-primary/10 text-primary" : "text-foreground hover:bg-primary/10"
+                  }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span>{lang.name}</span>
+                  <span className="text-sm text-muted-foreground">{lang.native}</span>
+                </div>
+              </DropdownMenuItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
 
+        <NotificationBell />
+
+        <div className="hidden sm:block">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-colors">
+                <MessageSquare className="h-5 w-5 text-primary" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-80 bg-card border-primary/20" align="end">
+              <DropdownMenuLabel className="text-primary text-base font-semibold">Messages</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-primary/20" />
+
+              <DropdownMenuItem className="flex flex-col items-start py-3 px-4 hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                <div className="font-semibold text-primary">Sarah Johnson</div>
+                <div className="text-sm text-primary/80 mt-0.5">Can we reschedule tomorrow's session?</div>
+                <div className="text-xs text-primary/50 mt-1">1 hour ago</div>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem className="flex flex-col items-start py-3 px-4 hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                <div className="font-semibold text-primary">Mike Chen</div>
+                <div className="text-sm text-primary/80 mt-0.5">Thanks for the workout plan!</div>
+                <div className="text-xs text-primary/50 mt-1">3 hours ago</div>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem className="flex flex-col items-start py-3 px-4 hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                <div className="font-semibold text-primary">Emily Davis</div>
+                <div className="text-sm text-primary/80 mt-0.5">What time is our session on Friday?</div>
+                <div className="text-xs text-primary/50 mt-1">Yesterday</div>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="bg-primary/20" />
+              <Link href="/dashboard/messages">
+                <DropdownMenuItem className="text-primary justify-center font-medium hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                  View all messages
+                </DropdownMenuItem>
+              </Link>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="hidden sm:block">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-colors">
+                <HelpCircle className="h-5 w-5 text-primary" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56 bg-card border-primary/20" align="end">
+              <DropdownMenuLabel className="text-primary text-base font-semibold">Help & Support</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-primary/20" />
+              <DropdownMenuItem className="text-primary hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                Documentation
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-primary hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                Video Tutorials
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-primary hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                Contact Support
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-primary hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                Keyboard Shortcuts
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-primary/20" />
+              <DropdownMenuItem className="text-primary hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                What's New
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex items-center gap-2">
-              {user.imageUrl ? (
-                <img 
-                  src={user.imageUrl} 
-                  alt={user.fullName || 'User'} 
-                  className="w-6 h-6 rounded-full"
-                />
-              ) : (
-                <User className="w-4 h-4" />
+            <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-primary/10 transition-colors">
+              <Avatar className="h-10 w-10 border-2 border-primary/20">
+                <AvatarImage src={user?.imageUrl} alt={userName} />
+                <AvatarFallback className="bg-primary text-background font-semibold">
+                  {userName.split(' ').map(n => n[0]).join('').toUpperCase() || 'T'}
+                </AvatarFallback>
+              </Avatar>
+              {trainerProfile && trainerProfile.isVerified && (
+                <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-0.5 border-2 border-card">
+                  <Check className="w-3 h-3" />
+                </div>
               )}
-              <span className="text-sm">{user.fullName || user.emailAddresses[0]?.emailAddress || 'User'}</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
+          <DropdownMenuContent className="w-56 bg-card border-primary/20" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-primary">{userName || "Trainer"}</p>
+                  {trainerProfile && getTierBadge(trainerProfile.tier)}
+                </div>
+                <p className="text-xs text-primary/70">{userEmail || "Loading..."}</p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-primary/20" />
+            <Link href={trainerProfile ? `/trainer/${trainerProfile.userId}` : "/dashboard/settings"}>
+              <DropdownMenuItem className="text-primary hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                Public Profile
+              </DropdownMenuItem>
+            </Link>
+            <Link href="/dashboard/leaderboard">
+              <DropdownMenuItem className="text-primary hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                Leaderboard
+              </DropdownMenuItem>
+            </Link>
+            <Link href="/dashboard/settings">
+              <DropdownMenuItem className="text-primary hover:bg-primary/10 cursor-pointer focus:bg-primary/10">
+                Settings
+              </DropdownMenuItem>
+            </Link>
+            <DropdownMenuSeparator className="bg-primary/20" />
+            <DropdownMenuItem
+              className="text-destructive hover:bg-destructive/10 cursor-pointer focus:bg-destructive/10"
+              onClick={handleLogout}
+            >
+              Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -102,3 +266,4 @@ export function Header() {
     </header>
   )
 }
+
