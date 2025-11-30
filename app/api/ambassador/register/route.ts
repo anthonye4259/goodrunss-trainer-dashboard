@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
         // Get user from database
         const user = await prisma.user.findUnique({
-            where: { clerkId: userId },
+            where: { id: userId },
             include: { ambassador: true }
         })
 

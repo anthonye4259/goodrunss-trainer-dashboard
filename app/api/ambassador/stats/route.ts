@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
         } else if (userId) {
             // Authenticated user lookup
             const user = await prisma.user.findUnique({
-                where: { clerkId: userId },
+                where: { id: userId },
                 include: {
                     ambassador: {
                         include: {

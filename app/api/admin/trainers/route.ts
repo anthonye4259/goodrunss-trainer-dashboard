@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
-        clerkId: true,
+        id: true,
         name: true,
         email: true,
         createdAt: true,

@@ -12,7 +12,7 @@ export async function POST() {
 
     // Remove tokens from database
     await prisma.user.update({
-      where: { clerkId: user.id },
+      where: { id: user.id },
       data: {
         google_access_token: null,
         google_refresh_token: null,

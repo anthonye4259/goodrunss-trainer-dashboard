@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     // Find user by Clerk ID
     const dbUser = await prisma.user.findUnique({
-      where: { clerkId: user.id },
+      where: { id: user.id },
     })
 
     if (!dbUser) {
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     }
 
     const dbUser = await prisma.user.findUnique({
-      where: { clerkId: user.id },
+      where: { id: user.id },
       select: {
         id: true,
         specialties: true,

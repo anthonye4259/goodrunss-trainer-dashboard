@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     // Save tokens to database
     await prisma.user.update({
-      where: { clerkId: user.id },
+      where: { id: user.id },
       data: {
         google_access_token: tokens.access_token,
         google_refresh_token: tokens.refresh_token || null,
