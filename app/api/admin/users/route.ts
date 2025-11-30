@@ -8,9 +8,9 @@ export async function GET(request: NextRequest) {
     // Security Check
     const user = await currentUser()
     const email = user?.emailAddresses[0]?.emailAddress
-    const isAdmin = email === 'anthony@goodrunss.com' || 
-                   email === 'anthonyedwards@goodrunss.com' || 
-                   email === 'anthonye@andrew.cmu.edu'
+    const isAdmin = email === 'anthony@goodrunss.com' ||
+      email === 'anthonyedwards@goodrunss.com' ||
+      email === 'anthonye@andrew.cmu.edu'
 
     if (!isAdmin) {
       console.log(`[ADMIN API] Access denied for ${email}`)
@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
       include: {
         _count: {
-          select: { 
-            client: true,
+          select: {
+            clients: true,
             trainerSessions: true
           }
         }
@@ -42,9 +42,9 @@ export async function POST(request: NextRequest) {
     // Security Check
     const user = await currentUser()
     const email = user?.emailAddresses[0]?.emailAddress
-    const isAdmin = email === 'anthony@goodrunss.com' || 
-                   email === 'anthonyedwards@goodrunss.com' || 
-                   email === 'anthonye@andrew.cmu.edu'
+    const isAdmin = email === 'anthony@goodrunss.com' ||
+      email === 'anthonyedwards@goodrunss.com' ||
+      email === 'anthonye@andrew.cmu.edu'
 
     if (!isAdmin) {
       console.log(`[ADMIN API] Sync denied for ${email}`)
@@ -56,18 +56,18 @@ export async function POST(request: NextRequest) {
 
     if (action === 'sync_clerk') {
       console.log('[ADMIN API] Starting Clerk Sync...')
-      
+
       // Fetch latest users from Clerk
       const client = await clerkClient()
       const clerkUsers = await client.users.getUserList({ limit: 100 })
-      
+
       console.log(`[ADMIN API] Found ${clerkUsers.data.length} users in Clerk`)
-      
+
       const syncedUsers = []
-      
+
       for (const clerkUser of clerkUsers.data) {
         const email = clerkUser.emailAddresses[0]?.emailAddress
-        const name = clerkUser.firstName 
+        const name = clerkUser.firstName
           ? `${clerkUser.firstName} ${clerkUser.lastName || ''}`.trim()
           : clerkUser.username || email?.split('@')[0] || 'Trainer'
 
@@ -95,10 +95,10 @@ export async function POST(request: NextRequest) {
 
       console.log(`[ADMIN API] Successfully synced ${syncedUsers.length} users`)
 
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         count: syncedUsers.length,
-        users: syncedUsers 
+        users: syncedUsers
       })
     }
 
