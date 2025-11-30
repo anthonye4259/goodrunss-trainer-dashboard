@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
             email: true,
           },
         },
-        trainer_sessions: {
+        sessions: {
           select: {
             id: true,
             title: true,

@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const statusFilter = searchParams.get('status') || 'WAITING'
 
-    // Get waitlist entries (we'll store in trainer_sessions with title starting with "Waitlist:")
+    // Get waitlist entries (we'll store in sessions with title starting with "Waitlist:")
     const waitlistEntries = await prisma.trainerSession.findMany({
       where: {
         trainerId: trainer.id,

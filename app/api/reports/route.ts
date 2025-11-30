@@ -173,7 +173,7 @@ async function generateClientReport(trainerId: string, startDate: Date, endDate:
   const clients = await prisma.client.findMany({
     where: { trainerId },
     include: {
-      trainer_sessions: {
+      sessions: {
         where: { scheduledAt: { gte: startDate, lte: endDate } }
       },
       payments: {
@@ -188,20 +188,20 @@ async function generateClientReport(trainerId: string, startDate: Date, endDate:
   )
 
   const activeClients = clients.filter(c => 
-    c.trainer_sessions.some(s => s.scheduledAt >= startDate)
+    c.sessions.some(s => s.scheduledAt >= startDate)
   )
 
   const inactiveClients = clients.filter(c =>
-    !c.trainer_sessions.some(s => s.scheduledAt >= startDate)
+    !c.sessions.some(s => s.scheduledAt >= startDate)
   )
 
   const clientList = clients.map(client => {
-    const sessionCount = client.trainer_sessions.length
+    const sessionCount = client.sessions.length
     const totalRevenue = client.payments
       .filter(p => p.status === 'COMPLETED')
       .reduce((sum, p) => sum + Number(p.amount), 0)
     
-    const lastSession = client.trainer_sessions
+    const lastSession = client.sessions
       .sort((a, b) => b.scheduledAt.getTime() - a.scheduledAt.getTime())[0]
     
     const daysSinceLastSession = lastSession 

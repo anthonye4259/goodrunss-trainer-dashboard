@@ -30,7 +30,7 @@ export async function GET(
         trainerId: trainer.id, // Ensure trainer owns this client
       },
       include: {
-        trainer_sessions: {
+        sessions: {
           orderBy: { scheduledAt: 'desc' },
           take: 10,
         },
