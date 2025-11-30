@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { getOrCreateUser } from "@/lib/get-or-create-user"
 import { openai } from '@ai-sdk/openai'
 import { streamText } from 'ai'
+import { z } from 'zod'
 import { SPECIALIZATION_PROMPTS, CONTEXT_ENHANCED_PROMPT } from '@/lib/gia/expert-prompts'
 import { prisma } from '@/lib/prisma'
 
@@ -152,30 +153,12 @@ export async function POST(request: NextRequest) {
       tools: {
         sendSMS: {
           description: 'Send SMS messages to clients via Twilio. Can send to specific clients, all clients, or custom phone numbers. Use this when the trainer asks to send messages, reminders, or bulk communications.',
-          parameters: {
-            type: 'object',
-            properties: {
-              message: {
-                type: 'string',
-                description: 'The SMS message to send. Use {name} or {client_name} for personalization.'
-              },
-              clientIds: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Array of client IDs to send to. Get these from the trainer\'s client list.'
-              },
-              sendToAll: {
-                type: 'boolean',
-                description: 'Set to true to send to all clients with phone numbers'
-              },
-              phoneNumbers: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Custom phone numbers to send to (in E.164 format, e.g., +1234567890)'
-              }
-            },
-            required: ['message']
-          },
+          parameters: z.object({
+            message: z.string().describe('The SMS message to send. Use {name} or {client_name} for personalization.'),
+            clientIds: z.array(z.string()).optional().describe('Array of client IDs to send to'),
+            sendToAll: z.boolean().optional().describe('Set to true to send to all clients with phone numbers'),
+            phoneNumbers: z.array(z.string()).optional().describe('Custom phone numbers to send to (in E.164 format, e.g., +1234567890)')
+          }),
           execute: async ({ message, clientIds, sendToAll, phoneNumbers }) => {
             try {
               console.log('[GIA SMS] Sending SMS:', { message, clientIds, sendToAll, phoneNumbers })
