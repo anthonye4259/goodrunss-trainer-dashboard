@@ -62,12 +62,12 @@ export async function GET(req: NextRequest) {
     
     // Active clients (had session in last 30 days)
     const activeClients = clients.filter(c => 
-      c.trainer_sessions.some(s => s.scheduledAt >= startDate)
+      c.sessions.some(s => s.scheduledAt >= startDate)
     ).length
 
     // Client retention rate
     const clientsWithRepeatBookings = clients.filter(c => 
-      c.trainer_sessions.length > 1
+      c.sessions.length > 1
     ).length
     const retentionRate = totalClients > 0 
       ? Math.round((clientsWithRepeatBookings / totalClients) * 100) 
@@ -142,7 +142,7 @@ export async function GET(req: NextRequest) {
         totalRevenue: client.payments
           .filter(p => p.status === 'COMPLETED')
           .reduce((sum, p) => sum + Number(p.amount), 0),
-        sessionCount: client.trainer_sessions.length
+        sessionCount: client.sessions.length
       }))
       .sort((a, b) => b.totalRevenue - a.totalRevenue)
       .slice(0, 10)
