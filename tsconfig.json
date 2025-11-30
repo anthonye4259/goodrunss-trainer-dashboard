@@ -43,6 +43,7 @@
     "COMPLETE_SESSION_NOV_8_2024",
     "SUBSCRIPTION_SYSTEM_COMPLETE",
     "scripts",
+    "app/admin/payouts",
     "src/app/api/ai-persona",
     "src/app/api/facility-reports",
     "src/app/api/public/ai-personas",
