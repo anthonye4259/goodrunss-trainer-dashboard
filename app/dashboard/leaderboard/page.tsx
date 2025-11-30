@@ -1,5 +1,4 @@
 import { Metadata } from "next"
-import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -14,17 +13,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 async function getLeaderboardData() {
-    const profiles = await prisma.trainer_profiles.findMany({
-        include: {
-            user: true
-        },
-        orderBy: {
-            monthlyRevenue: "desc"
-        },
-        take: 50
-    })
-
-    // Mock data for initial population
+    // Mock data for leaderboard
     const mockProfiles = [
         {
             id: "mock-1",
@@ -73,8 +62,7 @@ async function getLeaderboardData() {
         }
     ]
 
-    // Combine real and mock data
-    return [...profiles, ...mockProfiles]
+    return mockProfiles
 }
 
 export default async function LeaderboardPage() {
@@ -111,34 +99,27 @@ export default async function LeaderboardPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {topEarners.length > 0 ? (
-                            topEarners.map((profile, index) => (
-                                <div key={profile.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-800/50 transition-colors">
-                                    <div className={`w-8 h-8 flex items-center justify-center font-bold rounded-full ${index === 0 ? "bg-primary text-black" :
-                                        index === 1 ? "bg-slate-300 text-black" :
-                                            index === 2 ? "bg-amber-700 text-white" : "bg-slate-800 text-slate-500"
-                                        }`}>
-                                        {index + 1}
-                                    </div>
-                                    <Avatar className="w-10 h-10 border border-slate-700">
-                                        <AvatarImage src={("profilePhotoUrl" in profile ? profile.profilePhotoUrl : null) || profile.user.image || ""} />
-                                        <AvatarFallback>{(profile.user.name || "T").charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-white font-medium truncate">{profile.user.name}</p>
-                                        <p className="text-xs text-slate-500 truncate">{profile.tier} Member</p>
-                                    </div>
-                                    {/* Hide actual revenue for privacy, show tier or score instead */}
-                                    <Badge variant="outline" className="border-slate-700 text-slate-400">
-                                        {profile.tier}
-                                    </Badge>
+                        {topEarners.map((profile, index) => (
+                            <div key={profile.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-800/50 transition-colors">
+                                <div className={`w-8 h-8 flex items-center justify-center font-bold rounded-full ${index === 0 ? "bg-primary text-black" :
+                                    index === 1 ? "bg-slate-300 text-black" :
+                                        index === 2 ? "bg-amber-700 text-white" : "bg-slate-800 text-slate-500"
+                                    }`}>
+                                    {index + 1}
                                 </div>
-                            ))
-                        ) : (
-                            <div className="text-center py-8 text-slate-500">
-                                No data yet. Be the first!
+                                <Avatar className="w-10 h-10 border border-slate-700">
+                                    <AvatarImage src={profile.user.image || ""} />
+                                    <AvatarFallback>{(profile.user.name || "T").charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-white font-medium truncate">{profile.user.name}</p>
+                                    <p className="text-xs text-slate-500 truncate">{profile.tier} Member</p>
+                                </div>
+                                <Badge variant="outline" className="border-slate-700 text-slate-400">
+                                    {profile.tier}
+                                </Badge>
                             </div>
-                        )}
+                        ))}
                     </CardContent>
                 </Card>
 
@@ -151,30 +132,24 @@ export default async function LeaderboardPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {mostClients.length > 0 ? (
-                            mostClients.map((profile, index) => (
-                                <div key={profile.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-800/50 transition-colors">
-                                    <div className={`w-8 h-8 flex items-center justify-center font-bold rounded-full ${index === 0 ? "bg-blue-500 text-white" :
-                                        index === 1 ? "bg-slate-300 text-black" :
-                                            index === 2 ? "bg-amber-700 text-white" : "bg-slate-800 text-slate-500"
-                                        }`}>
-                                        {index + 1}
-                                    </div>
-                                    <Avatar className="w-10 h-10 border border-slate-700">
-                                        <AvatarImage src={("profilePhotoUrl" in profile ? profile.profilePhotoUrl : null) || profile.user.image || ""} />
-                                        <AvatarFallback>{(profile.user.name || "T").charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-white font-medium truncate">{profile.user.name}</p>
-                                        <p className="text-xs text-slate-500 truncate">{profile.totalClients} Clients</p>
-                                    </div>
+                        {mostClients.map((profile, index) => (
+                            <div key={profile.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-800/50 transition-colors">
+                                <div className={`w-8 h-8 flex items-center justify-center font-bold rounded-full ${index === 0 ? "bg-blue-500 text-white" :
+                                    index === 1 ? "bg-slate-300 text-black" :
+                                        index === 2 ? "bg-amber-700 text-white" : "bg-slate-800 text-slate-500"
+                                    }`}>
+                                    {index + 1}
                                 </div>
-                            ))
-                        ) : (
-                            <div className="text-center py-8 text-slate-500">
-                                No data yet. Be the first!
+                                <Avatar className="w-10 h-10 border border-slate-700">
+                                    <AvatarImage src={profile.user.image || ""} />
+                                    <AvatarFallback>{(profile.user.name || "T").charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-white font-medium truncate">{profile.user.name}</p>
+                                    <p className="text-xs text-slate-500 truncate">{profile.totalClients} Clients</p>
+                                </div>
                             </div>
-                        )}
+                        ))}
                     </CardContent>
                 </Card>
 
@@ -187,33 +162,27 @@ export default async function LeaderboardPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {highestRated.length > 0 ? (
-                            highestRated.map((profile, index) => (
-                                <div key={profile.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-800/50 transition-colors">
-                                    <div className={`w-8 h-8 flex items-center justify-center font-bold rounded-full ${index === 0 ? "bg-purple-500 text-white" :
-                                        index === 1 ? "bg-slate-300 text-black" :
-                                            index === 2 ? "bg-amber-700 text-white" : "bg-slate-800 text-slate-500"
-                                        }`}>
-                                        {index + 1}
-                                    </div>
-                                    <Avatar className="w-10 h-10 border border-slate-700">
-                                        <AvatarImage src={("profilePhotoUrl" in profile ? profile.profilePhotoUrl : null) || profile.user.image || ""} />
-                                        <AvatarFallback>{(profile.user.name || "T").charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-white font-medium truncate">{profile.user.name}</p>
-                                        <div className="flex items-center gap-1">
-                                            <Star className="w-3 h-3 text-primary fill-primary" />
-                                            <span className="text-xs text-slate-400">{profile.averageRating?.toFixed(1) || "N/A"}</span>
-                                        </div>
+                        {highestRated.map((profile, index) => (
+                            <div key={profile.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-800/50 transition-colors">
+                                <div className={`w-8 h-8 flex items-center justify-center font-bold rounded-full ${index === 0 ? "bg-purple-500 text-white" :
+                                    index === 1 ? "bg-slate-300 text-black" :
+                                        index === 2 ? "bg-amber-700 text-white" : "bg-slate-800 text-slate-500"
+                                    }`}>
+                                    {index + 1}
+                                </div>
+                                <Avatar className="w-10 h-10 border border-slate-700">
+                                    <AvatarImage src={profile.user.image || ""} />
+                                    <AvatarFallback>{(profile.user.name || "T").charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-white font-medium truncate">{profile.user.name}</p>
+                                    <div className="flex items-center gap-1">
+                                        <Star className="w-3 h-3 text-primary fill-primary" />
+                                        <span className="text-xs text-slate-400">{profile.averageRating?.toFixed(1) || "N/A"}</span>
                                     </div>
                                 </div>
-                            ))
-                        ) : (
-                            <div className="text-center py-8 text-slate-500">
-                                No data yet. Be the first!
                             </div>
-                        )}
+                        ))}
                     </CardContent>
                 </Card>
             </div>

@@ -74,4 +74,47 @@ export async function createCustomerPortalSession(customerId: string) {
   }
 }
 
+// For embedded checkout
+export async function startCheckoutSession(
+  productId: string,
+  metadata?: {
+    email?: string
+    password?: string
+    name?: string
+    plan?: string
+  }
+) {
+  try {
+    const session = await stripe.checkout.sessions.create({
+      ui_mode: "embedded",
+      redirect_on_completion: "never",
+      customer_email: metadata?.email,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: productId,
+              description: `GoodRunss ${productId} Plan`,
+            },
+            unit_amount: 2999, // $29.99 default
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      metadata: {
+        plan: metadata?.plan || productId,
+        name: metadata?.name || "",
+        email: metadata?.email || "",
+      },
+    })
+
+    return session.client_secret
+  } catch (error: any) {
+    console.error("Stripe checkout error:", error)
+    throw new Error(error.message || "Failed to create checkout session")
+  }
+}
+
 

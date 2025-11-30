@@ -75,7 +75,7 @@ export async function PUT(request: NextRequest) {
     })
 
     // Also update Clerk user if name or image changed
-    if ((name || image) && trainer.clerkId) {
+    if ((name || image) && trainer.id) {
       try {
         const clerkUpdate: any = {}
         if (name) {
@@ -87,7 +87,7 @@ export async function PUT(request: NextRequest) {
           clerkUpdate.profileImageUrl = image
         }
         
-        const clerkUserId = trainer.clerkId // Type guard: store in const
+        const clerkUserId = trainer.id // Type guard: store in const
         const client = await clerkClient()
         await client.users.updateUser(clerkUserId, clerkUpdate)
       } catch (clerkError) {

@@ -64,9 +64,8 @@ export async function POST(req: NextRequest) {
       data: {
         senderId: client.id,
         receiverId: client.trainerId,
-        content: body,
-        messageType: 'SMS',
-        metadata: { messageSid, from, to }
+        content: `[SMS from ${from}] ${body}`,
+        messageType: 'TEXT',
       }
     });
 
@@ -107,12 +106,8 @@ Common scenarios and responses:
       data: {
         senderId: client.trainerId,
         receiverId: client.id,
-        content: aiResponse,
-        messageType: 'SMS',
-        metadata: { 
-          generatedByAI: true,
-          inResponseTo: messageSid 
-        }
+        content: `[GIA Auto-Reply] ${aiResponse}`,
+        messageType: 'TEXT',
       }
     });
 

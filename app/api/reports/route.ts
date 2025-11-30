@@ -176,7 +176,7 @@ async function generateClientReport(trainerId: string, startDate: Date, endDate:
       sessions: {
         where: { scheduledAt: { gte: startDate, lte: endDate } }
       },
-      payment: {
+      payments: {
         where: { createdAt: { gte: startDate, lte: endDate } }
       }
     },
@@ -197,7 +197,7 @@ async function generateClientReport(trainerId: string, startDate: Date, endDate:
 
   const clientList = clients.map(client => {
     const sessionCount = client.sessions.length
-    const totalRevenue = client.payment
+    const totalRevenue = client.payments
       .filter(p => p.status === 'COMPLETED')
       .reduce((sum, p) => sum + Number(p.amount), 0)
     

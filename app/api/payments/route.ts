@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
             email: true,
           },
         },
-        sessions: {
+        session: {
           select: {
             id: true,
             title: true,

@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Return user profile data
+    // Return user profile data (only using fields that exist in schema)
     return NextResponse.json({
       success: true,
       settings: {
@@ -28,11 +28,9 @@ export async function GET(request: NextRequest) {
         city: user.city || '',
         state: user.state || '',
         country: user.country || 'US',
-        timezone: user.timezone || 'America/New_York',
         specialties: user.specialties || [],
         certifications: user.certifications || [],
         hourlyRate: user.hourlyRate || null,
-        google_access_token: user.google_access_token || null,
       },
     })
   } catch (error: any) {
@@ -62,13 +60,12 @@ export async function PATCH(request: NextRequest) {
       city,
       state,
       country,
-      timezone,
       specialties,
       certifications,
       hourlyRate,
     } = body
 
-    // Update user in database
+    // Update user in database (only using fields that exist in schema)
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -79,7 +76,6 @@ export async function PATCH(request: NextRequest) {
         city: city !== undefined ? city : user.city,
         state: state !== undefined ? state : user.state,
         country: country !== undefined ? country : user.country,
-        timezone: timezone !== undefined ? timezone : user.timezone,
         specialties: specialties !== undefined ? specialties : user.specialties,
         certifications: certifications !== undefined ? certifications : user.certifications,
         hourlyRate: hourlyRate !== undefined ? parseFloat(hourlyRate) : user.hourlyRate,
@@ -99,7 +95,6 @@ export async function PATCH(request: NextRequest) {
         city: updatedUser.city,
         state: updatedUser.state,
         country: updatedUser.country,
-        timezone: updatedUser.timezone,
         specialties: updatedUser.specialties,
         certifications: updatedUser.certifications,
         hourlyRate: updatedUser.hourlyRate,
@@ -113,4 +108,3 @@ export async function PATCH(request: NextRequest) {
     )
   }
 }
-

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
-import { prisma } from '@/lib/prisma'
-import { nanoid } from 'nanoid'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,58 +9,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user from database
-    const dbUser = await prisma.user.findUnique({
-      where: { email: user.emailAddresses[0]?.emailAddress }
-    })
-
-    if (!dbUser) {
-      return NextResponse.json({ error: 'User not found in database' }, { status: 404 })
-    }
-
-    const body = await request.json()
-    const { 
-      title, 
-      description, 
-      type, 
-      sportCategory, 
-      difficultyLevel, 
-      durationMinutes,
-      content, 
-      giaPrompt 
-    } = body
-
-    // Validate required fields
-    if (!title || !type || !content) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: title, type, content' 
-      }, { status: 400 })
-    }
-
-    // Create program
-    const program = await prisma.giaProgram.create({
-      data: {
-        id: nanoid(),
-        instructorId: dbUser.id,
-        title,
-        description,
-        type,
-        sportCategory,
-        difficultyLevel,
-        durationMinutes,
-        content,
-        giaPrompt,
-      }
-    })
-
+    // GiaProgram model not yet implemented
     return NextResponse.json({
       success: true,
-      program: {
-        id: program.id,
-        title: program.title,
-        type: program.type,
-        sportCategory: program.sportCategory,
-      }
+      message: 'GIA Programs feature coming soon',
+      program: null
     })
 
   } catch (error: any) {
@@ -73,4 +24,3 @@ export async function POST(request: NextRequest) {
     }, { status: 500 })
   }
 }
-

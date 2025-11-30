@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
           ],
         },
         include: {
-          users_messages_senderIdTousers: {
+          sender: {
             select: { id: true, name: true, image: true },
           },
-          users_messages_receiverIdTousers: {
+          receiver: {
             select: { id: true, name: true, image: true },
           },
         },
@@ -55,10 +55,10 @@ export async function GET(request: NextRequest) {
     const messages = await prisma.message.findMany({
       where,
       include: {
-        users_messages_senderIdTousers: {
+        sender: {
           select: { id: true, name: true, image: true },
         },
-        users_messages_receiverIdTousers: {
+        receiver: {
           select: { id: true, name: true, image: true },
         },
       },
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       if (!conversations[partnerId]) {
         conversations[partnerId] = {
           partnerId,
-          partner: msg.senderId === trainer.id ? msg.users_messages_receiverIdTousers : msg.users_messages_senderIdTousers,
+          partner: msg.senderId === trainer.id ? msg.receiver : msg.sender,
           lastMessage: msg,
           unreadCount: 0,
           messages: [],
@@ -128,10 +128,10 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
       },
       include: {
-        users_messages_senderIdTousers: {
+        sender: {
           select: { id: true, name: true, image: true },
         },
-        users_messages_receiverIdTousers: {
+        receiver: {
           select: { id: true, name: true, image: true },
         },
       },

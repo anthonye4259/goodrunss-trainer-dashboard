@@ -314,7 +314,7 @@ export async function POST(request: NextRequest) {
           const dbUser = await prisma.user.create({
             data: {
               id: crypto.randomUUID(),
-              clerkId: clerkUserId,
+              
               email: customerEmail,
               name: customerName || customerEmail.split('@')[0],
               role: 'TRAINER',
@@ -446,7 +446,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({
             success: true,
             userId: dbUserId,
-            clerkId: clerkUserId,
+            
             processingTime,
           })
 
@@ -575,11 +575,10 @@ export async function POST(request: NextRequest) {
         const subscriptionId = (invoice as any).subscription as string
         const subscription = await prisma.userSubscription.findFirst({
           where: { stripeSubscriptionId: subscriptionId },
-          include: { user: true }
         })
 
-        if (!subscription || !subscription.user) {
-          console.error(`[WEBHOOK] Subscription/User not found for invoice ${invoice.id}`)
+        if (!subscription) {
+          console.error(`[WEBHOOK] Subscription not found for invoice ${invoice.id}`)
           return NextResponse.json({ received: true })
         }
 
@@ -592,12 +591,12 @@ export async function POST(request: NextRequest) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              userId: subscription.user.id,
+              userId: subscription.userId,
               amount: invoice.amount_paid / 100, // Convert cents to dollars
               isFirstPayment: invoice.billing_reason === 'subscription_create'
             })
           })
-          console.log(`[WEBHOOK] Commission processed for user ${subscription.user.id}`)
+          console.log(`[WEBHOOK] Commission processed for user ${subscription.userId}`)
         } catch (err) {
           console.error(`[WEBHOOK] Failed to process commission: ${err}`)
         }

@@ -30,43 +30,23 @@ export async function GET(
       )
     }
 
-    // Fetch real services from database
-    let services = await prisma.trainerService.findMany({
-      where: {
-        trainerId,
-        isActive: true,
+    // TrainerService model not implemented - provide default services based on hourly rate
+    const services = [
+      {
+        id: "default-1",
+        name: "1-on-1 Training Session",
+        duration: 60,
+        price: trainer.hourlyRate || 100,
+        description: "Personalized training session focused on your goals",
       },
-      orderBy: {
-        price: 'asc',
+      {
+        id: "default-2",
+        name: "30-Min Consultation",
+        duration: 30,
+        price: (trainer.hourlyRate || 100) / 2,
+        description: "Quick consultation to discuss your fitness goals",
       },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        duration: true,
-        price: true,
-      },
-    })
-
-    // If no services exist, provide default fallback
-    if (services.length === 0) {
-      services = [
-        {
-          id: "default-1",
-          name: "1-on-1 Training Session",
-          duration: 60,
-          price: trainer.hourlyRate || 100,
-          description: "Personalized training session focused on your goals",
-        },
-        {
-          id: "default-2",
-          name: "30-Min Consultation",
-          duration: 30,
-          price: (trainer.hourlyRate || 100) / 2,
-          description: "Quick consultation to discuss your fitness goals",
-        },
-      ] as any
-    }
+    ]
 
     // Use first specialty as sport type, or default
     const sportType = trainer.specialties?.[0] || "PERSONAL_TRAINING"

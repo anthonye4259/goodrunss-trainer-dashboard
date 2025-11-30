@@ -171,7 +171,7 @@ export async function GET() {
         lowEngagement: Math.floor(totalClients * 0.08),
         ltv: clientLTV,
       },
-      payment: {
+      payments: {
         overdue: overduePayments.length,
         overdueTotal: overdueTotal,
         overdueList: overduePayments.map(p => ({
