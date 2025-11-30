@@ -9,7 +9,6 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
-        id: true,
         name: true,
         email: true,
         createdAt: true,
@@ -20,18 +19,18 @@ export async function GET(request: NextRequest) {
     // Get subscriptions for each trainer
     const trainersWithSubscriptions = await Promise.all(
       trainers.map(async (trainer) => {
-        if (!trainer.clerkId) {
+        if (!trainer.id) {
           return {
             ...trainer,
             subscription: null,
           }
         }
 
-        // Store clerkId in a variable for TypeScript type narrowing
-        const clerkId = trainer.clerkId
+        // Store id in a variable for TypeScript type narrowing
+        const clerkId = trainer.id
 
         const subscription = await prisma.userSubscription.findFirst({
-          where: { userId: clerkId },
+          where: { userId: odId },
           orderBy: { createdAt: 'desc' },
         })
 
