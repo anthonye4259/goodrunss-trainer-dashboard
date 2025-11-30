@@ -58,19 +58,20 @@ export default function AmbassadorDashboard() {
 
     const fetchAmbassadorData = async () => {
         try {
-            // Check session first
-            const sessionRes = await fetch("/api/ambassador/auth/session")
+            // Get email from URL parameter
+            const urlParams = new URLSearchParams(window.location.search)
+            const email = urlParams.get('email')
 
-            if (!sessionRes.ok) {
-                // Not authenticated - redirect to login
-                window.location.href = "/ambassador/login"
+            if (!email) {
+                // No email provided - redirect to join page
+                window.location.href = "/ambassador/join"
                 return
             }
 
-            const { ambassador } = await sessionRes.json()
+            console.log('[Ambassador Dashboard] Loading data for email:', email)
 
-            // Fetch stats using authenticated session
-            const res = await fetch("/api/ambassador/stats")
+            // Fetch stats directly with email (no auth required)
+            const res = await fetch(`/api/ambassador/stats?email=${encodeURIComponent(email)}`)
             if (res.ok) {
                 const data = await res.json()
                 setStats(data.stats)
@@ -80,11 +81,14 @@ export default function AmbassadorDashboard() {
                 if (data.stats?.id) {
                     fetchPayouts(data.stats.id)
                 }
+            } else {
+                console.error('[Ambassador Dashboard] Failed to fetch stats:', await res.text())
+                alert('Ambassador not found. Please sign up first.')
+                window.location.href = "/ambassador/join"
             }
         } catch (error) {
             console.error("Error fetching ambassador data:", error)
-            // On error, redirect to login
-            window.location.href = "/ambassador/login"
+            alert('Failed to load dashboard. Please try again.')
         } finally {
             setLoading(false)
         }

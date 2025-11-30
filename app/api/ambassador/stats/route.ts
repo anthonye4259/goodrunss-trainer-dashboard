@@ -60,6 +60,7 @@ export async function GET(req: NextRequest) {
 
         // Calculate stats
         const stats = {
+            id: ambassador.id,
             totalEarnings: Number(ambassador.totalEarnings),
             pendingEarnings: Number(ambassador.pendingEarnings),
             paidEarnings: Number(ambassador.paidEarnings),
