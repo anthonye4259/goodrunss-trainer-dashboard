@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light mode - Clean, minimal, professional */
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+
+  /* Primary - Lime green (GoodRunss brand) */
+  --primary: 88 70% 50%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+
+  --accent: 88 70% 50%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 88 70% 50%;
+
+  --radius: 0.75rem;
+}
+
+/* Refined dark mode - Cleaner, less visual noise */
+.dark {
+  /* Core backgrounds - Simplified navy */
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+
+  /* Card system - Single shade for consistency */
+  --card: 222 47% 15%;
+  --card-foreground: 210 40% 98%;
+
+  /* Popover */
+  --popover: 222 47% 15%;
+  --popover-foreground: 210 40% 98%;
+
+  /* Primary - Lime green (only accent color) */
+  --primary: 88 70% 65%;
+  --primary-foreground: 222 47% 11%;
+
+  /* Secondary - Subtle gray */
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+
+  /* Muted */
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+
+  /* Accent - Same as primary for consistency */
+  --accent: 88 70% 65%;
+  --accent-foreground: 222 47% 11%;
+
+  /* Destructive */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+
+  /* Borders - Subtle */
+  --border: 217 33% 24%;
+  --input: 217 33% 24%;
+
+  /* Ring - Primary color */
+  --ring: 88 70% 65%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Premium Design Utilities */
+
+/* Glass Effects */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-strong {
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(24px) saturate(200%);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+/* Gold Glows */
+.glow-gold {
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.15), 0 0 80px rgba(212, 175, 55, 0.05);
+}
+
+.text-gold {
+  color: #D4AF37;
+}
+
+.bg-gold {
+  background-color: #D4AF37;
+}
+
+.border-gold {
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+/* Gradients */
+.gradient-gold {
+  background: linear-gradient(135deg, #D4AF37 0%, #FWD700 100%);
+}
+
+.gradient-text-gold {
+  background: linear-gradient(135deg, #D4AF37 0%, #F2D06B 50%, #D4AF37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% auto;
+  animation: shine 3s linear infinite;
+}
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* Animations */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
