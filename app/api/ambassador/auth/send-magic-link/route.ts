@@ -6,47 +6,74 @@ import crypto from "crypto"
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: NextRequest) {
+  try {
+    const { email } = await req.json()
+
+    if (!email) {
+      console.error("[MAGIC_LINK] No email provided")
+      return NextResponse.json({ error: "Email is required" }, { status: 400 })
+    }
+
+    console.log(`[MAGIC_LINK] Request for email: ${email}`)
+
+    // Find ambassador by email
+    const ambassador = await prisma.ambassadors.findUnique({
+      where: { email }
+    })
+
+    if (!ambassador) {
+      console.error(`[MAGIC_LINK] Ambassador not found for email: ${email}`)
+      return NextResponse.json({ error: "Ambassador not found. Please sign up first." }, { status: 404 })
+    }
+
+    console.log(`[MAGIC_LINK] Found ambassador: ${ambassador.id}`)
+
+    // Generate secure token
+    const token = crypto.randomBytes(32).toString("hex")
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+
+    // Save magic link
+    await prisma.ambassador_magic_links.create({
+      data: {
+        ambassadorId: ambassador.id,
+        token,
+        expiresAt
+      }
+    })
+
+    console.log(`[MAGIC_LINK] Created magic link token for ${email}`)
+
+    // Create magic link URL
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://goodrunss-trainer-dashboard.vercel.app"
+    const magicLink = `${appUrl}/ambassador/verify?token=${token}`
+
+    // Always log the magic link for debugging
+    console.log(`[MAGIC_LINK] Login link for ${email}: ${magicLink}`)
+
+    // Check if Resend API key is configured
+    const hasResendKey = process.env.RESEND_API_KEY &&
+      process.env.RESEND_API_KEY !== "your_resend_api_key_here" &&
+      process.env.RESEND_API_KEY.startsWith("re_")
+
+    if (!hasResendKey) {
+      console.warn("[MAGIC_LINK] RESEND_API_KEY not configured - email will not be sent")
+      console.warn("[MAGIC_LINK] Use this link to login:", magicLink)
+      return NextResponse.json({
+        success: true,
+        message: "Magic link generated! (Email sending not configured - check server logs for link)",
+        devLink: process.env.NODE_ENV === 'development' ? magicLink : undefined
+      })
+    }
+
+    // Send email via Resend
     try {
-        const { email } = await req.json()
+      console.log(`[MAGIC_LINK] Attempting to send email to ${email}`)
 
-        if (!email) {
-            return NextResponse.json({ error: "Email is required" }, { status: 400 })
-        }
-
-        // Find ambassador by email
-        const ambassador = await prisma.ambassadors.findUnique({
-            where: { email }
-        })
-
-        if (!ambassador) {
-            return NextResponse.json({ error: "Ambassador not found. Please sign up first." }, { status: 404 })
-        }
-
-        // Generate secure token
-        const token = crypto.randomBytes(32).toString("hex")
-        const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
-
-        // Save magic link
-        await prisma.ambassador_magic_links.create({
-            data: {
-                ambassadorId: ambassador.id,
-                token,
-                expiresAt
-            }
-        })
-
-        // Create magic link URL
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-        const magicLink = `${appUrl}/ambassador/verify?token=${token}`
-
-        // Send email via Resend
-        if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== "your_resend_api_key_here") {
-            try {
-                await resend.emails.send({
-                    from: "GoodRunss Ambassadors <ambassadors@goodrunss.com>",
-                    to: email,
-                    subject: "🔐 Your Ambassador Dashboard Login Link",
-                    html: `
+      const result = await resend.emails.send({
+        from: "GoodRunss Ambassadors <ambassadors@goodrunss.com>",
+        to: email,
+        subject: "🔐 Your Ambassador Dashboard Login Link",
+        html: `
             <!DOCTYPE html>
             <html>
               <head>
@@ -88,23 +115,39 @@ export async function POST(req: NextRequest) {
               </body>
             </html>
           `
-                })
-            } catch (emailError) {
-                console.error("[MAGIC_LINK] Failed to send email:", emailError)
-                // Continue anyway - we'll log the link for development
-            }
-        }
+      })
 
-        // For development: log the magic link
-        console.log(`[MAGIC_LINK] Login link for ${email}: ${magicLink}`)
+      console.log(`[MAGIC_LINK] Email sent successfully:`, result)
 
-        return NextResponse.json({
-            success: true,
-            message: "Magic link sent! Check your email."
-        })
+      return NextResponse.json({
+        success: true,
+        message: "Magic link sent! Check your email."
+      })
 
-    } catch (error) {
-        console.error("[MAGIC_LINK_ERROR]", error)
-        return NextResponse.json({ error: "Failed to send magic link" }, { status: 500 })
+    } catch (emailError: any) {
+      console.error("[MAGIC_LINK] Failed to send email:", {
+        error: emailError?.message,
+        name: emailError?.name,
+        statusCode: emailError?.statusCode,
+        response: emailError?.response
+      })
+
+      // Return error with helpful message
+      return NextResponse.json({
+        error: "Failed to send email. Please try again or contact support.",
+        details: process.env.NODE_ENV === 'development' ? emailError?.message : undefined,
+        magicLink: process.env.NODE_ENV === 'development' ? magicLink : undefined
+      }, { status: 500 })
     }
+
+  } catch (error: any) {
+    console.error("[MAGIC_LINK_ERROR]", {
+      message: error?.message,
+      stack: error?.stack
+    })
+    return NextResponse.json({
+      error: "Failed to send magic link",
+      details: process.env.NODE_ENV === 'development' ? error?.message : undefined
+    }, { status: 500 })
+  }
 }
