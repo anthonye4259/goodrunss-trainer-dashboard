@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Store id in a variable for TypeScript type narrowing
-        const clerkId = trainer.id
+        const odId = trainer.id
 
         const subscription = await prisma.userSubscription.findFirst({
           where: { userId: odId },
