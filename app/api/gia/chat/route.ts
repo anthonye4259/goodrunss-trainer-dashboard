@@ -31,13 +31,7 @@ export async function POST(request: NextRequest) {
             id: true,
             name: true,
             goals: true,
-            sport: true,
-            skillLevel: true,
-            injuries: true,
-            preferences: true,
-            progress: true,
-            sessionsCount: true,
-            lastSessionDate: true,
+            notes: true,
           }
         }
       }
@@ -46,11 +40,11 @@ export async function POST(request: NextRequest) {
     // If specific client mentioned, get their context
     let clientContext = null
     if (clientId && dbUser) {
-      clientContext = dbUser.client.find(c => c.id === clientId)
+      clientContext = dbUser.clients.find(c => c.id === clientId)
     } else if (dbUser) {
       // Try to detect client name in message
       const lastMessage = messages[messages.length - 1]?.content.toLowerCase()
-      const detectedClient = dbUser.client.find(c =>
+      const detectedClient = dbUser.clients.find(c =>
         lastMessage && lastMessage.includes(c.name.toLowerCase())
       )
       if (detectedClient) {
@@ -159,14 +153,14 @@ export async function POST(request: NextRequest) {
       clientContext ? {
         name: clientContext.name,
         goals: clientContext.goals,
-        injuries: clientContext.injuries,
-        experience: clientContext.skillLevel || undefined,
-        equipment: [], // Can add later from client preferences
-        lastInteraction: clientContext.lastSessionDate ? `Session on ${clientContext.lastSessionDate.toLocaleDateString()}` : undefined
+        injuries: [], // Not in schema
+        experience: undefined, // Not in schema
+        equipment: [],
+        lastInteraction: undefined // Not in schema
       } : undefined,
       dbUser && revenueContext && scheduleContext ? {
         specialty: dbUser.specialties?.[0],
-        clientCount: dbUser.client?.length || 0,
+        clientCount: dbUser.clients?.length || 0,
         businessGoals: [], // Add if available in DB
         revenue: {
           mrr: revenueContext.currentMRR,
