@@ -162,8 +162,7 @@ export async function POST(request: NextRequest) {
         injuries: clientContext.injuries,
         experience: clientContext.skillLevel || undefined,
         equipment: [], // Can add later from client preferences
-        lastInteraction: clientContext.lastSessionDate ? `Session on ${clientContext.lastSessionDate.toLocaleDateString()}` : undefined,
-        nextSession: scheduleContext?.sessions.find(s => s.clients?.name === clientContext?.name)?.scheduledAt.toLocaleDateString()
+        lastInteraction: clientContext.lastSessionDate ? `Session on ${clientContext.lastSessionDate.toLocaleDateString()}` : undefined
       } : undefined,
       dbUser && revenueContext && scheduleContext ? {
         specialty: dbUser.specialties?.[0],
