@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     console.log(`[CREATE FREE TRAINER] Database user created: ${dbUser.id}`)
 
     // Step 3: Create lifetime free subscription
-    await prisma.user_subscriptions.create({
+    await prisma.userSubscription.create({
       data: {
         id: crypto.randomUUID(),
         userId: clerkUser.id,
