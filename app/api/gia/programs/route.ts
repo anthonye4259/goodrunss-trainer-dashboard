@@ -4,7 +4,7 @@ import { currentUser } from '@clerk/nextjs/server'
 export async function GET(request: NextRequest) {
   try {
     const user = await currentUser()
-    
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

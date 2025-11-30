@@ -34,10 +34,10 @@ export async function GET(req: NextRequest) {
 
     // Calculate client activity
     const clientActivity = new Map<string, { lastSession: Date; sessionCount: number }>()
-    
+
     for (const session of recentSessions) {
       if (!session.clientId) continue // Skip sessions without client
-      
+
       const existing = clientActivity.get(session.clientId)
       if (!existing || session.scheduledAt > existing.lastSession) {
         clientActivity.set(session.clientId, {
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
 
     for (const client of allClients) {
       const activity = clientActivity.get(client.id)
-      
+
       if (!activity) {
         // Never had a session in this period
         churnedClients.push({
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
         })
       } else {
         const daysSince = Math.floor((now.getTime() - activity.lastSession.getTime()) / (1000 * 60 * 60 * 24))
-        
+
         if (daysSince <= 7) {
           activeClients.push({
             ...client,
@@ -112,13 +112,13 @@ export async function GET(req: NextRequest) {
     const churnRate = totalClients > 0 ? (churnedClients.length / totalClients) * 100 : 0
 
     // Calculate engagement metrics
-    const avgSessionsPerClient = totalClients > 0 
-      ? recentSessions.length / totalClients 
+    const avgSessionsPerClient = totalClients > 0
+      ? recentSessions.length / totalClients
       : 0
 
     // Generate recommendations
     const recommendations: any[] = []
-    
+
     if (atRiskClients.length > 0) {
       recommendations.push({
         priority: 'HIGH',
@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
         client: atRiskClients.slice(0, 5).map(c => c.name)
       })
     }
-    
+
     if (churnedClients.length > 0) {
       recommendations.push({
         priority: 'MEDIUM',
@@ -138,7 +138,7 @@ export async function GET(req: NextRequest) {
         client: churnedClients.slice(0, 5).map(c => c.name)
       })
     }
-    
+
     if (retentionRate < 60) {
       recommendations.push({
         priority: 'CRITICAL',
@@ -156,7 +156,7 @@ export async function GET(req: NextRequest) {
         churnRate: Math.round(churnRate),
         avgSessionsPerClient: Math.round(avgSessionsPerClient * 10) / 10
       },
-      client: {
+      clients: {
         total: totalClients,
         active: activeClients.length,
         atRisk: atRiskClients.length,
@@ -212,7 +212,7 @@ export async function POST(req: NextRequest) {
     for (const client of clients) {
       if (client.email) {
         const personalizedMessage = defaultMessage.replace('[NAME]', client.name || 'there')
-        
+
         let offerText = ''
         if (offerType === '25_OFF') {
           offerText = '<p><strong>🎁 Special Offer: 25% off your next 3 sessions!</strong></p>'
@@ -226,7 +226,7 @@ export async function POST(req: NextRequest) {
           html: `<h2>${defaultSubject}</h2><p>${personalizedMessage}</p>${offerText}<p>Reply to this email or book directly to get back on track!</p><p>Best,<br>${trainer.name}</p>`,
           text: `${personalizedMessage}\n\n${offerText ? 'Special offer included! ' : ''}Reply to get back on track!`
         })
-        
+
         sent++
       }
     }

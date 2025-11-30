@@ -51,8 +51,8 @@ export async function GET() {
 
     const thisMonthRevenue = paymentsThisMonth._sum.amount || 0
     const lastMonthRevenue = paymentsLastMonth._sum.amount || 0
-    const revenueChange = lastMonthRevenue > 0 
-      ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 
+    const revenueChange = lastMonthRevenue > 0
+      ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
       : 0
 
     // 2. CLIENT STATS
@@ -128,7 +128,7 @@ export async function GET() {
         clientId: { not: null },
       },
     })
-    
+
     const activeClientCount = clientsWithRecentSessions.length
     const inactiveThisMonth = Math.max(0, totalClients - activeClientCount)
     const churnRate = totalClients > 0 ? (inactiveThisMonth / totalClients) * 100 : 0
@@ -155,7 +155,7 @@ export async function GET() {
         forecast: thisMonthRevenue * 1.14, // 14% projected growth
         totalTransactions: paymentsThisMonth._count,
       },
-      client: {
+      clients: {
         total: totalClients,
         active: totalClients,
         inactive: allClients.length - totalClients,
@@ -184,8 +184,8 @@ export async function GET() {
       sessions: {
         thisWeek: sessionsThisWeek,
         completed: completedSessionsThisWeek,
-        utilization: sessionsThisWeek > 0 
-          ? (completedSessionsThisWeek / sessionsThisWeek) * 100 
+        utilization: sessionsThisWeek > 0
+          ? (completedSessionsThisWeek / sessionsThisWeek) * 100
           : 0,
       },
       churn: {
