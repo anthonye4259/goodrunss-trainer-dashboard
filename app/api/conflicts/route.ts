@@ -36,21 +36,21 @@ export async function GET(req: NextRequest) {
 
     // Detect conflicts (overlapping sessions)
     const conflicts: any[] = []
-    
+
     for (let i = 0; i < sessions.length; i++) {
       const session1 = sessions[i]
       const session1End = new Date(session1.scheduledAt.getTime() + (session1.duration || 60) * 60000)
-      
+
       for (let j = i + 1; j < sessions.length; j++) {
         const session2 = sessions[j]
         const session2End = new Date(session2.scheduledAt.getTime() + (session2.duration || 60) * 60000)
-        
+
         // Check if sessions overlap
         const overlaps = (
           (session1.scheduledAt <= session2.scheduledAt && session1End > session2.scheduledAt) ||
           (session2.scheduledAt <= session1.scheduledAt && session2End > session1.scheduledAt)
         )
-        
+
         if (overlaps) {
           conflicts.push({
             id: `conflict-${session1.id}-${session2.id}`,
@@ -94,10 +94,10 @@ export async function GET(req: NextRequest) {
       const session1 = sessions[i]
       const session2 = sessions[i + 1]
       const session1End = new Date(session1.scheduledAt.getTime() + (session1.duration || 60) * 60000)
-      
+
       // If less than 15 minutes between sessions
       const gapMinutes = (session2.scheduledAt.getTime() - session1End.getTime()) / 60000
-      
+
       if (gapMinutes < 15 && gapMinutes >= 0) {
         warnings.push({
           id: `warning-${session1.id}-${session2.id}`,
@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
     } else if (action === 'reschedule' && newDate && newTime) {
       // Reschedule the session
       const newDateTime = new Date(`${newDate}T${newTime}:00`)
-      
+
       await prisma.trainerSession.update({
         where: { id: sessionId },
         data: {
