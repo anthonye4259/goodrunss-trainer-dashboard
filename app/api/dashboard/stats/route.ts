@@ -105,7 +105,7 @@ export async function GET() {
         createdAt: { lt: sevenDaysAgo },
       },
       include: {
-        clients: {
+        client: {
           select: {
             name: true,
             email: true,
