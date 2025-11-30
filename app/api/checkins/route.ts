@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       where.id = clientId
     }
 
-    const clients = await prisma.clients.findMany({
+    const clients = await prisma.client.findMany({
       where,
       take: limit,
       orderBy: { createdAt: 'desc' }
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
     // Get recent completed sessions as check-ins
     const clientIds = clients.map(c => c.id)
-    const recentSessions = await prisma.trainer_sessions.findMany({
+    const recentSessions = await prisma.trainerSession.findMany({
       where: {
         trainerId: trainer.id,
         clientId: { in: clientIds },
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify client belongs to trainer
-    const client = await prisma.clients.findFirst({
+    const client = await prisma.client.findFirst({
       where: {
         id: clientId,
         trainerId: trainer.id
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create a check-in entry (stored as a completed session with special type)
-    const checkin = await prisma.trainer_sessions.create({
+    const checkin = await prisma.trainerSession.create({
       data: {
         id: crypto.randomUUID(),
         trainerId: trainer.id,
@@ -170,7 +170,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Check-in ID required" }, { status: 400 })
     }
 
-    const checkin = await prisma.trainer_sessions.findFirst({
+    const checkin = await prisma.trainerSession.findFirst({
       where: {
         id: checkinId,
         trainerId: trainer.id
@@ -185,7 +185,7 @@ export async function PATCH(req: NextRequest) {
     const existingData = checkin.notes ? JSON.parse(checkin.notes) : {}
     const updatedData = { ...existingData, ...updates, updatedAt: new Date().toISOString() }
 
-    await prisma.trainer_sessions.update({
+    await prisma.trainerSession.update({
       where: { id: checkinId },
       data: {
         notes: JSON.stringify(updatedData),
@@ -225,7 +225,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Check-in ID required" }, { status: 400 })
     }
 
-    await prisma.trainer_sessions.delete({
+    await prisma.trainerSession.delete({
       where: {
         id: checkinId,
         trainerId: trainer.id

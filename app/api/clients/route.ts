@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if client email already exists for this trainer
-    const existingClient = await prisma.clients.findFirst({
+    const existingClient = await prisma.client.findFirst({
       where: {
         trainerId: trainer.id,
         email: email.toLowerCase(),
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Create client
-    const client = await prisma.clients.create({
+    const client = await prisma.client.create({
       data: {
         id: crypto.randomUUID(),
         trainerId: trainer.id,

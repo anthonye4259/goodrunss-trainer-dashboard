@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all availability windows from database
-    const windows = await prisma.availability_windows.findMany({
+    const windows = await prisma.availabilityWindow.findMany({
       where: {
         trainerId: trainer.id,
         isActive: true,
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Delete existing availability windows
-    await prisma.availability_windows.deleteMany({
+    await prisma.availabilityWindow.deleteMany({
       where: { trainerId: trainer.id },
     })
 
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (windowsToCreate.length > 0) {
-      await prisma.availability_windows.createMany({
+      await prisma.availabilityWindow.createMany({
         data: windowsToCreate,
       })
     }

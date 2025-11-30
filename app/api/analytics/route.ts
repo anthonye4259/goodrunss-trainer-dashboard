@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     startDate.setDate(startDate.getDate() - rangeInDays)
 
     // 1. REVENUE ANALYTICS
-    const payments = await prisma.payments.findMany({
+    const payments = await prisma.payment.findMany({
       where: {
         trainerId: trainer.id,
         createdAt: { gte: startDate },
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
       })
 
     // 2. CLIENT ANALYTICS
-    const clients = await prisma.clients.findMany({
+    const clients = await prisma.client.findMany({
       where: { trainerId: trainer.id },
       include: {
         trainer_sessions: {
@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
       : 0
 
     // 3. SESSION ANALYTICS
-    const sessions = await prisma.trainer_sessions.findMany({
+    const sessions = await prisma.trainerSession.findMany({
       where: {
         trainerId: trainer.id,
         scheduledAt: { gte: startDate }
@@ -151,14 +151,14 @@ export async function GET(req: NextRequest) {
     const previousStartDate = new Date(startDate)
     previousStartDate.setDate(previousStartDate.getDate() - rangeInDays)
 
-    const previousSessions = await prisma.trainer_sessions.count({
+    const previousSessions = await prisma.trainerSession.count({
       where: {
         trainerId: trainer.id,
         scheduledAt: { gte: previousStartDate, lt: startDate }
       }
     })
 
-    const previousPayments = await prisma.payments.findMany({
+    const previousPayments = await prisma.payment.findMany({
       where: {
         trainerId: trainer.id,
         createdAt: { gte: previousStartDate, lt: startDate },

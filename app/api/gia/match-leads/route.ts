@@ -276,7 +276,7 @@ export async function PUT(request: NextRequest) {
 
     if (action === 'accept' || action === 'convert') {
       // Create client from lead
-      const newClient = await prisma.clients.create({
+      const newClient = await prisma.client.create({
         data: {
           id: crypto.randomUUID(),
           trainerId: trainer.id,

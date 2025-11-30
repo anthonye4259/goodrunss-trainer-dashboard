@@ -21,7 +21,7 @@ export async function GET(
 
     const { id } = await params
 
-    const session = await prisma.trainer_sessions.findFirst({
+    const session = await prisma.trainerSession.findFirst({
       where: {
         id,
         trainerId: trainer.id,
@@ -62,7 +62,7 @@ export async function PUT(
 
     const { id } = await params
 
-    const existingSession = await prisma.trainer_sessions.findFirst({
+    const existingSession = await prisma.trainerSession.findFirst({
       where: {
         id,
         trainerId: trainer.id,
@@ -76,7 +76,7 @@ export async function PUT(
     const body = await request.json()
     const { title, description, type, duration, scheduledAt, location, notes, status } = body
 
-    const session = await prisma.trainer_sessions.update({
+    const session = await prisma.trainerSession.update({
       where: { id },
       data: {
         ...(title && { title }),
@@ -130,7 +130,7 @@ export async function DELETE(
 
     const { id } = await params
 
-    const existingSession = await prisma.trainer_sessions.findFirst({
+    const existingSession = await prisma.trainerSession.findFirst({
       where: {
         id,
         trainerId: trainer.id,
@@ -141,7 +141,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
 
-    await prisma.trainer_sessions.delete({
+    await prisma.trainerSession.delete({
       where: { id },
     })
 

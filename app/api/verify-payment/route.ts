@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
       if (metadata) {
         // Create the training session in the database
-        await prisma.trainer_sessions.create({
+        await prisma.trainerSession.create({
           data: {
             id: crypto.randomUUID(),
             trainerId: metadata.trainerId,

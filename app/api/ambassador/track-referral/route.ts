@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Check if referral already exists
-        const existingReferral = await prisma.referrals.findUnique({
+        const existingReferral = await prisma.referralTracking.findUnique({
             where: { referredUserId: userId }
         })
 
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Create referral record
-        const referral = await prisma.referrals.create({
+        const referral = await prisma.referralTracking.create({
             data: {
                 ambassadorId: ambassador.id,
                 referredUserId: userId,

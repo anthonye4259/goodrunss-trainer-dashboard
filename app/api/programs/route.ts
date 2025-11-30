@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       where.clientId = clientId
     }
 
-    const programs = await prisma.workout_plans.findMany({
+    const programs = await prisma.workoutPlan.findMany({
       where,
       orderBy: { createdAt: 'desc' }
     })
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     // Get associated sessions for each program
     const programsWithDetails = await Promise.all(
       programs.map(async (program) => {
-        const sessions = await prisma.trainer_sessions.findMany({
+        const sessions = await prisma.trainerSession.findMany({
           where: {
             trainerId: trainer.id,
             clientId: program.clientId || undefined,
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
 
     // Verify client if provided
     if (clientId) {
-      const client = await prisma.clients.findFirst({
+      const client = await prisma.client.findFirst({
         where: { id: clientId, trainerId: trainer.id }
       })
       if (!client) {
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
     end.setDate(end.getDate() + (weeks * 7))
 
     // Create program as workout plan
-    const program = await prisma.workout_plans.create({
+    const program = await prisma.workoutPlan.create({
       data: {
         id: crypto.randomUUID(),
         trainerId: trainer.id,
@@ -165,12 +165,12 @@ export async function POST(req: NextRequest) {
         })
       }
 
-      await prisma.trainer_sessions.createMany({ data: sessions })
+      await prisma.trainerSession.createMany({ data: sessions })
     }
 
     // Notify client if assigned
     if (clientId) {
-      const client = await prisma.clients.findUnique({ where: { id: clientId } })
+      const client = await prisma.client.findUnique({ where: { id: clientId } })
       if (client?.email) {
         await sendEmail({
           to: client.email,
@@ -216,7 +216,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Program ID required" }, { status: 400 })
     }
 
-    await prisma.workout_plans.update({
+    await prisma.workoutPlan.update({
       where: {
         id: programId,
         trainerId: trainer.id
@@ -256,7 +256,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Program ID required" }, { status: 400 })
     }
 
-    await prisma.workout_plans.delete({
+    await prisma.workoutPlan.delete({
       where: {
         id: programId,
         trainerId: trainer.id

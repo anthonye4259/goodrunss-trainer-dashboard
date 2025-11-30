@@ -19,7 +19,7 @@ export async function GET(
     const { trainerId } = await params
     
     // Fetch trainer's availability windows from database
-    const windows = await prisma.availability_windows.findMany({
+    const windows = await prisma.availabilityWindow.findMany({
       where: {
         trainerId,
         isActive: true,

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
 
-    const upcomingSessions = await prisma.trainer_sessions.findMany({
+    const upcomingSessions = await prisma.trainerSession.findMany({
       where: {
         trainerId: trainer.id,
         status: { in: ['SCHEDULED', 'CONFIRMED'] },
@@ -97,7 +97,7 @@ async function sendAutomaticReminders(trainer: any) {
     const oneDayFromNow = new Date(now.getTime() + 25 * 60 * 60 * 1000) // 25 hours buffer
 
     // Get sessions needing reminders
-    const sessionsNeedingReminders = await prisma.trainer_sessions.findMany({
+    const sessionsNeedingReminders = await prisma.trainerSession.findMany({
       where: {
         trainerId: trainer.id,
         status: { in: ['SCHEDULED', 'CONFIRMED'] },
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 })
     }
 
-    const session = await prisma.trainer_sessions.findFirst({
+    const session = await prisma.trainerSession.findFirst({
       where: {
         id: sessionId,
         trainerId: trainer.id

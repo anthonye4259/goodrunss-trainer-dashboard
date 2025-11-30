@@ -23,7 +23,7 @@ export async function PATCH(
         const { status, amount, description, method } = body
 
         // Verify payment belongs to trainer
-        const payment = await prisma.payments.findFirst({
+        const payment = await prisma.payment.findFirst({
             where: {
                 id,
                 trainerId: trainer.id,
@@ -35,7 +35,7 @@ export async function PATCH(
         }
 
         // Update payment
-        const updatedPayment = await prisma.payments.update({
+        const updatedPayment = await prisma.payment.update({
             where: { id },
             data: {
                 ...(status && { status }),

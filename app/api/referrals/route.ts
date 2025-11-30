@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     // Get referrals (clients who joined via this code)
     // We'd store referral source in client metadata
-    const allClients = await prisma.clients.findMany({
+    const allClients = await prisma.client.findMany({
       where: { trainerId: trainer.id }
     })
 
@@ -141,11 +141,11 @@ export async function PATCH(req: NextRequest) {
     const trainer = trainers[0]
 
     // Update client to mark referral source
-    const client = await prisma.clients.findUnique({ where: { id: newClientId } })
+    const client = await prisma.client.findUnique({ where: { id: newClientId } })
 
     if (client) {
       const currentNotes = client.notes ? JSON.parse(client.notes) : {}
-      await prisma.clients.update({
+      await prisma.client.update({
         where: { id: newClientId },
         data: {
           notes: JSON.stringify({

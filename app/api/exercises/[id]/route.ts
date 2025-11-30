@@ -14,7 +14,7 @@ export async function GET(
     }
 
     const { id } = await params
-    const exercise = await prisma.exercises.findUnique({
+    const exercise = await prisma.exercise.findUnique({
       where: { id },
     })
 
@@ -64,7 +64,7 @@ export async function PUT(
       substitutes,
     } = body
 
-    const exercise = await prisma.exercises.update({
+    const exercise = await prisma.exercise.update({
       where: { id },
       data: {
         ...(name && { name }),
@@ -108,7 +108,7 @@ export async function DELETE(
     }
 
     const { id } = await params
-    await prisma.exercises.delete({
+    await prisma.exercise.delete({
       where: { id },
     })
 

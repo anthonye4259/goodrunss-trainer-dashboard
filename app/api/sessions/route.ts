@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       where.status = status
     }
 
-    const sessions = await prisma.trainer_sessions.findMany({
+    const sessions = await prisma.trainerSession.findMany({
       where,
       include: {
         clients: {
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify client belongs to trainer
-    const client = await prisma.clients.findFirst({
+    const client = await prisma.client.findFirst({
       where: {
         id: clientId,
         trainerId: trainer.id,
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for scheduling conflicts
-    const conflict = await prisma.trainer_sessions.findFirst({
+    const conflict = await prisma.trainerSession.findFirst({
       where: {
         trainerId: trainer.id,
         scheduledAt: new Date(scheduledAt),
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Create session
-    const session = await prisma.trainer_sessions.create({
+    const session = await prisma.trainerSession.create({
       data: {
         id: sessionId,
         trainerId: trainer.id,

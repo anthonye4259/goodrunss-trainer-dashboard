@@ -16,7 +16,7 @@ export async function GET(
 
     const { id } = await params
 
-    const plan = await prisma.workout_plans.findFirst({
+    const plan = await prisma.workoutPlan.findFirst({
       where: {
         id,
         trainerId: trainer.id
@@ -31,7 +31,7 @@ export async function GET(
     }
 
     // Fetch client info separately
-    const client = await prisma.clients.findUnique({
+    const client = await prisma.client.findUnique({
       where: { id: plan.clientId },
       select: {
         id: true,
@@ -92,7 +92,7 @@ export async function POST(
     const { action, ...data } = body
 
     // Verify ownership
-    const plan = await prisma.workout_plans.findFirst({
+    const plan = await prisma.workoutPlan.findFirst({
       where: {
         id,
         trainerId: trainer.id
@@ -116,7 +116,7 @@ export async function POST(
           )
         }
 
-        const activatedPlan = await prisma.workout_plans.update({
+        const activatedPlan = await prisma.workoutPlan.update({
           where: { id },
           data: {
             status: 'active',
@@ -127,7 +127,7 @@ export async function POST(
         })
 
         // Fetch client separately
-        const activatedClient = await prisma.clients.findUnique({
+        const activatedClient = await prisma.client.findUnique({
           where: { id: activatedPlan.clientId },
           select: { id: true, name: true, email: true }
         })
@@ -145,7 +145,7 @@ export async function POST(
 
       case 'clone':
         // Clone a plan (useful for templates or repeating plans)
-        const clonedPlan = await prisma.workout_plans.create({
+        const clonedPlan = await prisma.workoutPlan.create({
           data: {
             id: crypto.randomUUID(),
             trainerId: trainer.id,
@@ -177,7 +177,7 @@ export async function POST(
         })
 
         // Fetch client separately
-        const clonedClient = await prisma.clients.findUnique({
+        const clonedClient = await prisma.client.findUnique({
           where: { id: clonedPlan.clientId },
           select: { id: true, name: true, email: true }
         })
@@ -195,7 +195,7 @@ export async function POST(
 
       case 'complete':
         // Mark plan as completed
-        const completedPlan = await prisma.workout_plans.update({
+        const completedPlan = await prisma.workoutPlan.update({
           where: { id },
           data: {
             status: 'completed',
@@ -206,7 +206,7 @@ export async function POST(
         })
 
         // Fetch client separately
-        const completedClient = await prisma.clients.findUnique({
+        const completedClient = await prisma.client.findUnique({
           where: { id: completedPlan.clientId },
           select: { id: true, name: true, email: true }
         })
@@ -224,7 +224,7 @@ export async function POST(
 
       case 'archive':
         // Archive a plan
-        const archivedPlan = await prisma.workout_plans.update({
+        const archivedPlan = await prisma.workoutPlan.update({
           where: { id },
           data: {
             status: 'archived',
@@ -246,7 +246,7 @@ export async function POST(
         const newCompletionRate = (sessionsCompleted / plan.totalSessions) * 100
         const newWeek = Math.floor(sessionsCompleted / plan.sessionsPerWeek) + 1
 
-        const updatedPlan = await prisma.workout_plans.update({
+        const updatedPlan = await prisma.workoutPlan.update({
           where: { id },
           data: {
             completedSessions: sessionsCompleted,
@@ -258,7 +258,7 @@ export async function POST(
         })
 
         // Fetch client separately
-        const updatedClient = await prisma.clients.findUnique({
+        const updatedClient = await prisma.client.findUnique({
           where: { id: updatedPlan.clientId },
           select: { id: true, name: true, email: true }
         })

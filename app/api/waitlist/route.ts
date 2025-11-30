@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const statusFilter = searchParams.get('status') || 'WAITING'
 
     // Get waitlist entries (we'll store in trainer_sessions with title starting with "Waitlist:")
-    const waitlistEntries = await prisma.trainer_sessions.findMany({
+    const waitlistEntries = await prisma.trainerSession.findMany({
       where: {
         trainerId: trainer.id,
         title: { startsWith: 'Waitlist:' }
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get client info
-    const client = await prisma.clients.findFirst({
+    const client = await prisma.client.findFirst({
       where: { id: clientId, trainerId: trainer.id }
     })
 
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
       ? new Date(`${requestedDate}T${requestedTime}:00`) 
       : new Date(requestedDate)
 
-    const waitlistEntry = await prisma.trainer_sessions.create({
+    const waitlistEntry = await prisma.trainerSession.create({
       data: {
         id: crypto.randomUUID(),
         trainerId: trainer.id,
@@ -171,7 +171,7 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json()
     const { waitlistId, action } = body
 
-    const entry = await prisma.trainer_sessions.findFirst({
+    const entry = await prisma.trainerSession.findFirst({
       where: {
         id: waitlistId,
         trainerId: trainer.id,
@@ -189,7 +189,7 @@ export async function PATCH(req: NextRequest) {
     if (action === 'notify') {
       // Mark as notified in notes
       const currentNotes = entry.notes ? JSON.parse(entry.notes) : {}
-      await prisma.trainer_sessions.update({
+      await prisma.trainerSession.update({
         where: { id: waitlistId },
         data: { 
           notes: JSON.stringify({ ...currentNotes, waitlistStatus: 'NOTIFIED' }), 
@@ -215,7 +215,7 @@ export async function PATCH(req: NextRequest) {
     } else if (action === 'convert') {
       // Convert to actual booked session by removing "Waitlist:" prefix
       const newTitle = entry.title.replace('Waitlist: ', '')
-      await prisma.trainer_sessions.update({
+      await prisma.trainerSession.update({
         where: { id: waitlistId },
         data: { 
           title: newTitle,
@@ -267,7 +267,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Waitlist ID required" }, { status: 400 })
     }
 
-    await prisma.trainer_sessions.delete({
+    await prisma.trainerSession.delete({
       where: {
         id: waitlistId,
         trainerId: trainer.id

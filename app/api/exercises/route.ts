@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    const exercises = await prisma.exercises.findMany({
+    const exercises = await prisma.exercise.findMany({
       where,
       orderBy: { popularityScore: 'desc' },
     })
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const exercise = await prisma.exercises.create({
+    const exercise = await prisma.exercise.create({
       data: {
         id: crypto.randomUUID(),
         name,

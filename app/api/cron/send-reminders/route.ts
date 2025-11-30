@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const in2Hours = new Date(now.getTime() + 2 * 60 * 60 * 1000); // Buffer
 
     // Find sessions in the next 24-25 hours (for 24hr reminders)
-    const sessions24hr = await prisma.trainer_sessions.findMany({
+    const sessions24hr = await prisma.trainerSession.findMany({
       where: {
         scheduledAt: {
           gte: in24Hours,
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Find sessions in the next 1-2 hours (for 1hr reminders)
-    const sessions1hr = await prisma.trainer_sessions.findMany({
+    const sessions1hr = await prisma.trainerSession.findMany({
       where: {
         scheduledAt: {
           gte: in1Hour,
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
         });
 
         // Mark as sent (update notes field since we don't have metadata)
-        await prisma.trainer_sessions.update({
+        await prisma.trainerSession.update({
           where: { id: session.id },
           data: {
             notes: `${session.notes || ''}\n[Reminder sent: 24hr at ${now.toISOString()}]`
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
         });
 
         // Mark as sent (update notes field since we don't have metadata)
-        await prisma.trainer_sessions.update({
+        await prisma.trainerSession.update({
           where: { id: session.id },
           data: {
             notes: `${session.notes || ''}\n[Reminder sent: 1hr at ${now.toISOString()}]`

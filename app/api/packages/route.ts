@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const clientId = searchParams.get('clientId')
 
     // Packages stored as payments with description containing package data
-    const allPayments = await prisma.payments.findMany({
+    const allPayments = await prisma.payment.findMany({
       where: {
         trainerId: trainer.id,
         clientId: clientId || undefined
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const client = await prisma.clients.findFirst({
+    const client = await prisma.client.findFirst({
       where: { id: clientId, trainerId: trainer.id }
     })
 
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
 
     const expiryDate = expiryDays ? new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000) : null
 
-    const packageRecord = await prisma.payments.create({
+    const packageRecord = await prisma.payment.create({
       data: {
         id: crypto.randomUUID(),
         trainerId: trainer.id,
@@ -186,7 +186,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Package ID required" }, { status: 400 })
     }
 
-    const packageRecord = await prisma.payments.findFirst({
+    const packageRecord = await prisma.payment.findFirst({
       where: {
         id: packageId,
         trainerId: trainer.id
@@ -227,7 +227,7 @@ export async function PATCH(req: NextRequest) {
       details.remaining += 1
     }
 
-    await prisma.payments.update({
+    await prisma.payment.update({
       where: { id: packageId },
       data: {
         description: JSON.stringify(details),

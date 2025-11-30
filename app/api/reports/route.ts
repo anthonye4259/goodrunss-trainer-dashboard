@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
 
 // FINANCIAL REPORT
 async function generateFinancialReport(trainerId: string, startDate: Date, endDate: Date) {
-  const payments = await prisma.payments.findMany({
+  const payments = await prisma.payment.findMany({
     where: {
       trainerId,
       createdAt: { gte: startDate, lte: endDate }
@@ -170,7 +170,7 @@ async function generateFinancialReport(trainerId: string, startDate: Date, endDa
 
 // CLIENT REPORT
 async function generateClientReport(trainerId: string, startDate: Date, endDate: Date) {
-  const clients = await prisma.clients.findMany({
+  const clients = await prisma.client.findMany({
     where: { trainerId },
     include: {
       trainer_sessions: {
@@ -238,7 +238,7 @@ async function generateClientReport(trainerId: string, startDate: Date, endDate:
 
 // SESSION REPORT
 async function generateSessionReport(trainerId: string, startDate: Date, endDate: Date) {
-  const sessions = await prisma.trainer_sessions.findMany({
+  const sessions = await prisma.trainerSession.findMany({
     where: {
       trainerId,
       scheduledAt: { gte: startDate, lte: endDate }

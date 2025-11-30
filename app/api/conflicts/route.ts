@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get all scheduled sessions for this trainer
-    const sessions = await prisma.trainer_sessions.findMany({
+    const sessions = await prisma.trainerSession.findMany({
       where: {
         trainerId: trainer.id,
         status: { in: ['SCHEDULED', 'CONFIRMED'] },
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const session = await prisma.trainer_sessions.findFirst({
+    const session = await prisma.trainerSession.findFirst({
       where: {
         id: sessionId,
         trainerId: trainer.id
@@ -175,7 +175,7 @@ export async function POST(req: NextRequest) {
 
     if (action === 'cancel') {
       // Cancel the session
-      await prisma.trainer_sessions.update({
+      await prisma.trainerSession.update({
         where: { id: sessionId },
         data: { status: 'CANCELLED', updatedAt: new Date() }
       })
@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
       // Reschedule the session
       const newDateTime = new Date(`${newDate}T${newTime}:00`)
       
-      await prisma.trainer_sessions.update({
+      await prisma.trainerSession.update({
         where: { id: sessionId },
         data: {
           scheduledAt: newDateTime,

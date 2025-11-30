@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
 
           try {
             // 1. Create or update client
-            let client = await prisma.clients.findFirst({
+            let client = await prisma.client.findFirst({
               where: {
                 email: customerEmail,
                 trainerId: metadata.trainerId,
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
             })
 
             if (!client) {
-              client = await prisma.clients.create({
+              client = await prisma.client.create({
                 data: {
                   id: crypto.randomUUID(),
                   trainerId: metadata.trainerId,
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
             // 2. Create training session
             const scheduledAt = metadata.date ? new Date(metadata.date) : new Date()
 
-            const trainingSession = await prisma.trainer_sessions.create({
+            const trainingSession = await prisma.trainerSession.create({
               data: {
                 id: crypto.randomUUID(),
                 trainerId: metadata.trainerId,
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
             console.log(`[WEBHOOK] Created training session: ${trainingSession.id}`)
 
             // 3. Create payment record
-            await prisma.payments.create({
+            await prisma.payment.create({
               data: {
                 id: crypto.randomUUID(),
                 trainerId: metadata.trainerId,

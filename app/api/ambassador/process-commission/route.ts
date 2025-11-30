@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Check if this user was referred
-        const referral = await prisma.referrals.findUnique({
+        const referral = await prisma.referralTracking.findUnique({
             where: { referredUserId: userId },
             include: { ambassador: true }
         })
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
         // Update referral status on first payment
         if (isFirstPayment && referral.status === "PENDING") {
-            await prisma.referrals.update({
+            await prisma.referralTracking.update({
                 where: { id: referral.id },
                 data: {
                     status: "CONVERTED",
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
         // Update referral status to ACTIVE if not already
         if (referral.status === "CONVERTED") {
-            await prisma.referrals.update({
+            await prisma.referralTracking.update({
                 where: { id: referral.id },
                 data: { status: "ACTIVE" }
             })

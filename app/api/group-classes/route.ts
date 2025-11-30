@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Group classes are sessions with type PERSONAL_TRAINING and title starting with "Group:"
-    const classes = await prisma.trainer_sessions.findMany({
+    const classes = await prisma.trainerSession.findMany({
       where: {
         trainerId: trainer.id,
         title: { startsWith: 'Group:' }
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const groupClass = await prisma.trainer_sessions.create({
+    const groupClass = await prisma.trainerSession.create({
       data: {
         id: crypto.randomUUID(),
         trainerId: trainer.id,
@@ -152,7 +152,7 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    const groupClass = await prisma.trainer_sessions.findFirst({
+    const groupClass = await prisma.trainerSession.findFirst({
       where: {
         id: classId,
         trainerId: trainer.id,
@@ -164,7 +164,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Group class not found" }, { status: 404 })
     }
 
-    const client = await prisma.clients.findFirst({
+    const client = await prisma.client.findFirst({
       where: { id: clientId, trainerId: trainer.id }
     })
 
@@ -214,7 +214,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Update class
-    await prisma.trainer_sessions.update({
+    await prisma.trainerSession.update({
       where: { id: classId },
       data: {
         notes: JSON.stringify({ ...data, participants }),
@@ -252,7 +252,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Class ID required" }, { status: 400 })
     }
 
-    const groupClass = await prisma.trainer_sessions.findFirst({
+    const groupClass = await prisma.trainerSession.findFirst({
       where: {
         id: classId,
         trainerId: trainer.id
@@ -284,7 +284,7 @@ export async function DELETE(req: NextRequest) {
       console.error('Error notifying participants:', e)
     }
 
-    await prisma.trainer_sessions.delete({
+    await prisma.trainerSession.delete({
       where: { id: classId }
     })
 

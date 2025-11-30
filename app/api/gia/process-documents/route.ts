@@ -151,7 +151,7 @@ Be thorough and extract EVERYTHING you see, even if handwritten or in a screensh
           for (const profile of parsed.clientProfiles) {
             if (profile.name) {
               // Create or update client in database
-              const existingClient = await prisma.clients.findFirst({
+              const existingClient = await prisma.client.findFirst({
                 where: {
                   trainerId: trainer.id,
                   name: profile.name
@@ -163,7 +163,7 @@ Be thorough and extract EVERYTHING you see, even if handwritten or in a screensh
               if (existingClient) {
                 clientId = existingClient.id
                 // Update existing client
-                await prisma.clients.update({
+                await prisma.client.update({
                   where: { id: existingClient.id },
           data: {
                     email: profile.email || existingClient.email,
@@ -173,7 +173,7 @@ Be thorough and extract EVERYTHING you see, even if handwritten or in a screensh
                 })
               } else {
                 // Create new client
-                const newClient = await prisma.clients.create({
+                const newClient = await prisma.client.create({
                   data: {
                     id: crypto.randomUUID(),
                     trainerId: trainer.id,
@@ -280,7 +280,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Return clients created by document processing
-    const clients = await prisma.clients.findMany({
+    const clients = await prisma.client.findMany({
       where: { trainerId: trainer.id },
         orderBy: { createdAt: 'desc' },
       take: 20

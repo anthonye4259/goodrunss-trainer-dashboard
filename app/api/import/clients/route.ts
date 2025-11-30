@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        await prisma.clients.create({
+        await prisma.client.create({
           data: {
             id: crypto.randomUUID(),
             trainerId: trainer.id,

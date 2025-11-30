@@ -19,12 +19,12 @@ export async function GET(req: NextRequest) {
     cutoffDate.setDate(cutoffDate.getDate() - daysAgo)
 
     // Get all clients
-    const allClients = await prisma.clients.findMany({
+    const allClients = await prisma.client.findMany({
       where: { trainerId: trainer.id }
     })
 
     // Get recent sessions
-    const recentSessions = await prisma.trainer_sessions.findMany({
+    const recentSessions = await prisma.trainerSession.findMany({
       where: {
         trainerId: trainer.id,
         scheduledAt: { gte: cutoffDate },
@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const clients = await prisma.clients.findMany({
+    const clients = await prisma.client.findMany({
       where: {
         id: { in: clientIds },
         trainerId: trainer.id

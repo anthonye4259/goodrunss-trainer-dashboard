@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     let clients: any[] = []
 
     if (audience === 'all') {
-      clients = await prisma.clients.findMany({
+      clients = await prisma.client.findMany({
         where: { trainerId: trainer.id }
       })
     } else if (audience === 'active') {
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       const recentDate = new Date()
       recentDate.setDate(recentDate.getDate() - 30)
 
-      const recentSessions = await prisma.trainer_sessions.findMany({
+      const recentSessions = await prisma.trainerSession.findMany({
         where: {
           trainerId: trainer.id,
           scheduledAt: { gte: recentDate }
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
 
       const activeClientIds = new Set(recentSessions.map(s => s.clientId).filter((id): id is string => id !== null))
 
-      clients = await prisma.clients.findMany({
+      clients = await prisma.client.findMany({
         where: {
           trainerId: trainer.id,
           id: { in: Array.from(activeClientIds) }
@@ -110,11 +110,11 @@ export async function POST(req: NextRequest) {
       const recentDate = new Date()
       recentDate.setDate(recentDate.getDate() - 30)
 
-      const allClients = await prisma.clients.findMany({
+      const allClients = await prisma.client.findMany({
         where: { trainerId: trainer.id }
       })
 
-      const recentSessions = await prisma.trainer_sessions.findMany({
+      const recentSessions = await prisma.trainerSession.findMany({
         where: {
           trainerId: trainer.id,
           scheduledAt: { gte: recentDate }

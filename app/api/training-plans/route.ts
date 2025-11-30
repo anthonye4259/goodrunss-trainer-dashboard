@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get workout plans
-    const plans = await prisma.workout_plans.findMany({
+    const plans = await prisma.workoutPlan.findMany({
       where,
       orderBy: [
         { status: 'asc' }, // Active first
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch client info separately
     const clientIds = [...new Set(plans.map(p => p.clientId))]
-    const clients = await prisma.clients.findMany({
+    const clients = await prisma.client.findMany({
       where: { id: { in: clientIds } },
       select: { id: true, name: true, email: true }
     })
@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
     const totalSessions = sessionsPerWeek * duration
 
     // Create workout plan
-    const plan = await prisma.workout_plans.create({
+    const plan = await prisma.workoutPlan.create({
       data: {
         id: crypto.randomUUID(),
         trainerId: trainer.id,
@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Fetch client info separately
-    const client = await prisma.clients.findUnique({
+    const client = await prisma.client.findUnique({
       where: { id: plan.clientId },
       select: { id: true, name: true, email: true }
     })
@@ -211,7 +211,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Verify ownership
-    const existingPlan = await prisma.workout_plans.findFirst({
+    const existingPlan = await prisma.workoutPlan.findFirst({
       where: {
         id: planId,
         trainerId: trainer.id
@@ -242,13 +242,13 @@ export async function PATCH(req: NextRequest) {
       updateData.status = 'completed'
     }
 
-    const plan = await prisma.workout_plans.update({
+    const plan = await prisma.workoutPlan.update({
       where: { id: planId },
       data: updateData
     })
 
     // Fetch client info separately
-    const client = await prisma.clients.findUnique({
+    const client = await prisma.client.findUnique({
       where: { id: plan.clientId },
       select: { id: true, name: true, email: true }
     })
@@ -294,7 +294,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Verify ownership
-    const existingPlan = await prisma.workout_plans.findFirst({
+    const existingPlan = await prisma.workoutPlan.findFirst({
       where: {
         id: planId,
         trainerId: trainer.id
@@ -310,7 +310,7 @@ export async function DELETE(req: NextRequest) {
 
     // Archive instead of delete if plan has started
     if (existingPlan.status === 'active' && existingPlan.completedSessions > 0) {
-      await prisma.workout_plans.update({
+      await prisma.workoutPlan.update({
         where: { id: planId },
         data: { 
           status: 'archived',
@@ -327,7 +327,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Permanently delete if no progress
-    await prisma.workout_plans.delete({
+    await prisma.workoutPlan.delete({
       where: { id: planId }
     })
 

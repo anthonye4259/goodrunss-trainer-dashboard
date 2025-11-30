@@ -15,7 +15,7 @@ export async function GET(
 
     const { id } = await params
 
-    const workoutPlan = await prisma.workout_plans.findUnique({
+    const workoutPlan = await prisma.workoutPlan.findUnique({
       where: { id },
       include: {
         workout_sessions: {
@@ -73,7 +73,7 @@ export async function PUT(
     } = body
 
     // Verify ownership
-    const existingPlan = await prisma.workout_plans.findUnique({
+    const existingPlan = await prisma.workoutPlan.findUnique({
       where: { id },
     })
 
@@ -85,7 +85,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const workoutPlan = await prisma.workout_plans.update({
+    const workoutPlan = await prisma.workoutPlan.update({
       where: { id },
       data: {
         ...(name && { name }),
@@ -128,7 +128,7 @@ export async function DELETE(
     const { id } = await params
 
     // Verify ownership
-    const existingPlan = await prisma.workout_plans.findUnique({
+    const existingPlan = await prisma.workoutPlan.findUnique({
       where: { id },
     })
 
@@ -140,7 +140,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    await prisma.workout_plans.delete({
+    await prisma.workoutPlan.delete({
       where: { id },
     })
 

@@ -24,7 +24,7 @@ export async function GET(
     const { id } = await params
 
     // Fetch client with all details
-    const client = await prisma.clients.findFirst({
+    const client = await prisma.client.findFirst({
       where: {
         id,
         trainerId: trainer.id, // Ensure trainer owns this client
@@ -42,7 +42,7 @@ export async function GET(
     }
 
     // Get session stats
-    const sessionStats = await prisma.trainer_sessions.aggregate({
+    const sessionStats = await prisma.trainerSession.aggregate({
       where: {
         clientId: id,
         trainerId: trainer.id,
@@ -81,7 +81,7 @@ export async function PUT(
     const { id } = await params
 
     // Verify client ownership
-    const existingClient = await prisma.clients.findFirst({
+    const existingClient = await prisma.client.findFirst({
       where: {
         id,
         trainerId: trainer.id,
@@ -96,7 +96,7 @@ export async function PUT(
     const { name, email, phone, age, goals, notes } = body
 
     // Update client
-    const updatedClient = await prisma.clients.update({
+    const updatedClient = await prisma.client.update({
       where: { id },
       data: {
         ...(name && { name }),
@@ -140,7 +140,7 @@ export async function DELETE(
     const { id } = await params
 
     // Verify client ownership
-    const existingClient = await prisma.clients.findFirst({
+    const existingClient = await prisma.client.findFirst({
       where: {
         id,
         trainerId: trainer.id,
@@ -152,7 +152,7 @@ export async function DELETE(
     }
 
     // Delete client (cascade will handle related records)
-    await prisma.clients.delete({
+    await prisma.client.delete({
       where: { id },
     })
 

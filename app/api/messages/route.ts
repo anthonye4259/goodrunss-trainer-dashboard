@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // If otherUserId is provided, get conversation with that user
     if (otherUserId) {
-      const messages = await prisma.messages.findMany({
+      const messages = await prisma.message.findMany({
         where: {
           OR: [
             { senderId: trainer.id, receiverId: otherUserId },
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       where.receiverId = trainer.id // Only unread messages TO the trainer
     }
 
-    const messages = await prisma.messages.findMany({
+    const messages = await prisma.message.findMany({
       where,
       include: {
         users_messages_senderIdTousers: {
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const message = await prisma.messages.create({
+    const message = await prisma.message.create({
       data: {
         id: crypto.randomUUID(),
         senderId: trainer.id,
@@ -164,7 +164,7 @@ export async function PUT(request: NextRequest) {
 
     if (messageIds && Array.isArray(messageIds)) {
       // Mark specific messages as read
-      await prisma.messages.updateMany({
+      await prisma.message.updateMany({
         where: {
           id: { in: messageIds },
           receiverId: trainer.id,
@@ -176,7 +176,7 @@ export async function PUT(request: NextRequest) {
       })
     } else if (otherUserId) {
       // Mark all messages from a user as read
-      await prisma.messages.updateMany({
+      await prisma.message.updateMany({
         where: {
           senderId: otherUserId,
           receiverId: trainer.id,

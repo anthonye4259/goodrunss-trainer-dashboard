@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     const totalSessions = duration * sessionsPerWeek
 
-    const workoutPlan = await prisma.workout_plans.create({
+    const workoutPlan = await prisma.workoutPlan.create({
       data: {
         id: crypto.randomUUID(),
         trainerId: trainer.id,

@@ -27,7 +27,7 @@ export async function GET() {
     startOfWeek.setHours(0, 0, 0, 0)
 
     // 1. REVENUE STATS
-    const paymentsThisMonth = await prisma.payments.aggregate({
+    const paymentsThisMonth = await prisma.payment.aggregate({
       where: {
         trainerId: trainer.id,
         status: 'COMPLETED',
@@ -37,7 +37,7 @@ export async function GET() {
       _count: true,
     })
 
-    const paymentsLastMonth = await prisma.payments.aggregate({
+    const paymentsLastMonth = await prisma.payment.aggregate({
       where: {
         trainerId: trainer.id,
         status: 'COMPLETED',
@@ -56,11 +56,11 @@ export async function GET() {
       : 0
 
     // 2. CLIENT STATS
-    const totalClients = await prisma.clients.count({
+    const totalClients = await prisma.client.count({
       where: { trainerId: trainer.id },
     })
 
-    const allClients = await prisma.clients.findMany({
+    const allClients = await prisma.client.findMany({
       where: { trainerId: trainer.id },
       include: {
         trainer_sessions: {
@@ -80,14 +80,14 @@ export async function GET() {
     const clientLTV = totalClients > 0 ? thisMonthRevenue / totalClients : 0
 
     // 3. SESSION STATS
-    const sessionsThisWeek = await prisma.trainer_sessions.count({
+    const sessionsThisWeek = await prisma.trainerSession.count({
       where: {
         trainerId: trainer.id,
         scheduledAt: { gte: startOfWeek },
       },
     })
 
-    const completedSessionsThisWeek = await prisma.trainer_sessions.count({
+    const completedSessionsThisWeek = await prisma.trainerSession.count({
       where: {
         trainerId: trainer.id,
         status: 'COMPLETED',
@@ -98,7 +98,7 @@ export async function GET() {
     // 4. PAYMENT STATS
     // Get pending payments (created more than 7 days ago as "overdue")
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    const overduePayments = await prisma.payments.findMany({
+    const overduePayments = await prisma.payment.findMany({
       where: {
         trainerId: trainer.id,
         status: 'PENDING',
@@ -120,7 +120,7 @@ export async function GET() {
     // 5. CHURN RATE (clients with no recent activity)
     // Count clients with no sessions in the last 60 days as potentially churned
     const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
-    const clientsWithRecentSessions = await prisma.trainer_sessions.groupBy({
+    const clientsWithRecentSessions = await prisma.trainerSession.groupBy({
       by: ['clientId'],
       where: {
         trainerId: trainer.id,

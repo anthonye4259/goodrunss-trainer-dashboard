@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const payments = await prisma.payments.findMany({
+    const payments = await prisma.payment.findMany({
       where,
       include: {
         clients: {
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify client belongs to trainer
-    const client = await prisma.clients.findFirst({
+    const client = await prisma.client.findFirst({
       where: {
         id: clientId,
         trainerId: trainer.id,
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Client not found' }, { status: 404 })
     }
 
-    const payment = await prisma.payments.create({
+    const payment = await prisma.payment.create({
       data: {
         id: crypto.randomUUID(),
         trainerId: trainer.id,
