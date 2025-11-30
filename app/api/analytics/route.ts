@@ -6,7 +6,7 @@ import { getOrCreateUser } from "@/lib/get-or-create-user"
 export async function GET(req: NextRequest) {
   try {
     const trainer = await getOrCreateUser()
-    
+
     if (!trainer) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const range = searchParams.get('range') || '30' // days
     const rangeInDays = parseInt(range)
-    
+
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - rangeInDays)
 
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     const totalRevenue = payments
       .filter(p => p.status === 'COMPLETED')
       .reduce((sum, p) => sum + Number(p.amount), 0)
-    
+
     const pendingRevenue = payments
       .filter(p => p.status === 'PENDING')
       .reduce((sum, p) => sum + Number(p.amount), 0)
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
         sessions: {
           where: { scheduledAt: { gte: startDate } }
         },
-        payment: {
+        payments: {
           where: { createdAt: { gte: startDate } }
         }
       }
@@ -59,18 +59,18 @@ export async function GET(req: NextRequest) {
 
     const totalClients = clients.length
     const newClients = clients.filter(c => c.createdAt >= startDate).length
-    
+
     // Active clients (had session in last 30 days)
-    const activeClients = clients.filter(c => 
+    const activeClients = clients.filter(c =>
       c.sessions.some(s => s.scheduledAt >= startDate)
     ).length
 
     // Client retention rate
-    const clientsWithRepeatBookings = clients.filter(c => 
+    const clientsWithRepeatBookings = clients.filter(c =>
       c.sessions.length > 1
     ).length
-    const retentionRate = totalClients > 0 
-      ? Math.round((clientsWithRepeatBookings / totalClients) * 100) 
+    const retentionRate = totalClients > 0
+      ? Math.round((clientsWithRepeatBookings / totalClients) * 100)
       : 0
 
     // 3. SESSION ANALYTICS
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
     const totalSessions = sessions.length
     const completedSessions = sessions.filter(s => s.status === 'COMPLETED').length
     const cancelledSessions = sessions.filter(s => s.status === 'CANCELLED').length
-    const upcomingSessions = sessions.filter(s => 
+    const upcomingSessions = sessions.filter(s =>
       s.status === 'SCHEDULED' && s.scheduledAt > new Date()
     ).length
 
@@ -207,7 +207,7 @@ export async function GET(req: NextRequest) {
         },
 
         // Client metrics
-        client: {
+        clients: {
           total: totalClients,
           new: newClients,
           active: activeClients,

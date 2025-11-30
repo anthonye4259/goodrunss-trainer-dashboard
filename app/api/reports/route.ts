@@ -6,7 +6,7 @@ import { getOrCreateUser } from "@/lib/get-or-create-user"
 export async function GET(req: NextRequest) {
   try {
     const trainer = await getOrCreateUser()
-    
+
     if (!trainer) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const range = searchParams.get('range') || '30'
     const format = searchParams.get('format') || 'json' // json, csv, pdf
     const rangeInDays = parseInt(range)
-    
+
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - rangeInDays)
     const endDate = new Date()
@@ -27,15 +27,15 @@ export async function GET(req: NextRequest) {
       case 'financial':
         reportData = await generateFinancialReport(trainer.id, startDate, endDate)
         break
-      
+
       case 'clients':
         reportData = await generateClientReport(trainer.id, startDate, endDate)
         break
-      
+
       case 'sessions':
         reportData = await generateSessionReport(trainer.id, startDate, endDate)
         break
-      
+
       case 'summary':
       default:
         reportData = await generateSummaryReport(trainer.id, startDate, endDate)
@@ -89,7 +89,7 @@ async function generateFinancialReport(trainerId: string, startDate: Date, endDa
       createdAt: { gte: startDate, lte: endDate }
     },
     include: {
-      client: {
+      clients: {
         select: { name: true, email: true }
       }
     },
@@ -107,7 +107,7 @@ async function generateFinancialReport(trainerId: string, startDate: Date, endDa
   // Overdue = PENDING for more than 30 days
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-  
+
   const overdueRevenue = payments
     .filter(p => p.status === 'PENDING' && p.createdAt < thirtyDaysAgo)
     .reduce((sum, p) => sum + Number(p.amount), 0)
@@ -128,10 +128,10 @@ async function generateFinancialReport(trainerId: string, startDate: Date, endDa
     .forEach(p => {
       const clientId = p.clientId
       if (clientId) {
-        const existing = clientRevenue.get(clientId) || { 
-          name: p.client?.name || 'Unknown', 
+        const existing = clientRevenue.get(clientId) || {
+          name: p.client?.name || 'Unknown',
           email: p.client?.email || null,
-          total: 0 
+          total: 0
         }
         existing.total += Number(p.amount)
         clientRevenue.set(clientId, existing)
@@ -176,18 +176,18 @@ async function generateClientReport(trainerId: string, startDate: Date, endDate:
       sessions: {
         where: { scheduledAt: { gte: startDate, lte: endDate } }
       },
-      payment: {
+      payments: {
         where: { createdAt: { gte: startDate, lte: endDate } }
       }
     },
     orderBy: { createdAt: 'desc' }
   })
 
-  const newClients = clients.filter(c => 
+  const newClients = clients.filter(c =>
     c.createdAt >= startDate && c.createdAt <= endDate
   )
 
-  const activeClients = clients.filter(c => 
+  const activeClients = clients.filter(c =>
     c.sessions.some(s => s.scheduledAt >= startDate)
   )
 
@@ -200,11 +200,11 @@ async function generateClientReport(trainerId: string, startDate: Date, endDate:
     const totalRevenue = client.payment
       .filter(p => p.status === 'COMPLETED')
       .reduce((sum, p) => sum + Number(p.amount), 0)
-    
+
     const lastSession = client.sessions
       .sort((a, b) => b.scheduledAt.getTime() - a.scheduledAt.getTime())[0]
-    
-    const daysSinceLastSession = lastSession 
+
+    const daysSinceLastSession = lastSession
       ? Math.floor((Date.now() - lastSession.scheduledAt.getTime()) / (1000 * 60 * 60 * 24))
       : null
 
@@ -219,9 +219,9 @@ async function generateClientReport(trainerId: string, startDate: Date, endDate:
       lastSessionDate: lastSession?.scheduledAt || null,
       daysSinceLastSession,
       status: daysSinceLastSession === null ? 'Never Booked' :
-              daysSinceLastSession <= 7 ? 'Active' :
-              daysSinceLastSession <= 30 ? 'Recent' :
-              'At Risk'
+        daysSinceLastSession <= 7 ? 'Active' :
+          daysSinceLastSession <= 30 ? 'Recent' :
+            'At Risk'
     }
   })
 
@@ -244,7 +244,7 @@ async function generateSessionReport(trainerId: string, startDate: Date, endDate
       scheduledAt: { gte: startDate, lte: endDate }
     },
     include: {
-      client: {
+      clients: {
         select: { name: true, email: true }
       }
     },
@@ -256,7 +256,7 @@ async function generateSessionReport(trainerId: string, startDate: Date, endDate
   const cancelledSessions = sessions.filter(s => s.status === 'CANCELLED')
   const noShowSessions = sessions.filter(s => s.status === 'NO_SHOW')
 
-  const completionRate = totalSessions > 0 
+  const completionRate = totalSessions > 0
     ? Math.round((completedSessions.length / totalSessions) * 100)
     : 0
 
@@ -289,7 +289,7 @@ async function generateSessionReport(trainerId: string, startDate: Date, endDate
   }, {})
 
   const peakHour = Object.entries(sessionsByHour)
-    .sort(([,a]: any, [,b]: any) => b - a)[0]
+    .sort(([, a]: any, [, b]: any) => b - a)[0]
 
   return {
     summary: {
@@ -342,7 +342,7 @@ async function generateSummaryReport(trainerId: string, startDate: Date, endDate
 function convertToCSV(data: any): string {
   // Simple CSV conversion
   const lines: string[] = []
-  
+
   if (data.transactions) {
     lines.push('Date,Client,Email,Amount,Method,Status,Description')
     data.transactions.forEach((t: any) => {
@@ -359,6 +359,6 @@ function convertToCSV(data: any): string {
       lines.push(`"${s.title}",${s.client},${s.email || ''},${s.date},${s.duration},${s.type},${s.status},${s.bookedFrom || ''}`)
     })
   }
-  
+
   return lines.join('\n')
 }
