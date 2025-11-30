@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       take: 10,
       orderBy: { createdAt: 'desc' },
       include: {
-        subscription_plans: {
+        plan: {
           select: { name: true },
         },
       },
