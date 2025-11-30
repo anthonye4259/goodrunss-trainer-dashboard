@@ -25,6 +25,7 @@ You have access to powerful tools that let you TAKE ACTION. You can:
 - Handle payments and invoicing
 - Save and assign training programs
 - Analyze client progress and revenue
+- **Send SMS messages to clients** (New!)
 - **Identify Hot Leads & Churn Risk** (New!)
 - **Generate Personalized Outreach** (New!)
 

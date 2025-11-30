@@ -149,6 +149,77 @@ export async function POST(request: NextRequest) {
         { role: 'user', content: lastMessageContent }
       ],
       temperature: 0.7,
+      tools: {
+        sendSMS: {
+          description: 'Send SMS messages to clients via Twilio. Can send to specific clients, all clients, or custom phone numbers. Use this when the trainer asks to send messages, reminders, or bulk communications.',
+          parameters: {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                description: 'The SMS message to send. Use {name} or {client_name} for personalization.'
+              },
+              clientIds: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Array of client IDs to send to. Get these from the trainer\'s client list.'
+              },
+              sendToAll: {
+                type: 'boolean',
+                description: 'Set to true to send to all clients with phone numbers'
+              },
+              phoneNumbers: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Custom phone numbers to send to (in E.164 format, e.g., +1234567890)'
+              }
+            },
+            required: ['message']
+          },
+          execute: async ({ message, clientIds, sendToAll, phoneNumbers }) => {
+            try {
+              console.log('[GIA SMS] Sending SMS:', { message, clientIds, sendToAll, phoneNumbers })
+
+              const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/gia/send-sms`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Cookie': request.headers.get('cookie') || ''
+                },
+                body: JSON.stringify({
+                  message,
+                  clientIds,
+                  sendToAll,
+                  phoneNumbers
+                })
+              })
+
+              const data = await response.json()
+
+              if (!response.ok) {
+                return {
+                  success: false,
+                  error: data.error || 'Failed to send SMS'
+                }
+              }
+
+              return {
+                success: true,
+                sent: data.sent,
+                failed: data.failed,
+                total: data.total,
+                message: `Successfully sent ${data.sent} message(s). ${data.failed > 0 ? `${data.failed} failed.` : ''}`
+              }
+            } catch (error: any) {
+              console.error('[GIA SMS] Error:', error)
+              return {
+                success: false,
+                error: error.message || 'Failed to send SMS'
+              }
+            }
+          }
+        }
+      }
     })
 
     return result.toTextStreamResponse()
