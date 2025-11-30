@@ -22,23 +22,40 @@ export default function AmbassadorJoinPage() {
         setLoading(true)
 
         try {
+            console.log("[Ambassador Join] Submitting form:", { name: formData.name, email: formData.email })
+
             const res = await fetch("/api/ambassador/join", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData)
             })
 
-            const data = await res.json()
+            console.log("[Ambassador Join] Response status:", res.status)
+
+            // Handle non-JSON responses (e.g., 500 HTML pages)
+            let data
+            const contentType = res.headers.get("content-type")
+            if (contentType && contentType.includes("application/json")) {
+                data = await res.json()
+            } else {
+                const text = await res.text()
+                console.error("[Ambassador Join] Non-JSON response:", text.substring(0, 200))
+                throw new Error("Server returned an invalid response. Please try again later.")
+            }
 
             if (res.ok) {
+                console.log("[Ambassador Join] Success! Referral code:", data.referralCode)
                 setSuccess(true)
                 setReferralCode(data.referralCode)
             } else {
-                alert(data.error || "Failed to join ambassador program")
+                const errorMessage = data.error || "Failed to join ambassador program"
+                console.error("[Ambassador Join] Error response:", data)
+                alert(errorMessage)
             }
-        } catch (error) {
-            console.error("Error joining:", error)
-            alert("Failed to join ambassador program")
+        } catch (error: any) {
+            console.error("[Ambassador Join] Exception:", error)
+            const errorMessage = error?.message || "Failed to join ambassador program. Please check your internet connection and try again."
+            alert(errorMessage)
         } finally {
             setLoading(false)
         }
