@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     } = data
 
     // Find user by Clerk ID
-    const dbUser = await prisma.users.findUnique({
+    const dbUser = await prisma.user.findUnique({
       where: { clerkId: user.id },
     })
 
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user with onboarding data
-    const updatedUser = await prisma.users.update({
+    const updatedUser = await prisma.user.update({
       where: { id: dbUser.id },
       data: {
         specialties: specialty ? [specialty] : [],
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const dbUser = await prisma.users.findUnique({
+    const dbUser = await prisma.user.findUnique({
       where: { clerkId: user.id },
       select: {
         id: true,

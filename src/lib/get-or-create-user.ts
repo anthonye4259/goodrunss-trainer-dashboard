@@ -18,19 +18,19 @@ export async function getOrCreateUser() {
     : clerkUser.username || email?.split('@')[0] || 'Trainer'
 
   // Try to find existing user
-  let user = await prisma.users.findUnique({
+  let user = await prisma.user.findUnique({
     where: { clerkId: clerkUser.id },
   })
 
   // If user doesn't exist by clerkId, check if they exist by email
   if (!user && email) {
-    user = await prisma.users.findUnique({
+    user = await prisma.user.findUnique({
       where: { email: email },
     })
 
     // If found by email, update with clerkId
     if (user) {
-      user = await prisma.users.update({
+      user = await prisma.user.update({
         where: { id: user.id },
         data: {
           clerkId: clerkUser.id,
@@ -44,7 +44,7 @@ export async function getOrCreateUser() {
 
   // If still no user, create them
   if (!user) {
-    user = await prisma.users.create({
+    user = await prisma.user.create({
       data: {
         id: crypto.randomUUID(),
         clerkId: clerkUser.id,
@@ -87,7 +87,7 @@ export async function getOrCreateUser() {
     }
   } else {
     // Update name and email from Clerk on every login (in case they changed it)
-    user = await prisma.users.update({
+    user = await prisma.user.update({
       where: { id: user.id },
       data: {
         name: name,

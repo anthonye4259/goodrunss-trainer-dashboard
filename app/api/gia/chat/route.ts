@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get trainer from database with clients
-    const dbUser = await prisma.users.findUnique({
+    const dbUser = await prisma.user.findUnique({
       where: { id: authUser.id },
       include: {
         clients: {

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 export async function GET(request: NextRequest) {
   try {
     // Get all trainers with their subscriptions
-    const trainers = await prisma.users.findMany({
+    const trainers = await prisma.user.findMany({
       where: { role: 'TRAINER' },
       orderBy: { createdAt: 'desc' },
       select: {

@@ -128,7 +128,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Find trainer by referral code (first 8 chars of ID)
-    const trainers = await prisma.users.findMany({
+    const trainers = await prisma.user.findMany({
       where: {
         id: { startsWith: referralCode.toLowerCase() }
       }

@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user from database
-    const dbUser = await prisma.users.findUnique({
+    const dbUser = await prisma.user.findUnique({
       where: { email: user.emailAddresses[0]?.emailAddress }
     })
 

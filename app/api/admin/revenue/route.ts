@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 
     const recentTransactionsWithNames = await Promise.all(
       recentTransactions.map(async (trans) => {
-        const user = await prisma.users.findFirst({
+        const user = await prisma.user.findFirst({
           where: { clerkId: trans.userId },
           select: { name: true },
         })

@@ -69,7 +69,7 @@ export async function PATCH(request: NextRequest) {
     } = body
 
     // Update user in database
-    const updatedUser = await prisma.users.update({
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
         name: name !== undefined ? name : user.name,

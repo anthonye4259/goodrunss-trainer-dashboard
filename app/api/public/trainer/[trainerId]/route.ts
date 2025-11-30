@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { trainerId } = await params
 
-    const trainer = await prisma.users.findUnique({
+    const trainer = await prisma.user.findUnique({
       where: { id: trainerId },
       select: {
         id: true,

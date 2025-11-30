@@ -119,7 +119,7 @@ async function generateLeadOutreachTool(args: any, trainerId: string) {
     const { prisma } = await import('@/lib/prisma')
 
     // Get trainer details
-    const trainer = await prisma.users.findUnique({
+    const trainer = await prisma.user.findUnique({
         where: { id: trainerId },
         select: { name: true }
     })

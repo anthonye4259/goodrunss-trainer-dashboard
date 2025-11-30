@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const errors: string[] = []
 
     // Get trainer's user ID
-    const trainer = await prisma.users.findUnique({
+    const trainer = await prisma.user.findUnique({
       where: { clerkId: user.id }
     })
 

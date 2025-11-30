@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get total trainers
-    const totalTrainers = await prisma.users.count({
+    const totalTrainers = await prisma.user.count({
       where: { role: 'TRAINER' },
     })
 
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     startOfMonth.setDate(1)
     startOfMonth.setHours(0, 0, 0, 0)
     
-    const newTrainersThisMonth = await prisma.users.count({
+    const newTrainersThisMonth = await prisma.user.count({
       where: {
         role: 'TRAINER',
         createdAt: { gte: startOfMonth },
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     const recentSignupsWithNames = await Promise.all(
       recentSignups.map(async (signup) => {
-        const user = await prisma.users.findFirst({
+        const user = await prisma.user.findFirst({
           where: { clerkId: signup.userId },
           select: { name: true, email: true },
         })

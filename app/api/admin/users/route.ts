@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all users from DB
-    const dbUsers = await prisma.users.findMany({
+    const dbUsers = await prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
         _count: {
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
           : clerkUser.username || email?.split('@')[0] || 'Trainer'
 
         // Upsert user in DB
-        const dbUser = await prisma.users.upsert({
+        const dbUser = await prisma.user.upsert({
           where: { clerkId: clerkUser.id },
           update: {
             email: email || '',

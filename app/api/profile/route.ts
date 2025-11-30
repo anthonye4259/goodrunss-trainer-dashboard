@@ -53,7 +53,7 @@ export async function PUT(request: NextRequest) {
     } = body
 
     // Update Prisma user
-    const updatedTrainer = await prisma.users.update({
+    const updatedTrainer = await prisma.user.update({
       where: { id: trainer.id },
       data: {
         ...(name && { name }),
