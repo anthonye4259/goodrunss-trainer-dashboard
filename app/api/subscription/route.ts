@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch user's active subscription
-    const subscription = await prisma.user_subscriptions.findFirst({
+    const subscription = await prisma.userSubscription.findFirst({
       where: {
         userId: user.id,
         status: {

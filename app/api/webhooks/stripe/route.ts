@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
           console.log(`[WEBHOOK] User ${customerEmail} already exists`)
 
           // Check if they already have an active subscription for this payment
-          const existingSubscription = await prisma.user_subscriptions.findFirst({
+          const existingSubscription = await prisma.userSubscription.findFirst({
             where: {
               userId: existingUser.id,
               stripeCustomerId: customerId,
@@ -260,7 +260,7 @@ export async function POST(request: NextRequest) {
           const endDate = new Date(now)
           endDate.setDate(endDate.getDate() + planDuration)
 
-          await prisma.user_subscriptions.create({
+          await prisma.userSubscription.create({
             data: {
               id: crypto.randomUUID(),
               userId: existingUser.id,
@@ -332,7 +332,7 @@ export async function POST(request: NextRequest) {
           const endDate = new Date(now)
           endDate.setDate(endDate.getDate() + planDuration)
 
-          await prisma.user_subscriptions.create({
+          await prisma.userSubscription.create({
             data: {
               id: crypto.randomUUID(),
               userId: dbUserId,
@@ -513,7 +513,7 @@ export async function POST(request: NextRequest) {
         const planName = subscription.metadata?.planName || 'Trainer Plan'
 
         // Create subscription record
-        await prisma.user_subscriptions.create({
+        await prisma.userSubscription.create({
           data: {
             id: crypto.randomUUID(),
             userId: user.id,
@@ -544,7 +544,7 @@ export async function POST(request: NextRequest) {
 
         console.log(`[WEBHOOK] Updating subscription ${subscription.id}`)
 
-        const updated = await prisma.user_subscriptions.updateMany({
+        const updated = await prisma.userSubscription.updateMany({
           where: { stripeSubscriptionId: subscription.id },
           data: {
             status: subscription.status,
@@ -573,7 +573,7 @@ export async function POST(request: NextRequest) {
 
         // Get user from subscription
         const subscriptionId = (invoice as any).subscription as string
-        const subscription = await prisma.user_subscriptions.findFirst({
+        const subscription = await prisma.userSubscription.findFirst({
           where: { stripeSubscriptionId: subscriptionId },
           include: { user: true }
         })

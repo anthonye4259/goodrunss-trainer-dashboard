@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 export async function GET(request: NextRequest) {
   try {
     // Get all active subscriptions
-    const subscriptions = await prisma.user_subscriptions.findMany({
+    const subscriptions = await prisma.userSubscription.findMany({
       where: { status: { in: ['active', 'trialing'] } },
     })
 
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     const arr = mrr * 12
 
     // Get paying customers (exclude free accounts)
-    const payingCustomers = await prisma.user_subscriptions.count({
+    const payingCustomers = await prisma.userSubscription.count({
       where: {
         status: 'active',
         planName: { not: { contains: 'Free' } },
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-    const cancelledCount = await prisma.user_subscriptions.count({
+    const cancelledCount = await prisma.userSubscription.count({
       where: {
         status: 'canceled',
         canceledAt: { gte: thirtyDaysAgo },
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       : 0
 
     // Get recent transactions
-    const recentTransactions = await prisma.user_subscriptions.findMany({
+    const recentTransactions = await prisma.userSubscription.findMany({
       where: { status: { in: ['active', 'trialing'] } },
       take: 10,
       orderBy: { createdAt: 'desc' },
@@ -107,12 +107,12 @@ export async function GET(request: NextRequest) {
     )
 
     // Get active trials
-    const activeTrials = await prisma.user_subscriptions.count({
+    const activeTrials = await prisma.userSubscription.count({
       where: { status: 'trialing' },
     })
 
     // Calculate trial conversion rate (simplified)
-    const completedTrials = await prisma.user_subscriptions.count({
+    const completedTrials = await prisma.userSubscription.count({
       where: {
         status: 'active',
         trialEnd: { not: null },

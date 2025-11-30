@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     console.log(`[GRANT FREE ACCESS] Granting free access to: ${userEmail}`)
 
     // Check if user already has a free subscription
-    const existingFreeSub = await prisma.user_subscriptions.findFirst({
+    const existingFreeSub = await prisma.userSubscription.findFirst({
       where: {
         userId,
         planName: {
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Cancel any existing subscriptions
-    await prisma.user_subscriptions.updateMany({
+    await prisma.userSubscription.updateMany({
       where: { userId },
       data: {
         status: 'canceled',
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Create lifetime free subscription
-    const freeSubscription = await prisma.user_subscriptions.create({
+    const freeSubscription = await prisma.userSubscription.create({
       data: {
         id: crypto.randomUUID(),
         userId,

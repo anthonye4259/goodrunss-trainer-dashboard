@@ -37,17 +37,17 @@ export async function GET(request: NextRequest) {
     })
 
     // Get active subscriptions
-    const activeSubscriptions = await prisma.user_subscriptions.count({
+    const activeSubscriptions = await prisma.userSubscription.count({
       where: { status: 'active' },
     })
 
     // Get trial subscriptions
-    const trialSubscriptions = await prisma.user_subscriptions.count({
+    const trialSubscriptions = await prisma.userSubscription.count({
       where: { status: 'trialing' },
     })
 
     // Calculate MRR (Monthly Recurring Revenue)
-    const subscriptions = await prisma.user_subscriptions.findMany({
+    const subscriptions = await prisma.userSubscription.findMany({
       where: { status: { in: ['active', 'trialing'] } },
     })
 
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Get recent signups (last 10)
-    const recentSignups = await prisma.user_subscriptions.findMany({
+    const recentSignups = await prisma.userSubscription.findMany({
       take: 10,
       orderBy: { createdAt: 'desc' },
       include: {

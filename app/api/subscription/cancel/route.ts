@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch user's active subscription
-    const subscription = await prisma.user_subscriptions.findFirst({
+    const subscription = await prisma.userSubscription.findFirst({
       where: {
         userId: user.id,
         status: {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     )
 
     // Update subscription in database
-    await prisma.user_subscriptions.update({
+    await prisma.userSubscription.update({
       where: { id: subscription.id },
       data: {
         cancelAtPeriodEnd: true,

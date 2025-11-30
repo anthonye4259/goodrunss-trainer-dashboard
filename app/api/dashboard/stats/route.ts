@@ -134,7 +134,7 @@ export async function GET() {
     const churnRate = totalClients > 0 ? (inactiveThisMonth / totalClients) * 100 : 0
 
     // 6. SUBSCRIPTION STATS (if trainer has subscriptions)
-    const activeSubscription = await prisma.user_subscriptions.findFirst({
+    const activeSubscription = await prisma.userSubscription.findFirst({
       where: {
         userId: trainer.id,
         status: 'active',
