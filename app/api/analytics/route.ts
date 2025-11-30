@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
     const clients = await prisma.client.findMany({
       where: { trainerId: trainer.id },
       include: {
-        trainer_sessions: {
+        sessions: {
           where: { scheduledAt: { gte: startDate } }
         },
         payments: {
