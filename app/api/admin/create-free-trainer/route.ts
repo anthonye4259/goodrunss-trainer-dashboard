@@ -48,15 +48,12 @@ export async function POST(request: NextRequest) {
     // Step 2: Create user in database
     const dbUser = await prisma.user.create({
       data: {
-        id: crypto.randomUUID(),
-        clerkId: clerkUser.id,
+        id: clerkUser.id,
         email: email,
         name: name,
         role: "TRAINER",
         emailVerified: new Date(),
         isAvailable: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       },
     })
     console.log(`[CREATE FREE TRAINER] Database user created: ${dbUser.id}`)
