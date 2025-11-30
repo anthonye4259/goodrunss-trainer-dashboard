@@ -3,7 +3,8 @@
 import { useEffect } from "react"
 import { useUser } from "@clerk/nextjs"
 import { driver } from "driver.js"
-import "driver.js/dist/driver.css"
+
+// Note: driver.js CSS is loaded via CDN in layout to avoid PostCSS conflicts
 
 export function ProductTour() {
   const { user } = useUser()
