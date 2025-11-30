@@ -82,7 +82,6 @@ export async function POST(request: NextRequest) {
           },
           create: {
             id: crypto.randomUUID(),
-            clerkId: clerkUser.id,
             email: email || '',
             name: name,
             image: clerkUser.imageUrl,
