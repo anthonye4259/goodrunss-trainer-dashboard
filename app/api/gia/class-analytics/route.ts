@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const dbUser = await getOrCreateUser(userId)
+        const dbUser = await getOrCreateUser()
 
         // Get class performance insights
         const classInsights = await analyzeClassPerformance(dbUser.id)
