@@ -213,7 +213,7 @@ export async function analyzeRevenue(trainerId: string): Promise<RevenueInsight>
 export async function analyzeClassPerformance(trainerId: string): Promise<ClassInsight[]> {
     try {
         // Get all classes for the trainer
-        const classes = await prisma.groupClasses.findMany({
+        const classes = await prisma.group_classes.findMany({
             where: { trainerId },
             select: {
                 id: true,
