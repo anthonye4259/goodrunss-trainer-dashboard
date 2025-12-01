@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Brain, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Users, ArrowRight, MessageSquare, Zap } from "lucide-react"
 import Link from "next/link"
+import { MessageDraftModal } from "@/components/message-draft-modal"
 
 interface DailyBriefingData {
     summary: {
@@ -43,9 +44,19 @@ export function DailyBriefing() {
     const [data, setData] = useState<DailyBriefingData | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [leads, setLeads] = useState<any[]>([])
+    const [modalOpen, setModalOpen] = useState(false)
+    const [selectedRecipient, setSelectedRecipient] = useState<{
+        id: string
+        name: string
+        phone?: string
+        type: 'lead_intro' | 'churn_reengagement'
+        context?: any
+    } | null>(null)
 
     useEffect(() => {
         fetchInsights()
+        fetchLeads()
     }, [])
 
     const fetchInsights = async () => {
@@ -61,6 +72,23 @@ export function DailyBriefing() {
         } finally {
             setIsLoading(false)
         }
+    }
+
+    const fetchLeads = async () => {
+        try {
+            const response = await fetch('/api/gia/match-leads')
+            if (!response.ok) throw new Error('Failed to fetch leads')
+
+            const result = await response.json()
+            setLeads(result.data?.matches?.slice(0, 2) || [])
+        } catch (err: any) {
+            console.error('Failed to fetch leads:', err)
+        }
+    }
+
+    const openDraftModal = (recipient: typeof selectedRecipient) => {
+        setSelectedRecipient(recipient)
+        setModalOpen(true)
     }
 
     if (isLoading) {
@@ -151,32 +179,49 @@ export function DailyBriefing() {
             </Card>
 
             {/* ⚡ SMART NURTURE (NEW) - Consistency Engine for Acquisition */}
-            <Card className="glass border-primary/20 bg-primary/5">
-                <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-primary" />
-                        Smart Nurture
-                        <Badge variant="secondary" className="ml-auto text-xs font-normal">
-                            2 New Leads
-                        </Badge>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-background/60 border border-primary/10">
-                        <div>
-                            <p className="font-semibold text-sm">Jessica Chen</p>
-                            <p className="text-xs text-muted-foreground">Tennis • Beginner • Goal: Weight Loss</p>
-                        </div>
-                        <Button size="sm" className="gap-2 bg-primary text-black hover:bg-primary/90" onClick={() => {
-                            // In a real app, this would open the chat with a pre-filled message
-                            alert("Gia drafted: 'Hi Jessica! Saw you're interested in tennis for fitness. I have a beginner clinic this Tuesday that burns 500+ calories. Want to try it out?'")
-                        }}>
-                            <MessageSquare className="h-3 w-3" />
-                            Draft Intro
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+            {leads.length > 0 && (
+                <Card className="glass border-primary/20 bg-primary/5">
+                    <CardHeader>
+                        <CardTitle className="text-base flex items-center gap-2">
+                            <Zap className="h-4 w-4 text-primary" />
+                            Smart Nurture
+                            <Badge variant="secondary" className="ml-auto text-xs font-normal">
+                                {leads.length} New Lead{leads.length > 1 ? 's' : ''}
+                            </Badge>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {leads.map((match) => (
+                            <div key={match.id} className="flex items-center justify-between p-3 rounded-lg bg-background/60 border border-primary/10">
+                                <div>
+                                    <p className="font-semibold text-sm">{match.lead.name}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {match.lead.preferredSport} • {match.lead.experienceLevel} • {match.overallScore}% Match
+                                    </p>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    className="gap-2 bg-primary text-black hover:bg-primary/90"
+                                    onClick={() => openDraftModal({
+                                        id: match.clientLeadId,
+                                        name: match.lead.name,
+                                        phone: match.lead.phone,
+                                        type: 'lead_intro',
+                                        context: {
+                                            sport: match.lead.preferredSport,
+                                            level: match.lead.experienceLevel,
+                                            goals: match.lead.fitnessGoals?.join(', ')
+                                        }
+                                    })}
+                                >
+                                    <MessageSquare className="h-3 w-3" />
+                                    Draft Intro
+                                </Button>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
 
             {/* 🛡️ CHURN INTERCEPTOR (NEW) - Consistency Engine for Retention */}
             {clientRisks.length > 0 && (
@@ -205,9 +250,15 @@ export function DailyBriefing() {
                                     <p className="font-semibold text-sm">{client.clientName}</p>
                                     <p className="text-xs text-muted-foreground">{client.reasons[0]}</p>
                                 </div>
-                                <Button size="sm" variant="outline" className="gap-2 border-orange-500/20 text-orange-500 hover:bg-orange-500/10" onClick={() => {
-                                    alert(`Gia drafted re-engagement for ${client.clientName}: 'Hey ${client.clientName.split(' ')[0]}! Missed you at the session last week. Everything ok? I have a spot open this Thursday if you want to get back on track!'`)
-                                }}>
+                                <Button size="sm" variant="outline" className="gap-2 border-orange-500/20 text-orange-500 hover:bg-orange-500/10" onClick={() => openDraftModal({
+                                    id: client.clientId,
+                                    name: client.clientName,
+                                    type: 'churn_reengagement',
+                                    context: {
+                                        missedSessions: 2,
+                                        lastSession: '2 weeks ago'
+                                    }
+                                })}>
                                     <MessageSquare className="h-3 w-3" />
                                     Re-engage
                                 </Button>
@@ -254,5 +305,24 @@ export function DailyBriefing() {
                 </Card>
             )}
         </div>
+
+        {/* Message Draft Modal */ }
+    {
+        selectedRecipient && (
+            <MessageDraftModal
+                open={modalOpen}
+                onOpenChange={setModalOpen}
+                recipientName={selectedRecipient.name}
+                recipientId={selectedRecipient.id}
+                recipientPhone={selectedRecipient.phone}
+                messageType={selectedRecipient.type}
+                context={selectedRecipient.context}
+                onSent={() => {
+                    fetchLeads()
+                    fetchInsights()
+                }}
+            />
+        )
+    }
     )
 }
