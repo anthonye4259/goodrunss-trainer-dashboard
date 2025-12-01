@@ -39,8 +39,11 @@ async function handleSessionCompleted(payload: EventPayload) {
     const { userId, entityId, metadata } = payload
 
     // Check for milestones (e.g., 10th session)
-    const sessionCount = await prisma.sessions.count({
-        where: { clientId: entityId, status: 'completed' }
+    const sessionCount = await prisma.trainer_sessions.count({
+        where: {
+            clientId: entityId,
+            status: 'COMPLETED' // SessionStatus enum value
+        }
     })
 
     if (sessionCount === 10 || sessionCount === 50 || sessionCount === 100) {
