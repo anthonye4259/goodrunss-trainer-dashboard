@@ -155,20 +155,17 @@ export function DashboardOverview() {
     )
   }
 
-  // Show error state - but with empty data instead of error
   if (error) {
-    // Return empty stats instead of showing error
-    const emptyStats = {
-      trainer: { name: "Trainer", rating: 5.0, totalSessions: 0 },
-      revenue: { thisMonth: 0, lastMonth: 0, change: 0, forecast: 0 },
-      clients: { total: 0, atRisk: 0, atRiskList: [], highEngagement: 0, mediumEngagement: 0, ltv: 0 },
-      payments: { overdue: 0, overdueTotal: 0, overdueList: [] },
-      sessions: { thisWeek: 0, completed: 0, utilization: 0 },
-      churn: { rate: 0, previousRate: 0 },
-      referrals: { totalInvites: 0, activeReferrals: 0, creditsEarned: 0, freeMonthsEarned: 0 }
-    }
-    setStats(emptyStats)
-    setError(null)
+    return (
+      <div className="max-w-[1600px] mx-auto space-y-8">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 text-center">
+          <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-destructive mb-2">Failed to load dashboard</h3>
+          <p className="text-destructive/80 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
+      </div>
+    )
   }
 
   // No stats available
@@ -203,50 +200,27 @@ export function DashboardOverview() {
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-8">
-      <SportSelectorModal />
-
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
-            Welcome back, <span className="text-primary">{stats.trainer.name}</span>
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+            Welcome back, {stats.trainer.name.split(' ')[0]}
           </h1>
-          <div className="mt-3 flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-              <Star className="h-4 w-4 fill-primary text-primary" />
-              <span className="text-sm font-semibold text-primary">{stats.trainer.rating.toFixed(1)} Rating • {getSportDisplayName()}</span>
-            </div>
-          </div>
+          <p className="text-muted-foreground mt-2 text-lg">
+            Here's what's happening with your business today.
+          </p>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white">
-                <Share2 className="mr-2 h-4 w-4" />
-                Share Impact
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-white border-none p-0 overflow-hidden">
-              <div className="p-6">
-                <ShareableStatsCard />
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Select defaultValue="7days">
-            <SelectTrigger className="w-full sm:w-[180px] bg-card/50 border-border/50 backdrop-blur-sm">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7days">Last 7 Days</SelectItem>
-              <SelectItem value="30days">Last 30 Days</SelectItem>
-              <SelectItem value="90days">Last 90 Days</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex gap-3">
+          <ShareToSocial
+            referralCode="COACH2024"
+            className="w-full md:w-auto"
+          />
+          <Button className="gap-2 shadow-lg shadow-primary/20" onClick={() => window.location.href = '/dashboard/sessions'}>
+            <Calendar className="h-4 w-4" />
+            Schedule Session
+          </Button>
         </div>
       </div>
-
-      {/* Booking Link Card - PROMINENT */}
-      <BookingLinkCard />
 
       {/* Gia's Daily Briefing - AI-Powered Insights */}
       <DailyBriefing />
@@ -375,404 +349,116 @@ export function DashboardOverview() {
         <OnboardingChecklist />
       )}
 
-      {/* Action Required Section - Show only if there are actual actions */}
-      {(stats.clients.atRisk > 0 || stats.payments.overdue > 0) && (
-        <div className="space-y-3">
-          <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-orange-400" />
-            Action Required
-          </h2>
-          <div className="grid gap-3 stagger-fade-in">
-            {stats.clients.atRisk > 0 && (
-              <Card className="bg-gradient-to-r from-red-500/10 to-red-600/5 border-red-500/20 hover:border-red-500/40 transition-colors hover-lift-subtle">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                      <XCircle className="h-5 w-5 text-red-400" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white">{stats.clients.atRisk} {terminology.clientPlural.toLowerCase()} haven't booked in 2+ weeks</p>
-                      <p className="text-sm text-white/60">At risk of churning - reach out today</p>
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="bg-red-500 hover:bg-red-600 text-white"
-                    onClick={() => window.location.href = '/dashboard/clients?filter=at-risk'}
-                  >
-                    View Clients
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+      {/* Main Stats Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {/* Revenue Card */}
+        <Card className="glass border-border/50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between space-y-0 pb-2">
+              <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="flex items-baseline justify-between">
+              <div className="text-2xl font-bold">${stats.revenue.thisMonth.toLocaleString()}</div>
+              {stats.revenue.change !== 0 && (
+                <Badge variant={stats.revenue.change > 0 ? "default" : "destructive"} className="ml-2">
+                  {stats.revenue.change > 0 ? "+" : ""}{stats.revenue.change}%
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Forecast: ${stats.revenue.forecast.toLocaleString()}
+            </p>
+          </CardContent>
+        </Card>
 
-            {stats.payments.overdue > 0 && (
-              <Card className="bg-gradient-to-r from-orange-500/10 to-orange-600/5 border-orange-500/20 hover:border-orange-500/40 transition-colors hover-lift-subtle">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                      <DollarSign className="h-5 w-5 text-orange-400" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white">{stats.payments.overdue} payments overdue (${stats.payments.overdueTotal.toFixed(0)} total)</p>
-                      <p className="text-sm text-white/60">Send payment reminders to collect revenue</p>
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="bg-orange-500 hover:bg-orange-600 text-white"
-          <p className="text-muted-foreground mt-2 text-lg">
-            Here's what's happening with your business today.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <ShareToSocial 
-            referralCode="COACH2024" 
-            className="w-full md:w-auto"
-          />
-                  <TrendingUp className="h-3 w-3 text-white" />
-                  <p className="text-sm text-white/90">Based on current data</p>
-                </div>
-              </div>
-              <div className="pt-2 border-t border-white/20">
-                <p className="text-xs text-white/70">Avg retention: 8.2 months</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden border-0 rounded-3xl bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
-            <CardContent className="relative p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-white/80">Outstanding Payments</p>
-                <AlertTriangle className="h-4 w-4 text-white/60" />
-              </div>
-              <div>
-                <p className="text-4xl font-bold text-white">${stats.payments.overdueTotal.toFixed(0)}</p>
-                <div className="flex items-center gap-1 mt-2">
-                  <Clock className="h-3 w-3 text-white" />
-                  <p className="text-sm text-white/90">{stats.payments.overdue} clients overdue</p>
-                </div>
-              </div>
-              <div className="pt-2 border-t border-white/20">
-                <p className="text-xs text-white/70">Collection rate: 96.8%</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div >
-
-    {/* Referral Rewards Section */ }
-    < div className = "space-y-3" >
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-          <Gift className="h-5 w-5 text-primary" />
-          Referral Rewards
-        </h2>
-      </div>
-
-  {/* Referral Stats */ }
-  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-    <Card className="p-4 bg-gradient-to-br from-card to-card/50 border-primary/20 backdrop-blur-sm">
-      <div className="flex items-center justify-between mb-2">
-        <Users className="w-5 h-5 text-primary" />
-        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs">
-          Total
-        </Badge>
-      </div>
-      <div className="space-y-1">
-        <p className="text-2xl font-bold text-primary">{referralStats.totalInvites}</p>
-        <p className="text-xs text-muted-foreground">Invites Sent</p>
-      </div>
-    </Card>
-
-    <Card className="p-4 bg-gradient-to-br from-card to-card/50 border-accent/20 backdrop-blur-sm">
-      <div className="flex items-center justify-between mb-2">
-        <TrendingUp className="w-5 h-5 text-accent" />
-        <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20 text-xs">
-          Active
-        </Badge>
-      </div>
-      <div className="space-y-1">
-        <p className="text-2xl font-bold text-accent">{referralStats.activeReferrals}</p>
-        <p className="text-xs text-muted-foreground">Active Referrals</p>
-      </div>
-    </Card>
-
-    <Card className="p-4 bg-gradient-to-br from-card to-card/50 border-primary/20 backdrop-blur-sm">
-      <div className="flex items-center justify-between mb-2">
-        <DollarSign className="w-5 h-5 text-primary" />
-        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs">
-          Credits
-        </Badge>
-      </div>
-      <div className="space-y-1">
-        <p className="text-2xl font-bold text-primary">${referralStats.creditsEarned}</p>
-        <p className="text-xs text-muted-foreground">Credits Earned</p>
-      </div>
-    </Card>
-
-    <Card className="p-4 bg-gradient-to-br from-card to-card/50 border-accent/20 backdrop-blur-sm">
-      <div className="flex items-center justify-between mb-2">
-        <Calendar className="w-5 h-5 text-accent" />
-        <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20 text-xs">
-          Free
-        </Badge>
-      </div>
-      <div className="space-y-1">
-        <p className="text-2xl font-bold text-accent">{referralStats.freeMonthsEarned}</p>
-        <p className="text-xs text-muted-foreground">Free Months</p>
-      </div>
-    </Card>
-  </div>
-
-  {/* Referral Link & Milestones */ }
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <Card className="p-6 bg-gradient-to-br from-card to-card/50 border-primary/20 backdrop-blur-sm">
-      <h3 className="text-lg font-semibold text-foreground mb-4">Your Referral Link</h3>
-      <div className="space-y-4">
-        <div className="flex gap-2">
-          <Input
-            value={referralLink}
-            readOnly
-            className="bg-background/50 border-primary/20 text-foreground font-mono text-sm"
-          />
-          <Button onClick={copyToClipboard} className="bg-primary hover:bg-primary/90 flex-shrink-0">
-            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          </Button>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">Quick Share</p>
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => shareToSocial("instagram")}
-              className="border-primary/20 hover:bg-primary/10"
-            >
-              <Instagram className="w-4 h-4 mr-2" />
-              Instagram
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => shareToSocial("threads")}
-              className="border-primary/20 hover:bg-primary/10"
-            >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              Threads
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => shareToSocial("whatsapp")}
-              className="border-primary/20 hover:bg-primary/10"
-            >
-              <Share2 className="w-4 h-4 mr-2" />
-              WhatsApp
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => shareToSocial("email")}
-              className="border-primary/20 hover:bg-primary/10"
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              Email
-            </Button>
-          </div>
-        </div>
-      </div>
-    </Card>
-
-    <Card className="p-6 bg-gradient-to-br from-card to-card/50 border-primary/20 backdrop-blur-sm">
-      <div className="flex items-center gap-2 mb-4">
-        <Trophy className="w-5 h-5 text-primary" />
-        <h3 className="text-lg font-semibold text-foreground">Multiplier Bonuses</h3>
-      </div>
-      <div className="space-y-3">
-        {milestones.map((milestone, index) => (
-          <div
-            key={index}
-            className={cn(
-              "p-3 rounded-lg border transition-all duration-300",
-              milestone.achieved ? "bg-primary/10 border-primary/30" : "bg-card/50 border-border",
-            )}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <Badge
-                variant={milestone.achieved ? "default" : "secondary"}
-                className={cn(
-                  "text-xs",
-                  milestone.achieved
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-secondary-foreground",
-                )}
-              >
-                {milestone.count} Referrals
+        {/* Active Clients Card */}
+        <Card className="glass border-border/50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between space-y-0 pb-2">
+              <p className="text-sm font-medium text-muted-foreground">Active Clients</p>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="flex items-baseline justify-between">
+              <div className="text-2xl font-bold">{stats.clients.total}</div>
+              <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">
+                {stats.clients.highEngagement} highly active
               </Badge>
-              {milestone.achieved && <Award className="w-4 h-4 text-primary" />}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats.clients.atRisk} clients at risk of churn
+            </p>
+          </CardContent>
+        </Card>
 
-            <p className="text-sm font-medium text-foreground mb-2">{milestone.reward}</p>
+        {/* Sessions Card */}
+        <Card className="glass border-border/50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between space-y-0 pb-2">
+              <p className="text-sm font-medium text-muted-foreground">Sessions This Week</p>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="flex items-baseline justify-between">
+              <div className="text-2xl font-bold">{stats.sessions.thisWeek}</div>
+              <Badge variant="outline" className="ml-2">
+                {stats.sessions.utilization}% utilization
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats.sessions.completed} completed so far
+            </p>
+          </CardContent>
+        </Card>
 
-            {!milestone.achieved && milestone.progress !== undefined && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Progress</span>
-                  <span>
-                    {milestone.progress}/{milestone.count}
-                  </span>
+        {/* Churn Rate Card */}
+        <Card className="glass border-border/50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between space-y-0 pb-2">
+              <p className="text-sm font-medium text-muted-foreground">Churn Rate</p>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="flex items-baseline justify-between">
+              <div className="text-2xl font-bold">{stats.churn.rate}%</div>
+              {stats.churn.rate !== stats.churn.previousRate && (
+                <div className={`flex items-center text-xs ${stats.churn.rate < stats.churn.previousRate ? 'text-green-500' : 'text-red-500'}`}>
+                  {stats.churn.rate < stats.churn.previousRate ? (
+                    <TrendingDown className="h-3 w-3 mr-1" />
+                  ) : (
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                  )}
+                  {Math.abs(stats.churn.rate - stats.churn.previousRate)}%
                 </div>
-                <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
-                    style={{ width: `${(milestone.progress / milestone.count) * 100}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {milestone.achieved && (
-              <div className="flex items-center gap-2 text-xs text-primary">
-                <Check className="w-3 h-3" />
-                <span>Unlocked!</span>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              vs {stats.churn.previousRate}% last month
+            </p>
+          </CardContent>
+        </Card>
       </div>
-    </Card>
-  </div>
-      </div >
 
-    <div className="space-y-3">
-      <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-        <Activity className="h-5 w-5 text-primary" />
-        Client Health & Engagement
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="relative overflow-hidden border-0 rounded-3xl bg-gradient-to-br from-purple-500 via-violet-500 to-purple-700">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
-          <CardContent className="relative p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-white/80">High Engagement</p>
-              <CheckCircle2 className="h-4 w-4 text-white/60" />
-            </div>
-            <div>
-              <p className="text-5xl font-bold text-white">{stats.clients.highEngagement}</p>
-              {/* Main Stats Grid */}
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {/* Revenue Card */}
-                <Card className="glass border-border/50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between space-y-0 pb-2">
-                      <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex items-baseline justify-between">
-                      <div className="text-2xl font-bold">${stats.revenue.thisMonth.toLocaleString()}</div>
-                      {stats.revenue.change !== 0 && (
-                        <Badge variant={stats.revenue.change > 0 ? "default" : "destructive"} className="ml-2">
-                          {stats.revenue.change > 0 ? "+" : ""}{stats.revenue.change}%
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Forecast: ${stats.revenue.forecast.toLocaleString()}
-                    </p>
-                  </CardContent>
-                </Card>
+      {/* Quick Actions Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <BookingLinkCard />
 
-                {/* Active Clients Card */}
-                <Card className="glass border-border/50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between space-y-0 pb-2">
-                      <p className="text-sm font-medium text-muted-foreground">Active Clients</p>
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex items-baseline justify-between">
-                      <div className="text-2xl font-bold">{stats.clients.total}</div>
-                      <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">
-                        {stats.clients.highEngagement} highly active
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {stats.clients.atRisk} clients at risk of churn
-                    </p>
-                  </CardContent>
-                </Card>
+        {/* Share Stats Card */}
+        <ShareableStatsCard
+          stats={{
+            sessionsCompleted: stats.trainer.totalSessions || 0,
+            activeClients: stats.clients.total || 0,
+            rating: stats.trainer.rating || 5.0,
+            yearsExperience: 5 // This should come from trainer profile
+          }}
+          trainerName={stats.trainer.name || "Trainer"}
+        />
 
-                {/* Sessions Card */}
-                <Card className="glass border-border/50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between space-y-0 pb-2">
-                      <p className="text-sm font-medium text-muted-foreground">Sessions This Week</p>
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex items-baseline justify-between">
-                      <div className="text-2xl font-bold">{stats.sessions.thisWeek}</div>
-                      <Badge variant="outline" className="ml-2">
-                        {stats.sessions.utilization}% utilization
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {stats.sessions.completed} completed so far
-                    </p>
-                  </CardContent>
-                </Card>
+        {/* Onboarding Checklist */}
+        <OnboardingChecklist />
+      </div>
 
-                {/* Churn Rate Card */}
-                <Card className="glass border-border/50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between space-y-0 pb-2">
-                      <p className="text-sm font-medium text-muted-foreground">Churn Rate</p>
-                      <Activity className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex items-baseline justify-between">
-                      <div className="text-2xl font-bold">{stats.churn.rate}%</div>
-                      {stats.churn.rate !== stats.churn.previousRate && (
-                        <div className={`flex items-center text-xs ${stats.churn.rate < stats.churn.previousRate ? 'text-green-500' : 'text-red-500'}`}>
-                          {stats.churn.rate < stats.churn.previousRate ? (
-                            <TrendingDown className="h-3 w-3 mr-1" />
-                          ) : (
-                            <TrendingUp className="h-3 w-3 mr-1" />
-                          )}
-                          {Math.abs(stats.churn.rate - stats.churn.previousRate)}%
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      vs {stats.churn.previousRate}% last month
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Quick Actions Grid */}
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <BookingLinkCard />
-
-                {/* Share Stats Card */}
-                <ShareableStatsCard
-                  stats={{
-                    sessionsCompleted: stats.trainer.totalSessions || 0,
-                    activeClients: stats.clients.total || 0,
-                    rating: stats.trainer.rating || 5.0,
-                    yearsExperience: 5 // This should come from trainer profile
-                  }}
-                  trainerName={stats.trainer.name || "Trainer"}
-                />
-
-                {/* Onboarding Checklist */}
-                <OnboardingChecklist />
-              </div>
-
-              {/* Empty States (Conditional) */}
-              {stats.clients.total === 0 && <EmptyClients />}
-              {stats.sessions.thisWeek === 0 && stats.clients.total > 0 && <EmptySessions />}
-            </div >
-            )
+      {/* Empty States (Conditional) */}
+      {stats.clients.total === 0 && <EmptyClients />}
+      {stats.sessions.thisWeek === 0 && stats.clients.total > 0 && <EmptySessions />}
+    </div>
+  )
 }
