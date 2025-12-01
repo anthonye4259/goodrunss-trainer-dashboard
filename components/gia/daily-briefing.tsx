@@ -306,9 +306,8 @@ export function DailyBriefing() {
             )}
         </div>
 
-        {/* Message Draft Modal */ }
-    {
-        selectedRecipient && (
+        {/* Message Draft Modal */}
+        {selectedRecipient && (
             <MessageDraftModal
                 open={modalOpen}
                 onOpenChange={setModalOpen}
@@ -322,7 +321,6 @@ export function DailyBriefing() {
                     fetchInsights()
                 }}
             />
-        )
-    }
+        )}
     )
 }
