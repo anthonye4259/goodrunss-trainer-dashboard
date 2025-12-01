@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Brain, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Users, ArrowRight } from "lucide-react"
+import { Loader2, Brain, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Users, ArrowRight, MessageSquare, Zap } from "lucide-react"
 import Link from "next/link"
 
 interface DailyBriefingData {
@@ -150,11 +150,78 @@ export function DailyBriefing() {
                 </CardContent>
             </Card>
 
+            {/* ⚡ SMART NURTURE (NEW) - Consistency Engine for Acquisition */}
+            <Card className="glass border-primary/20 bg-primary/5">
+                <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-primary" />
+                        Smart Nurture
+                        <Badge variant="secondary" className="ml-auto text-xs font-normal">
+                            2 New Leads
+                        </Badge>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-background/60 border border-primary/10">
+                        <div>
+                            <p className="font-semibold text-sm">Jessica Chen</p>
+                            <p className="text-xs text-muted-foreground">Tennis • Beginner • Goal: Weight Loss</p>
+                        </div>
+                        <Button size="sm" className="gap-2 bg-primary text-black hover:bg-primary/90" onClick={() => {
+                            // In a real app, this would open the chat with a pre-filled message
+                            alert("Gia drafted: 'Hi Jessica! Saw you're interested in tennis for fitness. I have a beginner clinic this Tuesday that burns 500+ calories. Want to try it out?'")
+                        }}>
+                            <MessageSquare className="h-3 w-3" />
+                            Draft Intro
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* 🛡️ CHURN INTERCEPTOR (NEW) - Consistency Engine for Retention */}
+            {clientRisks.length > 0 && (
+                <Card className="glass border-orange-500/20 bg-orange-500/5">
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <AlertTriangle className="h-4 w-4 text-orange-500" />
+                                Churn Interceptor
+                            </CardTitle>
+                            <Link href="/dashboard/clients">
+                                <Button variant="ghost" size="sm" className="gap-1 text-orange-500 hover:text-orange-600 hover:bg-orange-500/10">
+                                    View All
+                                    <ArrowRight className="h-3 w-3" />
+                                </Button>
+                            </Link>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {clientRisks.slice(0, 3).map((client) => (
+                            <div
+                                key={client.clientId}
+                                className="flex items-center justify-between p-3 rounded-lg bg-background/60 border border-orange-500/10"
+                            >
+                                <div className="flex-1">
+                                    <p className="font-semibold text-sm">{client.clientName}</p>
+                                    <p className="text-xs text-muted-foreground">{client.reasons[0]}</p>
+                                </div>
+                                <Button size="sm" variant="outline" className="gap-2 border-orange-500/20 text-orange-500 hover:bg-orange-500/10" onClick={() => {
+                                    alert(`Gia drafted re-engagement for ${client.clientName}: 'Hey ${client.clientName.split(' ')[0]}! Missed you at the session last week. Everything ok? I have a spot open this Thursday if you want to get back on track!'`)
+                                }}>
+                                    <MessageSquare className="h-3 w-3" />
+                                    Re-engage
+                                </Button>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Recommendations */}
             {recommendations.length > 0 && (
                 <Card className="glass border-border/50">
                     <CardHeader>
-                        <CardTitle className="text-base">Recommended Actions</CardTitle>
+                        <CardTitle className="text-base">Other Recommendations</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         {recommendations.slice(0, 3).map((rec) => (
@@ -181,42 +248,6 @@ export function DailyBriefing() {
                                         <ArrowRight className="h-3 w-3" />
                                     </Button>
                                 </Link>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* At-Risk Clients Preview */}
-            {clientRisks.length > 0 && (
-                <Card className="glass border-border/50">
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-base">Clients Needing Attention</CardTitle>
-                            <Link href="/dashboard/clients">
-                                <Button variant="ghost" size="sm" className="gap-1">
-                                    View All
-                                    <ArrowRight className="h-3 w-3" />
-                                </Button>
-                            </Link>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                        {clientRisks.slice(0, 3).map((client) => (
-                            <div
-                                key={client.clientId}
-                                className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50"
-                            >
-                                <div className="flex-1">
-                                    <p className="font-semibold text-sm">{client.clientName}</p>
-                                    <p className="text-xs text-muted-foreground">{client.reasons[0]}</p>
-                                </div>
-                                <Badge
-                                    variant={client.riskLevel === 'high' ? 'destructive' : 'secondary'}
-                                    className="text-xs"
-                                >
-                                    {client.riskLevel} risk
-                                </Badge>
                             </div>
                         ))}
                     </CardContent>
