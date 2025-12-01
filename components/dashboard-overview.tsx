@@ -648,156 +648,131 @@ export function DashboardOverview() {
   </div>
       </div >
 
-      <div className="space-y-3">
-        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-          <Activity className="h-5 w-5 text-primary" />
-          Client Health & Engagement
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="relative overflow-hidden border-0 rounded-3xl bg-gradient-to-br from-purple-500 via-violet-500 to-purple-700">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
-            <CardContent className="relative p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-white/80">High Engagement</p>
-                <CheckCircle2 className="h-4 w-4 text-white/60" />
-              </div>
-              <div>
-                <p className="text-5xl font-bold text-white">{stats.clients.highEngagement}</p>
-                <p className="text-sm text-white/70 mt-2">Clients ({stats.clients.total > 0 ? ((stats.clients.highEngagement / stats.clients.total) * 100).toFixed(0) : 0}% of total)</p>
-              </div>
-              <div className="pt-2 border-t border-white/20 space-y-1">
-                <p className="text-xs text-white/70">• 3+ sessions/week</p>
-                <p className="text-xs text-white/70">• 90%+ attendance rate</p>
-                <p className="text-xs text-white/70">• Active in last 48 hours</p>
-              </div>
-            </CardContent>
-          </Card>
+    <div className="space-y-3">
+      <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+        <Activity className="h-5 w-5 text-primary" />
+        Client Health & Engagement
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="relative overflow-hidden border-0 rounded-3xl bg-gradient-to-br from-purple-500 via-violet-500 to-purple-700">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
+          <CardContent className="relative p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-white/80">High Engagement</p>
+              <CheckCircle2 className="h-4 w-4 text-white/60" />
+            </div>
+            <div>
+              <p className="text-5xl font-bold text-white">{stats.clients.highEngagement}</p>
+              {/* Main Stats Grid */}
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {/* Revenue Card */}
+                <Card className="glass border-border/50">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between space-y-0 pb-2">
+                      <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-2xl font-bold">${stats.revenue.thisMonth.toLocaleString()}</div>
+                      {stats.revenue.change !== 0 && (
+                        <Badge variant={stats.revenue.change > 0 ? "default" : "destructive"} className="ml-2">
+                          {stats.revenue.change > 0 ? "+" : ""}{stats.revenue.change}%
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Forecast: ${stats.revenue.forecast.toLocaleString()}
+                    </p>
+                  </CardContent>
+                </Card>
 
-          <Card className="relative overflow-hidden border-0 rounded-3xl bg-gradient-to-br from-yellow-500 via-orange-400 to-orange-600">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
-            <CardContent className="relative p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-white/80">Medium Engagement</p>
-                <AlertTriangle className="h-4 w-4 text-white/60" />
-              </div>
-              <div>
-                <p className="text-5xl font-bold text-white">{stats.clients.mediumEngagement}</p>
-                <p className="text-sm text-white/70 mt-2">Clients ({stats.clients.total > 0 ? ((stats.clients.mediumEngagement / stats.clients.total) * 100).toFixed(0) : 0}% of total)</p>
-              </div>
-              <div className="pt-2 border-t border-white/20 space-y-1">
-                <p className="text-xs text-white/70">• 1-2 sessions/week</p>
-                <p className="text-xs text-white/70">• 60-80% attendance</p>
-                <p className="text-xs text-white/70">• Check in weekly</p>
-              </div>
-            </CardContent>
-          </Card>
+                {/* Active Clients Card */}
+                <Card className="glass border-border/50">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between space-y-0 pb-2">
+                      <p className="text-sm font-medium text-muted-foreground">Active Clients</p>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-2xl font-bold">{stats.clients.total}</div>
+                      <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">
+                        {stats.clients.highEngagement} highly active
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {stats.clients.atRisk} clients at risk of churn
+                    </p>
+                  </CardContent>
+                </Card>
 
-          <Card className="relative overflow-hidden border-0 rounded-3xl bg-gradient-to-br from-red-500 via-red-600 to-rose-700">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
-            <CardContent className="relative p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-white/80">At Risk</p>
-                <XCircle className="h-4 w-4 text-white/60" />
-              </div>
-              <div>
-                <p className="text-5xl font-bold text-white">{stats.clients.atRisk}</p>
-                <p className="text-sm text-white/70 mt-2">Clients ({stats.clients.total > 0 ? ((stats.clients.atRisk / stats.clients.total) * 100).toFixed(0) : 0}% of total)</p>
-              </div>
-              <div className="pt-2 border-t border-white/20 space-y-1">
-                <p className="text-xs text-white/70">• No sessions in 2+ weeks</p>
-                <p className="text-xs text-white/70">• &lt;50% attendance rate</p>
-                <p className="text-xs text-white/70">• Immediate action needed</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+                {/* Sessions Card */}
+                <Card className="glass border-border/50">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between space-y-0 pb-2">
+                      <p className="text-sm font-medium text-muted-foreground">Sessions This Week</p>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-2xl font-bold">{stats.sessions.thisWeek}</div>
+                      <Badge variant="outline" className="ml-2">
+                        {stats.sessions.utilization}% utilization
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {stats.sessions.completed} completed so far
+                    </p>
+                  </CardContent>
+                </Card>
 
-      <div className="space-y-3">
-        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-          <Target className="h-5 w-5 text-primary" />
-          Operational Insights
-        </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="relative overflow-hidden border-0 rounded-3xl aspect-square group hover:scale-105 transition-transform duration-300">
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 via-blue-400 to-indigo-600 opacity-90"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
-            <CardContent className="relative h-full flex flex-col justify-between p-6">
-              <div>
-                <p className="text-sm font-medium text-white/80">Session Utilization</p>
-                <p className="text-xs text-white/60 mt-0.5">This Week</p>
+                {/* Churn Rate Card */}
+                <Card className="glass border-border/50">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between space-y-0 pb-2">
+                      <p className="text-sm font-medium text-muted-foreground">Churn Rate</p>
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-2xl font-bold">{stats.churn.rate}%</div>
+                      {stats.churn.rate !== stats.churn.previousRate && (
+                        <div className={`flex items-center text-xs ${stats.churn.rate < stats.churn.previousRate ? 'text-green-500' : 'text-red-500'}`}>
+                          {stats.churn.rate < stats.churn.previousRate ? (
+                            <TrendingDown className="h-3 w-3 mr-1" />
+                          ) : (
+                            <TrendingUp className="h-3 w-3 mr-1" />
+                          )}
+                          {Math.abs(stats.churn.rate - stats.churn.previousRate)}%
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      vs {stats.churn.previousRate}% last month
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
-              <div className="space-y-2">
-                <div className="relative h-2 w-full bg-white/20 rounded-full overflow-hidden">
-                  <div className="absolute inset-y-0 left-0 bg-white rounded-full" style={{ width: `${stats.sessions.utilization}%` }}></div>
-                </div>
-                <p className="text-5xl font-bold text-white">{stats.sessions.utilization.toFixed(0)}%</p>
-              </div>
-              <p className="text-sm font-medium text-white/80">{stats.sessions.completed}/{stats.sessions.thisWeek} slots filled</p>
-            </CardContent>
-          </Card>
 
-          <Card className="relative overflow-hidden border-0 rounded-3xl aspect-square group hover:scale-105 transition-transform duration-300">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600 opacity-90"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
-            <CardContent className="relative h-full flex flex-col justify-between p-6">
-              <div>
-                <p className="text-sm font-medium text-white/80">Avg Completion Rate</p>
-                <p className="text-xs text-white/60 mt-0.5">All Programs</p>
-              </div>
-              <div className="space-y-2">
-                <svg className="w-full h-12 opacity-60" viewBox="0 0 100 50" preserveAspectRatio="none">
-                  <path d="M0,40 L25,35 L50,25 L75,20 L100,15" fill="none" stroke="white" strokeWidth="2" />
-                </svg>
-                <p className="text-5xl font-bold text-white">78%</p>
-              </div>
-              <p className="text-sm font-medium text-white/80">+5% vs last month</p>
-            </CardContent>
-          </Card>
+              {/* Quick Actions Grid */}
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <BookingLinkCard />
 
-          <Card className="relative overflow-hidden border-0 rounded-3xl aspect-square group hover:scale-105 transition-transform duration-300">
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-400 via-rose-500 to-red-600 opacity-90"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
-            <CardContent className="relative h-full flex flex-col justify-between p-6">
-              <div>
-                <p className="text-sm font-medium text-white/80">Peak Booking Time</p>
-                <p className="text-xs text-white/60 mt-0.5">Most Popular</p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-end justify-center gap-1 h-12">
-                  {[3, 4, 5, 7, 11, 9, 6, 4, 3, 2].map((height, i) => (
-                    <div
-                      key={i}
-                      className={`w-2 rounded-t ${i === 4 ? "bg-white" : "bg-white/40"}`}
-                      style={{ height: `${height * 4}px` }}
-                    ></div>
-                  ))}
-                </div>
-                <p className="text-5xl font-bold text-white">6PM</p>
-              </div>
-              <p className="text-sm font-medium text-white/80">Mon-Thu evenings</p>
-            </CardContent>
-          </Card>
+                {/* Share Stats Card */}
+                <ShareableStatsCard
+                  stats={{
+                    sessionsCompleted: stats.trainer.totalSessions || 0,
+                    activeClients: stats.clients.total || 0,
+                    rating: stats.trainer.rating || 5.0,
+                    yearsExperience: 5 // This should come from trainer profile
+                  }}
+                  trainerName={stats.trainer.name || "Trainer"}
+                />
 
-          <Card className="relative overflow-hidden border-0 rounded-3xl aspect-square group hover:scale-105 transition-transform duration-300">
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-400 via-purple-500 to-indigo-600 opacity-90"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
-            <CardContent className="relative h-full flex flex-col justify-between p-6">
-              <div>
-                <p className="text-sm font-medium text-white/80">Capacity Available</p>
-                <p className="text-xs text-white/60 mt-0.5">Next 7 Days</p>
+                {/* Onboarding Checklist */}
+                <OnboardingChecklist />
               </div>
-              <div className="space-y-2">
-                <div className="flex justify-center items-center h-12">
-                  <Calendar className="w-12 h-12 text-white/40" />
-                </div>
-                <p className="text-5xl font-bold text-white">18</p>
-              </div>
-              <p className="text-sm font-medium text-white/80">Open slots</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div >
-  )
+
+              {/* Empty States (Conditional) */}
+              {stats.clients.total === 0 && <EmptyClients />}
+              {stats.sessions.thisWeek === 0 && stats.clients.total > 0 && <EmptySessions />}
+            </div >
+            )
 }
