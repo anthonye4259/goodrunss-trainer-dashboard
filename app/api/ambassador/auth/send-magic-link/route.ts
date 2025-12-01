@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       console.log(`[MAGIC_LINK] Attempting to send email to ${email}`)
 
       const result = await resend.emails.send({
-        from: "GoodRunss <onboarding@resend.dev>",
+        from: "GoodRunss Ambassadors <helpdesk@teamgoodrunss.com>",
         to: email,
         subject: "🔐 Your Ambassador Dashboard Login Link",
         html: `
