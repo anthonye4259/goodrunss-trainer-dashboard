@@ -16,7 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Users, Clock, Loader2, AlertCircle } from "lucide-react"
+import { Plus, Users, Clock, Loader2, AlertCircle, TrendingUp } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface GroupClass {
@@ -29,10 +29,41 @@ interface GroupClass {
   status: string
 }
 
+interface ClassAnalytics {
+  classInsights: Array<{
+    classId: string
+    className: string
+    revenuePerClass: number
+    averageAttendance: number
+    attendanceTrend: 'increasing' | 'stable' | 'declining'
+    profitability: 'high' | 'medium' | 'low'
+    recommendations: string[]
+  }>
+  attendancePatterns: Array<{
+    clientId: string
+    clientName: string
+    dropoffDetected: boolean
+    recommendation: string
+  }>
+  revenueBreakdown: {
+    total: number
+    dropIn: number
+    packages: number
+  }
+  topPerformingClasses: Array<{
+    classId: string
+    className: string
+    revenue: number
+    attendance: number
+  }>
+}
+
 export default function GroupClassesPage() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [classes, setClasses] = useState<GroupClass[]>([])
+  const [analytics, setAnalytics] = useState<ClassAnalytics | null>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,19 +78,20 @@ export default function GroupClassesPage() {
 
   useEffect(() => {
     fetchClasses()
+    fetchAnalytics()
   }, [])
 
   const fetchClasses = async () => {
     setLoading(true)
     setError(null)
-    
+
     try {
       const response = await fetch('/api/group-classes')
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch group classes')
       }
-      
+
       const data = await response.json()
       setClasses(data.classes || [])
     } catch (err: any) {
@@ -67,6 +99,24 @@ export default function GroupClassesPage() {
       setError(err.message || 'Failed to load group classes')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchAnalytics = async () => {
+    setAnalyticsLoading(true)
+
+    try {
+      const response = await fetch('/api/gia/class-analytics')
+
+      if (response.ok) {
+        const data = await response.json()
+        setAnalytics(data.data)
+      }
+    } catch (err: any) {
+      console.error('Fetch analytics error:', err)
+      // Don't show error for analytics - it's optional
+    } finally {
+      setAnalyticsLoading(false)
     }
   }
 
@@ -84,7 +134,7 @@ export default function GroupClassesPage() {
 
     try {
       const scheduledAt = new Date(`${formData.date}T${formData.time}`)
-      
+
       const response = await fetch('/api/group-classes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -101,12 +151,12 @@ export default function GroupClassesPage() {
       }
 
       const data = await response.json()
-      
-      toast({ 
+
+      toast({
         title: "✅ Class created successfully",
         description: `${formData.name} has been scheduled`
       })
-      
+
       await fetchClasses()
       setOpen(false)
       setFormData({
@@ -196,7 +246,7 @@ export default function GroupClassesPage() {
                   id="name"
                   placeholder="e.g., Morning HIIT Class"
                   value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -206,7 +256,7 @@ export default function GroupClassesPage() {
                     id="date"
                     type="date"
                     value={formData.date}
-                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -215,7 +265,7 @@ export default function GroupClassesPage() {
                     id="time"
                     type="time"
                     value={formData.time}
-                    onChange={(e) => setFormData({...formData, time: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                   />
                 </div>
               </div>
@@ -226,7 +276,7 @@ export default function GroupClassesPage() {
                     id="duration"
                     type="number"
                     value={formData.duration}
-                    onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -235,7 +285,7 @@ export default function GroupClassesPage() {
                     id="capacity"
                     type="number"
                     value={formData.capacity}
-                    onChange={(e) => setFormData({...formData, capacity: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
                   />
                 </div>
               </div>
@@ -273,7 +323,7 @@ export default function GroupClassesPage() {
             <p className="text-xs text-muted-foreground mt-1">Active group sessions</p>
           </CardContent>
         </Card>
-        
+
         <Card className="glass border-border/50">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -286,7 +336,7 @@ export default function GroupClassesPage() {
             <p className="text-xs text-muted-foreground mt-1">Out of {totalCapacity} capacity</p>
           </CardContent>
         </Card>
-        
+
         <Card className="glass border-border/50">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -300,6 +350,145 @@ export default function GroupClassesPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Class Performance Analytics */}
+      {analytics && !analyticsLoading && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Top Performers & Underperforming */}
+          <Card className="glass border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Class Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Top Performers */}
+              {analytics.topPerformingClasses.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                    🏆 Top Performers
+                  </h4>
+                  <div className="space-y-2">
+                    {analytics.topPerformingClasses.slice(0, 3).map((cls) => (
+                      <div key={cls.classId} className="flex justify-between items-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                        <div>
+                          <div className="font-medium">{cls.className}</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {cls.attendance.toFixed(1)} avg attendance
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-green-600">${cls.revenue.toFixed(0)}</div>
+                          <div className="text-xs text-muted-foreground">per class</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Underperforming Classes */}
+              {analytics.classInsights.filter(c => c.profitability === 'low').length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                    ⚠️ Needs Attention
+                  </h4>
+                  <div className="space-y-2">
+                    {analytics.classInsights
+                      .filter(c => c.profitability === 'low')
+                      .slice(0, 3)
+                      .map((cls) => (
+                        <div key={cls.classId} className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                          <div className="font-medium">{cls.className}</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            ${cls.revenuePerClass.toFixed(0)}/class • {cls.averageAttendance.toFixed(1)} avg attendance
+                          </div>
+                          {cls.recommendations[0] && (
+                            <div className="text-xs text-yellow-700 dark:text-yellow-400 mt-2 flex items-start gap-1">
+                              <span>💡</span>
+                              <span>{cls.recommendations[0]}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Attendance Insights */}
+          <Card className="glass border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Attendance Insights
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Revenue Breakdown */}
+              <div>
+                <h4 className="font-semibold text-sm mb-3">💰 Revenue Breakdown</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center p-2 rounded bg-secondary/50">
+                    <span className="text-sm">Total Revenue</span>
+                    <span className="font-bold text-primary">${analytics.revenueBreakdown.total.toFixed(0)}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 rounded bg-secondary/30">
+                    <span className="text-sm text-muted-foreground">Packages (60%)</span>
+                    <span className="text-sm font-medium">${analytics.revenueBreakdown.packages.toFixed(0)}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 rounded bg-secondary/30">
+                    <span className="text-sm text-muted-foreground">Drop-ins (40%)</span>
+                    <span className="text-sm font-medium">${analytics.revenueBreakdown.dropIn.toFixed(0)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dropoff Alerts */}
+              {analytics.attendancePatterns.filter(p => p.dropoffDetected).length > 0 && (
+                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-sm text-red-700 dark:text-red-400 mb-2">
+                        Attendance Dropoffs Detected
+                      </h4>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {analytics.attendancePatterns.filter(p => p.dropoffDetected).length} client{analytics.attendancePatterns.filter(p => p.dropoffDetected).length > 1 ? 's' : ''} stopped attending classes
+                      </p>
+                      <div className="space-y-2">
+                        {analytics.attendancePatterns
+                          .filter(p => p.dropoffDetected)
+                          .slice(0, 3)
+                          .map((pattern) => (
+                            <div key={pattern.clientId} className="text-xs bg-background/50 p-2 rounded">
+                              <div className="font-medium">{pattern.clientName}</div>
+                              <div className="text-muted-foreground mt-1">{pattern.recommendation}</div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* High Performers */}
+              {analytics.attendancePatterns.filter(p => !p.dropoffDetected).length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                    ⭐ High Attendance
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    {analytics.attendancePatterns.filter(p => !p.dropoffDetected).length} client{analytics.attendancePatterns.filter(p => !p.dropoffDetected).length > 1 ? 's' : ''} with excellent attendance - potential upsell opportunities
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Classes List */}
       <Card className="glass border-border/50">
