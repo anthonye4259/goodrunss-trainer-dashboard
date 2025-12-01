@@ -82,6 +82,13 @@ export async function POST(request: NextRequest) {
       messageText.includes('stretching') || messageText.includes('flexibility') || messageText.includes('mind-body')) {
       specialization = 'wellness'
     }
+    // Swimming keywords
+    else if (messageText.includes('swim') || messageText.includes('freestyle') || messageText.includes('backstroke') ||
+      messageText.includes('breaststroke') || messageText.includes('butterfly') || messageText.includes('stroke') ||
+      messageText.includes('pool') || messageText.includes('lap') || messageText.includes('triathlon') ||
+      messageText.includes('flip turn') || messageText.includes('open water') || messageText.includes('aquatic')) {
+      specialization = 'swimming'
+    }
     // Sports keywords
     else if (messageText.includes('pickleball') || messageText.includes('tennis') || messageText.includes('golf') ||
       messageText.includes('basketball') || messageText.includes('soccer') || messageText.includes('padel') ||
