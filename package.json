@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.74",
+    "@ai-sdk/react": "^2.0.104",
     "@anthropic-ai/sdk": "^0.68.0",
     "@clerk/nextjs": "^6.34.0",
     "@google/generative-ai": "0.17.1",
