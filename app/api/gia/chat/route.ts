@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       tools: {
         sendSMS: {
           description: 'Send SMS messages to clients via Twilio. Can send to specific clients, all clients, or custom phone numbers. Use this when the trainer asks to send messages, reminders, or bulk communications.',
-          parameters: z.object({
+          inputSchema: z.object({
             message: z.string().describe('The SMS message to send. Use {name} or {client_name} for personalization.'),
             clientIds: z.array(z.string()).optional().describe('Array of client IDs to send to'),
             sendToAll: z.boolean().optional().describe('Set to true to send to all clients with phone numbers'),
