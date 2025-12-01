@@ -65,7 +65,7 @@ export default function GIAPage() {
       console.error("Chat error:", error)
       toast.error("Failed to connect to GIA. Please try again.")
     }
-  })
+  }) as any
 
   // Scroll to bottom when messages change
   useEffect(() => {
