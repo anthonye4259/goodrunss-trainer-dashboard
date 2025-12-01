@@ -452,15 +452,7 @@ export function DashboardOverview() {
         <BookingLinkCard />
 
         {/* Share Stats Card */}
-        <ShareableStatsCard
-          stats={{
-            sessionsCompleted: stats.trainer.totalSessions || 0,
-            activeClients: stats.clients.total || 0,
-            rating: stats.trainer.rating || 5.0,
-            yearsExperience: 5 // This should come from trainer profile
-          }}
-          trainerName={stats.trainer.name || "Trainer"}
-        />
+        <ShareableStatsCard />
 
         {/* Onboarding Checklist */}
         <OnboardingChecklist />
