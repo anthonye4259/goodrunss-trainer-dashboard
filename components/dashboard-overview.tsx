@@ -212,8 +212,18 @@ export function DashboardOverview() {
         </div>
         <div className="flex gap-3">
           <ShareToSocial
-            referralCode="COACH2024"
-            className="w-full md:w-auto"
+            data={{
+              title: "Join me on GoodRunss",
+              value: "Train with the best",
+              subtitle: "Get 10% off your first month",
+              gradient: "bg-gradient-to-br from-primary via-primary/80 to-accent"
+            }}
+            trigger={
+              <Button variant="outline" className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white w-full md:w-auto">
+                <Share2 className="h-4 w-4" />
+                Share Profile
+              </Button>
+            }
           />
           <Button className="gap-2 shadow-lg shadow-primary/20" onClick={() => window.location.href = '/dashboard/sessions'}>
             <Calendar className="h-4 w-4" />
