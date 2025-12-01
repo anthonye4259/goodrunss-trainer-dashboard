@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
             },
             include: {
                 trainer_sessions: {
-                    orderBy: { date: 'desc' },
+                    orderBy: { scheduledAt: 'desc' },
                     take: 5
                 }
             }
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 
             const lastSession = client.trainer_sessions[0]
             const daysSinceLastSession = lastSession
-                ? Math.floor((Date.now() - new Date(lastSession.date).getTime()) / (1000 * 60 * 60 * 24))
+                ? Math.floor((Date.now() - new Date(lastSession.scheduledAt).getTime()) / (1000 * 60 * 60 * 24))
                 : 30 // Default if no sessions
 
             if (daysSinceLastSession > 14) {
