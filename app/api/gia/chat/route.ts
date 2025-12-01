@@ -201,6 +201,63 @@ export async function POST(request: NextRequest) {
               }
             }
           }
+        },
+        analyzeClasses: {
+          description: 'Analyze class performance, attendance patterns, and revenue. Use this when the trainer asks about class analytics, attendance trends, or which classes are performing well.',
+          inputSchema: z.object({
+            timeframe: z.enum(['week', 'month', 'quarter']).optional().describe('Timeframe for analysis (defaults to month)')
+          }),
+          execute: async ({ timeframe }) => {
+            try {
+              console.log('[GIA CLASS ANALYTICS] Analyzing classes:', { timeframe })
+
+              const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/gia/class-analytics`, {
+                method: 'GET',
+                headers: {
+                  'Cookie': request.headers.get('cookie') || ''
+                }
+              })
+
+              const data = await response.json()
+
+              if (!response.ok) {
+                return {
+                  success: false,
+                  error: data.error || 'Failed to analyze classes'
+                }
+              }
+
+              const { classInsights, attendancePatterns, revenueBreakdown, topPerformingClasses, recommendations } = data.data
+
+              // Format insights for Gia
+              const summary = {
+                success: true,
+                totalRevenue: revenueBreakdown.total,
+                topClasses: topPerformingClasses.map((c: any) => ({
+                  name: c.className,
+                  revenue: c.revenue,
+                  attendance: c.attendance
+                })),
+                underperforming: classInsights.filter((c: any) => c.profitability === 'low').map((c: any) => ({
+                  name: c.className,
+                  issue: c.recommendations.join(', ')
+                })),
+                dropoffs: attendancePatterns.filter((p: any) => p.dropoffDetected).map((p: any) => ({
+                  client: p.clientName,
+                  recommendation: p.recommendation
+                })),
+                recommendations
+              }
+
+              return summary
+            } catch (error: any) {
+              console.error('[GIA CLASS ANALYTICS] Error:', error)
+              return {
+                success: false,
+                error: error.message || 'Failed to analyze classes'
+              }
+            }
+          }
         }
       }
     })
