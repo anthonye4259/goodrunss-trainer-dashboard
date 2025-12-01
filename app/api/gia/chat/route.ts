@@ -258,6 +258,125 @@ export async function POST(request: NextRequest) {
               }
             }
           }
+        },
+        getHotLeads: {
+          description: 'Fetch the hottest leads matched for the trainer. Use this when the trainer asks for "new leads", "opportunities", or "who should I contact".',
+          inputSchema: z.object({}),
+          execute: async () => {
+            try {
+              const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/gia/match-leads`, {
+                headers: { 'Cookie': request.headers.get('cookie') || '' }
+              })
+              const data = await response.json()
+              return data
+            } catch (error: any) {
+              return { error: error.message }
+            }
+          }
+        },
+        draftLeadMessage: {
+          description: 'Draft a personalized intro message for a lead. Use this when the trainer wants to contact a lead.',
+          inputSchema: z.object({
+            leadId: z.string().describe('ID of the lead'),
+            leadName: z.string().describe('Name of the lead'),
+            sport: z.string().optional().describe('Sport interest'),
+            goals: z.string().optional().describe('Fitness goals')
+          }),
+          execute: async ({ leadId, leadName, sport, goals }) => {
+            try {
+              // 1. Generate message
+              const draftRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/gia/draft-message`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Cookie': request.headers.get('cookie') || '' },
+                body: JSON.stringify({
+                  type: 'lead_intro',
+                  recipientId: leadId,
+                  recipientName: leadName,
+                  context: { sport, goals }
+                })
+              })
+              const draftData = await draftRes.json()
+
+              // 2. Add to queue
+              const queueRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/gia/message-queue`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Cookie': request.headers.get('cookie') || '' },
+                body: JSON.stringify({
+                  recipientId: leadId,
+                  recipientName: leadName,
+                  message: draftData.message,
+                  type: 'lead_intro',
+                  channel: 'sms'
+                })
+              })
+
+              return {
+                success: true,
+                message: `Draft created for ${leadName}: "${draftData.message}". It has been added to your Draft Queue for approval.`
+              }
+            } catch (error: any) {
+              return { error: error.message }
+            }
+          }
+        },
+        draftReengagementMessage: {
+          description: 'Draft a re-engagement message for an at-risk client. Use this when the trainer wants to reach out to a client who hasn\'t visited in a while.',
+          inputSchema: z.object({
+            clientId: z.string().describe('ID of the client'),
+            clientName: z.string().describe('Name of the client'),
+            missedSessions: z.number().optional().describe('Number of missed sessions')
+          }),
+          execute: async ({ clientId, clientName, missedSessions }) => {
+            try {
+              // 1. Generate message
+              const draftRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/gia/draft-message`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Cookie': request.headers.get('cookie') || '' },
+                body: JSON.stringify({
+                  type: 'churn_reengagement',
+                  recipientId: clientId,
+                  recipientName: clientName,
+                  context: { missedSessions }
+                })
+              })
+              const draftData = await draftRes.json()
+
+              // 2. Add to queue
+              const queueRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/gia/message-queue`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Cookie': request.headers.get('cookie') || '' },
+                body: JSON.stringify({
+                  recipientId: clientId,
+                  recipientName: clientName,
+                  message: draftData.message,
+                  type: 'churn_reengagement',
+                  channel: 'sms'
+                })
+              })
+
+              return {
+                success: true,
+                message: `Draft created for ${clientName}: "${draftData.message}". It has been added to your Draft Queue for approval.`
+              }
+            } catch (error: any) {
+              return { error: error.message }
+            }
+          }
+        },
+        getMessageQueue: {
+          description: 'View pending message drafts. Use this when the trainer asks "what drafts do I have" or "show my queue".',
+          inputSchema: z.object({}),
+          execute: async () => {
+            try {
+              const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/gia/message-queue`, {
+                headers: { 'Cookie': request.headers.get('cookie') || '' }
+              })
+              const data = await response.json()
+              return data
+            } catch (error: any) {
+              return { error: error.message }
+            }
+          }
         }
       }
     })
