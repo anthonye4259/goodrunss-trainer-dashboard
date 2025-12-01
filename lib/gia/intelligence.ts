@@ -214,13 +214,13 @@ export async function analyzeClassPerformance(trainerId: string): Promise<ClassI
     try {
         // Get all classes for the trainer
         const classes = await prisma.group_classes.findMany({
-            where: { trainerId },
+            where: { trainer_id: trainerId },
             select: {
                 id: true,
                 title: true,
                 price: true,
-                maxParticipants: true,
-                createdAt: true
+                max_participants: true,
+                created_at: true
             }
         })
 
@@ -257,7 +257,7 @@ export async function analyzeClassPerformance(trainerId: string): Promise<ClassI
             else attendanceTrend = 'stable'
 
             // Determine profitability
-            const capacityUtilization = averageAttendance / classItem.maxParticipants
+            const capacityUtilization = averageAttendance / classItem.max_participants
             let profitability: 'high' | 'medium' | 'low'
             if (capacityUtilization > 0.7) profitability = 'high'
             else if (capacityUtilization > 0.4) profitability = 'medium'
