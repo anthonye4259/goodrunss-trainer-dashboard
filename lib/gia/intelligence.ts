@@ -217,9 +217,9 @@ export async function analyzeClassPerformance(trainerId: string): Promise<ClassI
             where: { trainer_id: trainerId },
             select: {
                 id: true,
-                title: true,
-                price: true,
-                max_participants: true,
+                name: true,
+                price_per_person: true,
+                max_capacity: true,
                 created_at: true
             }
         })
@@ -241,7 +241,7 @@ export async function analyzeClassPerformance(trainerId: string): Promise<ClassI
             const averageAttendance = totalAttendance > 0 ? totalAttendance / 4 : 0 // Assuming ~4 weeks
 
             // Calculate revenue
-            const revenuePerClass = Number(classItem.price) * averageAttendance
+            const revenuePerClass = Number(classItem.price_per_person) * averageAttendance
 
             // Determine attendance trend (simplified)
             const recentAttendance = attendance.filter(a =>
@@ -257,7 +257,7 @@ export async function analyzeClassPerformance(trainerId: string): Promise<ClassI
             else attendanceTrend = 'stable'
 
             // Determine profitability
-            const capacityUtilization = averageAttendance / classItem.max_participants
+            const capacityUtilization = averageAttendance / classItem.max_capacity
             let profitability: 'high' | 'medium' | 'low'
             if (capacityUtilization > 0.7) profitability = 'high'
             else if (capacityUtilization > 0.4) profitability = 'medium'
@@ -277,7 +277,7 @@ export async function analyzeClassPerformance(trainerId: string): Promise<ClassI
 
             insights.push({
                 classId: classItem.id,
-                className: classItem.title,
+                className: classItem.name,
                 revenuePerClass,
                 averageAttendance,
                 attendanceTrend,
