@@ -26,6 +26,7 @@ import {
   Share2,
   Trophy,
   Award,
+  Sparkles,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ShareToSocial } from "@/components/share-to-social"
@@ -250,6 +251,125 @@ export function DashboardOverview() {
       {/* Gia's Daily Briefing - AI-Powered Insights */}
       <DailyBriefing />
 
+      {/* 🚀 GROWTH ENGINE SECTION (NEW) */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* 1. Hot Leads Card */}
+        <Card className="glass border-primary/20 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-6 relative">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant="default" className="bg-primary/20 text-primary hover:bg-primary/30 border-primary/20">
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    Growth Engine
+                  </Badge>
+                </div>
+                <h3 className="text-2xl font-bold text-white">New Client Opportunities</h3>
+                <p className="text-muted-foreground">2 high-value leads match your profile</p>
+              </div>
+              <Button variant="outline" className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => window.location.href = '/dashboard/client-leads'}>
+                View All Leads
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {/* Mock Lead 1 */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-background/40 border border-white/5 hover:border-primary/20 transition-colors cursor-pointer group/lead">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                    JC
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white flex items-center gap-2">
+                      Jessica Chen
+                      <Badge variant="secondary" className="text-[10px] h-5 bg-green-500/10 text-green-500 border-green-500/20">95% Match</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground">Tennis • Beginner • Downtown</div>
+                  </div>
+                </div>
+                <Button size="sm" className="opacity-0 group-hover/lead:opacity-100 transition-opacity bg-primary text-black hover:bg-primary/90">
+                  Message
+                </Button>
+              </div>
+
+              {/* Mock Lead 2 */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-background/40 border border-white/5 hover:border-primary/20 transition-colors cursor-pointer group/lead">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                    MW
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white flex items-center gap-2">
+                      Marcus Williams
+                      <Badge variant="secondary" className="text-[10px] h-5 bg-green-500/10 text-green-500 border-green-500/20">88% Match</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground">Golf • Intermediate • Westside</div>
+                  </div>
+                </div>
+                <Button size="sm" className="opacity-0 group-hover/lead:opacity-100 transition-opacity bg-primary text-black hover:bg-primary/90">
+                  Message
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 2. Viral Referral Stats */}
+        <Card className="glass border-border/50 relative overflow-hidden">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant="outline" className="border-white/10 text-white/70">
+                    <Users className="h-3 w-3 mr-1" />
+                    Referral Network
+                  </Badge>
+                </div>
+                <h3 className="text-2xl font-bold text-white">Viral Growth</h3>
+                <p className="text-muted-foreground">Your referral loop is active</p>
+              </div>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={() => {
+                navigator.clipboard.writeText(referralLink)
+                setCopied(true)
+                setTimeout(() => setCopied(false), 2000)
+              }}>
+                {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                <div className="text-2xl font-bold text-primary">{referralStats.activeReferrals}</div>
+                <div className="text-xs text-muted-foreground">Active Referrals</div>
+              </div>
+              <div className="p-3 rounded-lg bg-background/40 border border-white/5 text-center">
+                <div className="text-2xl font-bold text-white">{referralStats.totalInvites}</div>
+                <div className="text-xs text-muted-foreground">Invites Sent</div>
+              </div>
+              <div className="p-3 rounded-lg bg-background/40 border border-white/5 text-center">
+                <div className="text-2xl font-bold text-white">${referralStats.creditsEarned}</div>
+                <div className="text-xs text-muted-foreground">Credits Earned</div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Next Reward: 10% Lifetime Discount</span>
+                <span className="font-medium text-white">{referralStats.activeReferrals}/10 Referrals</span>
+              </div>
+              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-purple-500 transition-all duration-500"
+                  style={{ width: `${(referralStats.activeReferrals / 10) * 100}%` }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Onboarding Checklist - Show for new users or users with < 3 clients */}
       {stats.clients.total < 3 && (
         <OnboardingChecklist />
@@ -302,121 +422,15 @@ export function DashboardOverview() {
                   <Button
                     size="sm"
                     className="bg-orange-500 hover:bg-orange-600 text-white"
-                    onClick={() => {
-                      // Open GIA with pre-filled prompt
-                      const event = new CustomEvent('openGIA', {
-                        detail: { prompt: 'Send payment reminders to overdue clients' }
-                      })
-                      window.dispatchEvent(event)
-                    }}
-                  >
-                    Send Reminders
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 transition-colors hover-lift-subtle">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white">"HIIT Bootcamp" has 92% completion rate</p>
-                    <p className="text-sm text-white/60">Your best performing program - promote it more</p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  className="bg-primary hover:bg-primary/90 text-black"
-                  onClick={() => window.location.href = '/dashboard/programs?highlight=hiit-bootcamp'}
-                >
-                  View Program
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          <p className="text-muted-foreground mt-2 text-lg">
+            Here's what's happening with your business today.
+          </p>
         </div>
-      )}
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-primary" />
-            Revenue Intelligence
-          </h2>
-          <ShareToSocial
-            data={{
-              title: "Monthly Recurring Revenue",
-              value: `$${stats.revenue.thisMonth.toFixed(0)}`,
-              subtitle: `${stats.revenue.change >= 0 ? '+' : ''}${stats.revenue.change.toFixed(1)}% vs last month`,
-              gradient: "bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600",
-            }}
-            platform="all"
+        <div className="flex gap-3">
+          <ShareToSocial 
+            referralCode="COACH2024" 
+            className="w-full md:w-auto"
           />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="relative overflow-hidden border-0 rounded-3xl bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
-            <CardContent className="relative p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-white/80">Monthly Recurring Revenue</p>
-                <TrendingUp className="h-4 w-4 text-white/60" />
-              </div>
-              <div>
-                <p className="text-4xl font-bold text-white">${stats.revenue.thisMonth.toFixed(0)}</p>
-                <div className="flex items-center gap-1 mt-2">
-                  {stats.revenue.change >= 0 ? (
-                    <TrendingUp className="h-3 w-3 text-white" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 text-white" />
-                  )}
-                  <p className="text-sm text-white/90">{stats.revenue.change >= 0 ? '+' : ''}{stats.revenue.change.toFixed(1)}% vs last month</p>
-                </div>
-              </div>
-              <div className="pt-2 border-t border-white/20">
-                <p className="text-xs text-white/70">Forecast: ${stats.revenue.forecast.toFixed(0)} next month</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden border-0 rounded-3xl bg-gradient-to-br from-red-500 via-rose-500 to-pink-600">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
-            <CardContent className="relative p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-white/80">Churn Rate</p>
-                <TrendingDown className="h-4 w-4 text-white/60" />
-              </div>
-              <div>
-                <p className="text-4xl font-bold text-white">{stats.churn.rate.toFixed(1)}%</p>
-                <div className="flex items-center gap-1 mt-2">
-                  {(stats.churn.rate - stats.churn.previousRate) >= 0 ? (
-                    <TrendingUp className="h-3 w-3 text-white" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 text-white" />
-                  )}
-                  <p className="text-sm text-white/90">{(stats.churn.rate - stats.churn.previousRate) >= 0 ? '+' : ''}{(stats.churn.rate - stats.churn.previousRate).toFixed(1)}% vs last month</p>
-                </div>
-              </div>
-              <div className="pt-2 border-t border-white/20">
-                <p className="text-xs text-white/70">Industry avg: 5-7%</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden border-0 rounded-3xl bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"></div>
-            <CardContent className="relative p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-white/80">Avg Client Lifetime Value</p>
-                <Users className="h-4 w-4 text-white/60" />
-              </div>
-              <div>
-                <p className="text-4xl font-bold text-white">${stats.clients.ltv.toFixed(0)}</p>
-                <div className="flex items-center gap-1 mt-2">
                   <TrendingUp className="h-3 w-3 text-white" />
                   <p className="text-sm text-white/90">Based on current data</p>
                 </div>
@@ -447,192 +461,192 @@ export function DashboardOverview() {
             </CardContent>
           </Card>
         </div>
+      </div >
+
+    {/* Referral Rewards Section */ }
+    < div className = "space-y-3" >
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+          <Gift className="h-5 w-5 text-primary" />
+          Referral Rewards
+        </h2>
       </div>
 
-      {/* Referral Rewards Section */}
+  {/* Referral Stats */ }
+  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <Card className="p-4 bg-gradient-to-br from-card to-card/50 border-primary/20 backdrop-blur-sm">
+      <div className="flex items-center justify-between mb-2">
+        <Users className="w-5 h-5 text-primary" />
+        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs">
+          Total
+        </Badge>
+      </div>
+      <div className="space-y-1">
+        <p className="text-2xl font-bold text-primary">{referralStats.totalInvites}</p>
+        <p className="text-xs text-muted-foreground">Invites Sent</p>
+      </div>
+    </Card>
+
+    <Card className="p-4 bg-gradient-to-br from-card to-card/50 border-accent/20 backdrop-blur-sm">
+      <div className="flex items-center justify-between mb-2">
+        <TrendingUp className="w-5 h-5 text-accent" />
+        <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20 text-xs">
+          Active
+        </Badge>
+      </div>
+      <div className="space-y-1">
+        <p className="text-2xl font-bold text-accent">{referralStats.activeReferrals}</p>
+        <p className="text-xs text-muted-foreground">Active Referrals</p>
+      </div>
+    </Card>
+
+    <Card className="p-4 bg-gradient-to-br from-card to-card/50 border-primary/20 backdrop-blur-sm">
+      <div className="flex items-center justify-between mb-2">
+        <DollarSign className="w-5 h-5 text-primary" />
+        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs">
+          Credits
+        </Badge>
+      </div>
+      <div className="space-y-1">
+        <p className="text-2xl font-bold text-primary">${referralStats.creditsEarned}</p>
+        <p className="text-xs text-muted-foreground">Credits Earned</p>
+      </div>
+    </Card>
+
+    <Card className="p-4 bg-gradient-to-br from-card to-card/50 border-accent/20 backdrop-blur-sm">
+      <div className="flex items-center justify-between mb-2">
+        <Calendar className="w-5 h-5 text-accent" />
+        <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20 text-xs">
+          Free
+        </Badge>
+      </div>
+      <div className="space-y-1">
+        <p className="text-2xl font-bold text-accent">{referralStats.freeMonthsEarned}</p>
+        <p className="text-xs text-muted-foreground">Free Months</p>
+      </div>
+    </Card>
+  </div>
+
+  {/* Referral Link & Milestones */ }
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <Card className="p-6 bg-gradient-to-br from-card to-card/50 border-primary/20 backdrop-blur-sm">
+      <h3 className="text-lg font-semibold text-foreground mb-4">Your Referral Link</h3>
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            value={referralLink}
+            readOnly
+            className="bg-background/50 border-primary/20 text-foreground font-mono text-sm"
+          />
+          <Button onClick={copyToClipboard} className="bg-primary hover:bg-primary/90 flex-shrink-0">
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          </Button>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">Quick Share</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => shareToSocial("instagram")}
+              className="border-primary/20 hover:bg-primary/10"
+            >
+              <Instagram className="w-4 h-4 mr-2" />
+              Instagram
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => shareToSocial("threads")}
+              className="border-primary/20 hover:bg-primary/10"
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Threads
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => shareToSocial("whatsapp")}
+              className="border-primary/20 hover:bg-primary/10"
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              WhatsApp
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => shareToSocial("email")}
+              className="border-primary/20 hover:bg-primary/10"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Email
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Card>
+
+    <Card className="p-6 bg-gradient-to-br from-card to-card/50 border-primary/20 backdrop-blur-sm">
+      <div className="flex items-center gap-2 mb-4">
+        <Trophy className="w-5 h-5 text-primary" />
+        <h3 className="text-lg font-semibold text-foreground">Multiplier Bonuses</h3>
+      </div>
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-            <Gift className="h-5 w-5 text-primary" />
-            Referral Rewards
-          </h2>
-        </div>
-
-        {/* Referral Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="p-4 bg-gradient-to-br from-card to-card/50 border-primary/20 backdrop-blur-sm">
+        {milestones.map((milestone, index) => (
+          <div
+            key={index}
+            className={cn(
+              "p-3 rounded-lg border transition-all duration-300",
+              milestone.achieved ? "bg-primary/10 border-primary/30" : "bg-card/50 border-border",
+            )}
+          >
             <div className="flex items-center justify-between mb-2">
-              <Users className="w-5 h-5 text-primary" />
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs">
-                Total
+              <Badge
+                variant={milestone.achieved ? "default" : "secondary"}
+                className={cn(
+                  "text-xs",
+                  milestone.achieved
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground",
+                )}
+              >
+                {milestone.count} Referrals
               </Badge>
+              {milestone.achieved && <Award className="w-4 h-4 text-primary" />}
             </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold text-primary">{referralStats.totalInvites}</p>
-              <p className="text-xs text-muted-foreground">Invites Sent</p>
-            </div>
-          </Card>
 
-          <Card className="p-4 bg-gradient-to-br from-card to-card/50 border-accent/20 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-2">
-              <TrendingUp className="w-5 h-5 text-accent" />
-              <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20 text-xs">
-                Active
-              </Badge>
-            </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold text-accent">{referralStats.activeReferrals}</p>
-              <p className="text-xs text-muted-foreground">Active Referrals</p>
-            </div>
-          </Card>
+            <p className="text-sm font-medium text-foreground mb-2">{milestone.reward}</p>
 
-          <Card className="p-4 bg-gradient-to-br from-card to-card/50 border-primary/20 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-2">
-              <DollarSign className="w-5 h-5 text-primary" />
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs">
-                Credits
-              </Badge>
-            </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold text-primary">${referralStats.creditsEarned}</p>
-              <p className="text-xs text-muted-foreground">Credits Earned</p>
-            </div>
-          </Card>
-
-          <Card className="p-4 bg-gradient-to-br from-card to-card/50 border-accent/20 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-2">
-              <Calendar className="w-5 h-5 text-accent" />
-              <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20 text-xs">
-                Free
-              </Badge>
-            </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold text-accent">{referralStats.freeMonthsEarned}</p>
-              <p className="text-xs text-muted-foreground">Free Months</p>
-            </div>
-          </Card>
-        </div>
-
-        {/* Referral Link & Milestones */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card className="p-6 bg-gradient-to-br from-card to-card/50 border-primary/20 backdrop-blur-sm">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Your Referral Link</h3>
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  value={referralLink}
-                  readOnly
-                  className="bg-background/50 border-primary/20 text-foreground font-mono text-sm"
-                />
-                <Button onClick={copyToClipboard} className="bg-primary hover:bg-primary/90 flex-shrink-0">
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Quick Share</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => shareToSocial("instagram")}
-                    className="border-primary/20 hover:bg-primary/10"
-                  >
-                    <Instagram className="w-4 h-4 mr-2" />
-                    Instagram
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => shareToSocial("threads")}
-                    className="border-primary/20 hover:bg-primary/10"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Threads
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => shareToSocial("whatsapp")}
-                    className="border-primary/20 hover:bg-primary/10"
-                  >
-                    <Share2 className="w-4 h-4 mr-2" />
-                    WhatsApp
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => shareToSocial("email")}
-                    className="border-primary/20 hover:bg-primary/10"
-                  >
-                    <Mail className="w-4 h-4 mr-2" />
-                    Email
-                  </Button>
+            {!milestone.achieved && milestone.progress !== undefined && (
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Progress</span>
+                  <span>
+                    {milestone.progress}/{milestone.count}
+                  </span>
+                </div>
+                <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+                    style={{ width: `${(milestone.progress / milestone.count) * 100}%` }}
+                  />
                 </div>
               </div>
-            </div>
-          </Card>
+            )}
 
-          <Card className="p-6 bg-gradient-to-br from-card to-card/50 border-primary/20 backdrop-blur-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <Trophy className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold text-foreground">Multiplier Bonuses</h3>
-            </div>
-            <div className="space-y-3">
-              {milestones.map((milestone, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "p-3 rounded-lg border transition-all duration-300",
-                    milestone.achieved ? "bg-primary/10 border-primary/30" : "bg-card/50 border-border",
-                  )}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge
-                      variant={milestone.achieved ? "default" : "secondary"}
-                      className={cn(
-                        "text-xs",
-                        milestone.achieved
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-secondary-foreground",
-                      )}
-                    >
-                      {milestone.count} Referrals
-                    </Badge>
-                    {milestone.achieved && <Award className="w-4 h-4 text-primary" />}
-                  </div>
-
-                  <p className="text-sm font-medium text-foreground mb-2">{milestone.reward}</p>
-
-                  {!milestone.achieved && milestone.progress !== undefined && (
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Progress</span>
-                        <span>
-                          {milestone.progress}/{milestone.count}
-                        </span>
-                      </div>
-                      <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
-                          style={{ width: `${(milestone.progress / milestone.count) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {milestone.achieved && (
-                    <div className="flex items-center gap-2 text-xs text-primary">
-                      <Check className="w-3 h-3" />
-                      <span>Unlocked!</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
+            {milestone.achieved && (
+              <div className="flex items-center gap-2 text-xs text-primary">
+                <Check className="w-3 h-3" />
+                <span>Unlocked!</span>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
+    </Card>
+  </div>
+      </div >
 
       <div className="space-y-3">
         <h2 className="text-xl font-semibold text-white flex items-center gap-2">
@@ -784,6 +798,6 @@ export function DashboardOverview() {
           </Card>
         </div>
       </div>
-    </div>
+    </div >
   )
 }
