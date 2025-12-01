@@ -2552,3 +2552,21 @@ model gia_notifications {
   @@index([trainerId])
   @@index([isRead])
 }
+
+model SmsMessage {
+  id          String   @id @default(uuid())
+  trainerId   String
+  clientId    String?
+  phoneNumber String
+  message     String
+  status      String   // sent, delivered, failed
+  twilioSid   String?
+  cost        Decimal? @db.Decimal(10, 4)
+  sentAt      DateTime @default(now())
+  deliveredAt DateTime?
+  errorMessage String?
+  
+  @@index([trainerId])
+  @@index([clientId])
+  @@index([sentAt])
+}

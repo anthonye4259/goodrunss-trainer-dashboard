@@ -109,18 +109,18 @@ export async function POST(req: NextRequest) {
 
                     console.log(`[SMS] Sent to ${recipient.phone}: ${result.sid}`)
 
-                    // Track in database (optional - would need to create SmsMessage model)
-                    // await prisma.smsMessage.create({
-                    //   data: {
-                    //     trainerId: dbUser.id,
-                    //     clientId: recipient.id,
-                    //     phoneNumber: recipient.phone,
-                    //     message: personalizedMessage,
-                    //     status: 'sent',
-                    //     twilioSid: result.sid,
-                    //     cost: parseFloat(result.price || '0')
-                    //   }
-                    // })
+                    // Track in database
+                    await prisma.smsMessage.create({
+                        data: {
+                            trainerId: dbUser.id,
+                            clientId: recipient.id,
+                            phoneNumber: recipient.phone,
+                            message: personalizedMessage,
+                            status: 'sent',
+                            twilioSid: result.sid,
+                            cost: parseFloat(result.price || '0')
+                        }
+                    })
 
                     return {
                         success: true,

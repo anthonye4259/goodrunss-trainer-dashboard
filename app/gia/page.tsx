@@ -1,18 +1,13 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
+import { useChat } from "ai/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { MessageSquare, Send, Sparkles, TrendingUp, Users, Calendar, DollarSign, Paperclip } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-
-type Message = {
-  id: string
-  role: "user" | "assistant"
-  content: string
-  timestamp: Date
-}
+import { toast } from "sonner"
 
 const suggestedPrompts = [
   "Analyze my revenue trends",
@@ -53,72 +48,29 @@ const quickInsights = [
 ]
 
 export default function GIAPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content:
-        "Hi! I'm GIA, your Goodrunss Intelligence Agent. I can help you analyze your training business, optimize your schedule, and provide insights about your clients and revenue. What would you like to know?",
-      timestamp: new Date(),
-    },
-  ])
-  const [input, setInput] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const handleSendMessage = async () => {
-    if (!input.trim() || isLoading) return
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input,
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-    setIsLoading(true)
-
-    try {
-      const response = await fetch("/api/gia/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages, userMessage].map(m => ({
-            role: m.role,
-            content: m.content
-          }))
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: data.response,
-          timestamp: new Date(),
-        }
-        setMessages((prev) => [...prev, aiResponse])
-      } else {
-        throw new Error(data.error || "Failed to get response")
-      }
-    } catch (error) {
-      console.error("Chat error:", error)
-      const errorResponse: Message = {
-        id: (Date.now() + 1).toString(),
+  const { messages, input, handleInputChange, handleSubmit, setInput, append, isLoading } = useChat({
+    api: "/api/gia/chat",
+    initialMessages: [
+      {
+        id: "1",
         role: "assistant",
-        content: "I'm having trouble connecting to my brain right now. Please try again later.",
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, errorResponse])
-    } finally {
-      setIsLoading(false)
+        content: "Hi! I'm GIA, your Goodrunss Intelligence Agent. I can help you analyze your training business, optimize your schedule, and provide insights about your clients and revenue. What would you like to know?",
+      },
+    ],
+    onError: (error) => {
+      console.error("Chat error:", error)
+      toast.error("Failed to connect to GIA. Please try again.")
     }
-  }
+  })
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -131,13 +83,10 @@ export default function GIAPage() {
     }
 
     // Add a user message about the upload
-    const uploadMessage: Message = {
-      id: Date.now().toString(),
+    await append({
       role: "user",
       content: `Uploading ${files.length} document(s) for analysis...`,
-      timestamp: new Date(),
-    }
-    setMessages((prev) => [...prev, uploadMessage])
+    })
 
     try {
       const response = await fetch("/api/gia/process-documents", {
@@ -157,25 +106,20 @@ export default function GIAPage() {
 
 I've updated your database with this information. You can now ask me questions about these clients!`
 
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
+        await append({
           role: "assistant",
           content: summary,
-          timestamp: new Date(),
-        }
-        setMessages((prev) => [...prev, aiResponse])
+        })
       } else {
         throw new Error(data.error || "Failed to process documents")
       }
     } catch (error) {
       console.error("Upload error:", error)
-      const errorResponse: Message = {
-        id: (Date.now() + 1).toString(),
+      toast.error("Failed to process documents")
+      await append({
         role: "assistant",
         content: "I encountered an error processing your documents. Please try again.",
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, errorResponse])
+      })
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) {
@@ -186,6 +130,8 @@ I've updated your database with this information. You can now ask me questions a
 
   const handleSuggestedPrompt = (prompt: string) => {
     setInput(prompt)
+    // Optional: auto-submit
+    // append({ role: 'user', content: prompt })
   }
 
   return (
@@ -244,11 +190,39 @@ I've updated your database with this information. You can now ask me questions a
                     className={`max-w-[80%] rounded-lg p-4 ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border/50"
                       }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-sm whitespace-pre-wrap">
+                      {message.content}
+                      {/* Render tool invocations if any (though usually content is empty for tool calls, AI SDK handles text) */}
+                      {message.toolInvocations?.map((toolInvocation) => {
+                        const { toolName, toolCallId, state } = toolInvocation;
+
+                        if (state === 'result') {
+                          const { result } = toolInvocation;
+                          return (
+                            <div key={toolCallId} className="mt-2 p-2 bg-muted/50 rounded text-xs font-mono">
+                              {toolName === 'sendSMS' ? (
+                                <>
+                                  <div className="font-semibold text-green-600">✓ SMS Sent</div>
+                                  <div>{result.message}</div>
+                                </>
+                              ) : (
+                                <div>Tool {toolName} executed</div>
+                              )}
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div key={toolCallId} className="mt-2 p-2 bg-muted/50 rounded text-xs animate-pulse">
+                              Calling {toolName}...
+                            </div>
+                          );
+                        }
+                      })}
+                    </p>
                     <p
                       className={`text-xs mt-2 ${message.role === "user" ? "text-primary-foreground/70" : "text-muted-foreground"}`}
                     >
-                      {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
                   {message.role === "user" && (
@@ -272,10 +246,11 @@ I've updated your database with this information. You can now ask me questions a
                   </div>
                 </div>
               )}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
-            <div className="flex gap-2">
+            <form onSubmit={handleSubmit} className="flex gap-2">
               <input
                 type="file"
                 multiple
@@ -285,6 +260,7 @@ I've updated your database with this information. You can now ask me questions a
                 accept=".pdf,.jpg,.jpeg,.png"
               />
               <Button
+                type="button"
                 variant="outline"
                 size="icon"
                 onClick={() => fileInputRef.current?.click()}
@@ -296,15 +272,14 @@ I've updated your database with this information. You can now ask me questions a
               <Input
                 placeholder="Ask GIA anything..."
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                onChange={handleInputChange}
                 className="flex-1"
                 disabled={isLoading || isUploading}
               />
-              <Button onClick={handleSendMessage} disabled={!input.trim() || isLoading || isUploading} size="icon">
+              <Button type="submit" disabled={!input.trim() || isLoading || isUploading} size="icon">
                 <Send className="h-4 w-4" />
               </Button>
-            </div>
+            </form>
           </CardContent>
         </Card>
 
@@ -361,11 +336,11 @@ I've updated your database with this information. You can now ask me questions a
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
-                  <Calendar className="h-4 w-4 text-primary" />
+                  <MessageSquare className="h-4 w-4 text-primary" />
                 </div>
-                <h3 className="font-semibold">Schedule Optimization</h3>
+                <h3 className="font-semibold">SMS Messaging</h3>
               </div>
-              <p className="text-sm text-muted-foreground">Find optimal booking times and maximize your availability</p>
+              <p className="text-sm text-muted-foreground">Send bulk messages, reminders, and updates to your clients instantly</p>
             </div>
           </div>
         </CardContent>
