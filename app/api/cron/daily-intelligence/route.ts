@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
                 // In a real app, filter for active status
             },
             include: {
-                sessions: {
+                trainer_sessions: {
                     orderBy: { date: 'desc' },
                     take: 5
                 }
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
             // Note: analyzeRetentionRisk needs to be adapted to take a client object or ID
             // For now, we'll simulate the logic here or call the function if it supports it
 
-            const lastSession = client.sessions[0]
+            const lastSession = client.trainer_sessions[0]
             const daysSinceLastSession = lastSession
                 ? Math.floor((Date.now() - new Date(lastSession.date).getTime()) / (1000 * 60 * 60 * 24))
                 : 30 // Default if no sessions
