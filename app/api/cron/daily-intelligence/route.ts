@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { analyzeRetentionRisk } from '@/lib/gia/intelligence'
+
 
 // This route should be protected with a secret key for Cron jobs
 export async function GET(req: NextRequest) {
