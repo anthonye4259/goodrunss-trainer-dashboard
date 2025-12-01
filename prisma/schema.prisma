@@ -2570,3 +2570,36 @@ model SmsMessage {
   @@index([clientId])
   @@index([sentAt])
 }
+
+// Class Analytics Models
+model ClassAttendance {
+  id          String   @id @default(uuid())
+  classId     String
+  clientId    String
+  trainerId   String
+  attendedAt  DateTime @default(now())
+  checkedIn   Boolean  @default(false)
+  packageId   String?
+  
+  @@index([classId])
+  @@index([clientId])
+  @@index([trainerId])
+  @@index([attendedAt])
+}
+
+model ClassPackage {
+  id                String   @id @default(uuid())
+  trainerId         String
+  clientId          String
+  packageType       String   // "drop-in" | "multi-class" | "unlimited"
+  totalClasses      Int
+  usedClasses       Int      @default(0)
+  remainingClasses  Int
+  price             Decimal  @db.Decimal(10, 2)
+  purchasedAt       DateTime @default(now())
+  expiresAt         DateTime?
+  
+  @@index([trainerId])
+  @@index([clientId])
+  @@index([expiresAt])
+}

@@ -36,6 +36,27 @@ export interface ActionRecommendation {
     actionLabel: string
 }
 
+export interface ClassInsight {
+    classId: string
+    className: string
+    revenuePerClass: number
+    averageAttendance: number
+    attendanceTrend: 'increasing' | 'stable' | 'declining'
+    profitability: 'high' | 'medium' | 'low'
+    recommendations: string[]
+}
+
+export interface AttendancePattern {
+    clientId: string
+    clientName: string
+    classType: string
+    attendanceRate: number // percentage
+    dropoffDetected: boolean
+    lastAttended: Date | null
+    missedClasses: number
+    recommendation: string
+}
+
 /**
  * Analyze client risk of churning
  */
@@ -76,6 +97,25 @@ export async function analyzeClientRisk(trainerId: string): Promise<ClientRisk[]
         if (client.sessionsCount < 3) {
             riskScore += 30
             reasons.push('Low engagement (< 3 sessions)')
+        }
+
+        // Check class attendance (if available)
+        try {
+            const classAttendance = await prisma.classAttendance.count({
+                where: {
+                    clientId: client.id,
+                    attendedAt: {
+                        gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+                    }
+                }
+            })
+
+            if (classAttendance === 0) {
+                riskScore += 20
+                reasons.push('No class attendance in 30 days')
+            }
+        } catch (error) {
+            // ClassAttendance table might not exist yet
         }
 
         // Determine risk level
@@ -168,6 +208,169 @@ export async function analyzeRevenue(trainerId: string): Promise<RevenueInsight>
 }
 
 /**
+ * Analyze class performance and revenue
+ */
+export async function analyzeClassPerformance(trainerId: string): Promise<ClassInsight[]> {
+    try {
+        // Get all classes for the trainer
+        const classes = await prisma.groupClasses.findMany({
+            where: { trainerId },
+            select: {
+                id: true,
+                title: true,
+                price: true,
+                maxParticipants: true,
+                createdAt: true
+            }
+        })
+
+        const insights: ClassInsight[] = []
+
+        for (const classItem of classes) {
+            // Get attendance for this class
+            const attendance = await prisma.classAttendance.findMany({
+                where: {
+                    classId: classItem.id,
+                    attendedAt: {
+                        gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+                    }
+                }
+            })
+
+            const totalAttendance = attendance.length
+            const averageAttendance = totalAttendance > 0 ? totalAttendance / 4 : 0 // Assuming ~4 weeks
+
+            // Calculate revenue
+            const revenuePerClass = Number(classItem.price) * averageAttendance
+
+            // Determine attendance trend (simplified)
+            const recentAttendance = attendance.filter(a =>
+                new Date(a.attendedAt) > new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+            ).length
+            const olderAttendance = attendance.filter(a =>
+                new Date(a.attendedAt) <= new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+            ).length
+
+            let attendanceTrend: 'increasing' | 'stable' | 'declining'
+            if (recentAttendance > olderAttendance * 1.2) attendanceTrend = 'increasing'
+            else if (recentAttendance < olderAttendance * 0.8) attendanceTrend = 'declining'
+            else attendanceTrend = 'stable'
+
+            // Determine profitability
+            const capacityUtilization = averageAttendance / classItem.maxParticipants
+            let profitability: 'high' | 'medium' | 'low'
+            if (capacityUtilization > 0.7) profitability = 'high'
+            else if (capacityUtilization > 0.4) profitability = 'medium'
+            else profitability = 'low'
+
+            // Generate recommendations
+            const recommendations: string[] = []
+            if (profitability === 'low') {
+                recommendations.push('Consider adjusting class time or reducing frequency')
+            }
+            if (attendanceTrend === 'declining') {
+                recommendations.push('Attendance declining - survey participants for feedback')
+            }
+            if (capacityUtilization > 0.9) {
+                recommendations.push('High demand - consider adding another session')
+            }
+
+            insights.push({
+                classId: classItem.id,
+                className: classItem.title,
+                revenuePerClass,
+                averageAttendance,
+                attendanceTrend,
+                profitability,
+                recommendations
+            })
+        }
+
+        return insights.sort((a, b) => b.revenuePerClass - a.revenuePerClass)
+    } catch (error) {
+        console.error('Error analyzing class performance:', error)
+        return []
+    }
+}
+
+/**
+ * Analyze recurring attendance patterns and detect dropoffs
+ */
+export async function analyzeRecurringAttendance(trainerId: string): Promise<AttendancePattern[]> {
+    try {
+        const clients = await prisma.clients.findMany({
+            where: { trainerId },
+            select: {
+                id: true,
+                name: true
+            }
+        })
+
+        const patterns: AttendancePattern[] = []
+
+        for (const client of clients) {
+            const attendance = await prisma.classAttendance.findMany({
+                where: { clientId: client.id },
+                orderBy: { attendedAt: 'desc' }
+            })
+
+            if (attendance.length === 0) continue
+
+            const totalClasses = attendance.length
+            const last30Days = attendance.filter(a =>
+                new Date(a.attendedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+            )
+            const previous30Days = attendance.filter(a => {
+                const date = new Date(a.attendedAt)
+                return date > new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) &&
+                    date <= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+            })
+
+            const attendanceRate = (last30Days.length / 8) * 100 // Assuming 8 possible classes per month
+            const dropoffDetected = previous30Days.length > 0 && last30Days.length < previous30Days.length * 0.5
+
+            const lastAttended = attendance[0] ? new Date(attendance[0].attendedAt) : null
+            const daysSinceLastClass = lastAttended
+                ? Math.floor((Date.now() - lastAttended.getTime()) / (1000 * 60 * 60 * 24))
+                : 999
+
+            const missedClasses = daysSinceLastClass > 7 ? Math.floor(daysSinceLastClass / 7) : 0
+
+            let recommendation = ''
+            if (dropoffDetected) {
+                recommendation = 'Significant dropoff detected - send check-in message'
+            } else if (missedClasses > 2) {
+                recommendation = `Missed ${missedClasses} classes - reach out to re-engage`
+            } else if (attendanceRate > 80) {
+                recommendation = 'Excellent attendance - consider upselling to unlimited package'
+            }
+
+            if (dropoffDetected || missedClasses > 2 || attendanceRate > 80) {
+                patterns.push({
+                    clientId: client.id,
+                    clientName: client.name,
+                    classType: 'Group Classes', // Could be enhanced with actual class types
+                    attendanceRate,
+                    dropoffDetected,
+                    lastAttended,
+                    missedClasses,
+                    recommendation
+                })
+            }
+        }
+
+        return patterns.sort((a, b) => {
+            if (a.dropoffDetected && !b.dropoffDetected) return -1
+            if (!a.dropoffDetected && b.dropoffDetected) return 1
+            return b.missedClasses - a.missedClasses
+        })
+    } catch (error) {
+        console.error('Error analyzing attendance patterns:', error)
+        return []
+    }
+}
+
+/**
  * Generate recommended actions for trainer
  */
 export async function generateRecommendations(trainerId: string): Promise<ActionRecommendation[]> {
@@ -213,10 +416,39 @@ export async function generateRecommendations(trainerId: string): Promise<Action
         })
     }
 
+    // Get class insights
+    const classInsights = await analyzeClassPerformance(trainerId)
+    const lowPerformingClasses = classInsights.filter(c => c.profitability === 'low')
+
+    if (lowPerformingClasses.length > 0) {
+        recommendations.push({
+            id: 'low-performing-classes',
+            priority: 'important',
+            title: `${lowPerformingClasses.length} underperforming class${lowPerformingClasses.length > 1 ? 'es' : ''}`,
+            description: `${lowPerformingClasses.map(c => c.className).join(', ')} need optimization`,
+            actionUrl: '/dashboard/classes',
+            actionLabel: 'Review Classes'
+        })
+    }
+
+    // Get attendance patterns
+    const attendancePatterns = await analyzeRecurringAttendance(trainerId)
+    const dropoffClients = attendancePatterns.filter(p => p.dropoffDetected)
+
+    if (dropoffClients.length > 0) {
+        recommendations.push({
+            id: 'attendance-dropoff',
+            priority: 'critical',
+            title: `${dropoffClients.length} client${dropoffClients.length > 1 ? 's' : ''} stopped attending classes`,
+            description: `${dropoffClients.map(c => c.clientName).join(', ')} showing attendance dropoff`,
+            actionUrl: '/dashboard/clients',
+            actionLabel: 'Re-engage Clients'
+        })
+    }
+
     // Check for hot leads (mock data for now - in production would query leads table)
-    // This simulates checking the lead matching system
-    const hasHotLeads = true // In production: check leads table for high-score matches
-    const hotLeadsCount = 2 // In production: count of leads with score > 90
+    const hasHotLeads = true
+    const hotLeadsCount = 2
 
     if (hasHotLeads) {
         recommendations.push({
