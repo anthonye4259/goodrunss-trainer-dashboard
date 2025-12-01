@@ -17,6 +17,10 @@ export async function GET(request: NextRequest) {
 
         const dbUser = await getOrCreateUser()
 
+        if (!dbUser) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 })
+        }
+
         // Get class performance insights
         const classInsights = await analyzeClassPerformance(dbUser.id)
 
