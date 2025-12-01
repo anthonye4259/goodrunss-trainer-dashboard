@@ -304,23 +304,22 @@ export function DailyBriefing() {
                     </CardContent>
                 </Card>
             )}
+            {/* Message Draft Modal */}
+            {selectedRecipient && (
+                <MessageDraftModal
+                    open={modalOpen}
+                    onOpenChange={setModalOpen}
+                    recipientName={selectedRecipient.name}
+                    recipientId={selectedRecipient.id}
+                    recipientPhone={selectedRecipient.phone}
+                    messageType={selectedRecipient.type}
+                    context={selectedRecipient.context}
+                    onSent={() => {
+                        fetchLeads()
+                        fetchInsights()
+                    }}
+                />
+            )}
         </div>
-
-        {/* Message Draft Modal */}
-        {selectedRecipient && (
-            <MessageDraftModal
-                open={modalOpen}
-                onOpenChange={setModalOpen}
-                recipientName={selectedRecipient.name}
-                recipientId={selectedRecipient.id}
-                recipientPhone={selectedRecipient.phone}
-                messageType={selectedRecipient.type}
-                context={selectedRecipient.context}
-                onSent={() => {
-                    fetchLeads()
-                    fetchInsights()
-                }}
-            />
-        )}
     )
 }
