@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrCreateUser } from '@/lib/get-or-create-user'
-import prisma from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 
 // In-memory queue for now (would be a database table in production)
 let messageQueue: any[] = [
