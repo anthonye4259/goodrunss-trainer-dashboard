@@ -3,6 +3,7 @@
 import { searchReddit } from './reddit'
 import { searchApolloContacts, FITNESS_SEARCH_TEMPLATES } from './apollo'
 import { findEmail, verifyEmail, guessDomain } from './hunter'
+import { searchTwitter, buildTwitterQuery } from './twitter'
 import { prisma } from '@/lib/prisma'
 
 export interface GeneratedLead {
@@ -13,7 +14,7 @@ export interface GeneratedLead {
     company: string | null
     title: string | null
     location: string | null
-    source: 'reddit' | 'apollo' | 'hunter'
+    source: 'reddit' | 'apollo' | 'hunter' | 'twitter'
     sourceUrl: string | null
     sourceData: any
     content: string
@@ -39,20 +40,24 @@ export async function generateLeadsForTrainer(trainer: TrainerProfile): Promise<
         const redditLeads = await generateRedditLeads(trainer)
         leads.push(...redditLeads)
 
-        // 2. Apollo Leads (2-3 leads)
+        // 2. Twitter Leads (2-3 leads)
+        const twitterLeads = await generateTwitterLeads(trainer)
+        leads.push(...twitterLeads)
+
+        // 3. Apollo Leads (2-3 leads)
         const apolloLeads = await generateApolloLeads(trainer)
         leads.push(...apolloLeads)
 
-        // 3. Enrich with Hunter (if email missing)
+        // 4. Enrich with Hunter (if email missing)
         await enrichLeadsWithHunter(leads)
 
-        // 4. Generate draft replies using Gia
+        // 5. Generate draft replies using Gia
         await generateDraftReplies(leads, trainer)
 
-        // 5. Sort by match score
+        // 6. Sort by match score
         leads.sort((a, b) => b.matchScore - a.matchScore)
 
-        // 6. Take top 10
+        // 7. Take top 10
         return leads.slice(0, 10)
     } catch (error) {
         console.error('Error generating leads for trainer:', trainer.id, error)
@@ -101,6 +106,47 @@ async function generateRedditLeads(trainer: TrainerProfile): Promise<GeneratedLe
         } catch (error) {
             console.error('Error fetching Reddit leads:', error)
         }
+    }
+
+    return leads
+}
+
+async function generateTwitterLeads(trainer: TrainerProfile): Promise<GeneratedLead[]> {
+    const leads: GeneratedLead[] = []
+
+    try {
+        // Build search query based on specialty
+        const specialty = trainer.specialties?.[0] || 'fitness'
+        const query = buildTwitterQuery(specialty)
+
+        const result = await searchTwitter(query, 10)
+
+        for (const tweet of result.tweets.slice(0, 3)) { // Top 3
+            const matchScore = calculateTwitterMatchScore(tweet, trainer)
+
+            if (matchScore >= 50) { // Only include decent matches
+                leads.push({
+                    trainerId: trainer.id,
+                    name: tweet.author?.name || tweet.author?.username || 'Twitter User',
+                    email: null,
+                    phone: null,
+                    company: null,
+                    title: null,
+                    location: null,
+                    source: 'twitter',
+                    sourceUrl: tweet.author?.username
+                        ? `https://twitter.com/${tweet.author.username}/status/${tweet.id}`
+                        : null,
+                    sourceData: tweet,
+                    content: tweet.text,
+                    context: `Posted on Twitter about ${specialty}`,
+                    matchScore,
+                    draftReply: null
+                })
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching Twitter leads:', error)
     }
 
     return leads
@@ -188,7 +234,7 @@ Specialty: ${trainer.specialties?.[0] || 'Fitness'}
 
 ${memoryPrompt}
 
-Draft a ${lead.source === 'reddit' ? 'Reddit reply' : 'LinkedIn/email message'} that:
+Draft a ${lead.source === 'reddit' ? 'Reddit reply' : lead.source === 'twitter' ? 'Twitter reply' : 'LinkedIn/email message'} that:
 - Is helpful and non-salesy
 - Offers genuine value
 - Subtly positions the trainer as an expert
@@ -253,6 +299,32 @@ function calculateApolloMatchScore(contact: any, trainer: TrainerProfile): numbe
 
     // Has email
     if (contact.email) score += 5
+
+    return Math.min(100, Math.max(0, score))
+}
+
+function calculateTwitterMatchScore(tweet: any, trainer: TrainerProfile): number {
+    let score = 50 // Base score
+
+    const specialty = trainer.specialties?.[0]?.toLowerCase() || ''
+    const content = tweet.text.toLowerCase()
+
+    // Specialty match
+    if (content.includes(specialty)) score += 20
+
+    // Recency (within 24 hours = +10, within 3 days = +5)
+    const ageHours = (Date.now() - new Date(tweet.created_at).getTime()) / (1000 * 60 * 60)
+    if (ageHours < 24) score += 10
+    else if (ageHours < 72) score += 5
+
+    // Engagement
+    const metrics = tweet.public_metrics
+    if (metrics.like_count > 5) score += 5
+    if (metrics.reply_count < 3) score += 10 // Less competition
+
+    // Quality indicators
+    if (content.length > 100) score += 5 // Detailed tweet
+    if (content.includes('looking for') || content.includes('need help') || content.includes('recommendations')) score += 10
 
     return Math.min(100, Math.max(0, score))
 }

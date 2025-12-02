@@ -43,6 +43,19 @@ export async function GET(req: NextRequest) {
                 // Store in database
                 const stored = await storeLeadsInDatabase(leads)
 
+                // Create notification if leads were generated
+                if (stored.length > 0) {
+                    await prisma.notifications.create({
+                        data: {
+                            userId: trainer.id,
+                            type: 'daily_leads_ready',
+                            title: 'New Leads Available',
+                            message: `${stored.length} new lead${stored.length > 1 ? 's' : ''} ready for you today!`,
+                            read: false
+                        }
+                    })
+                }
+
                 totalLeadsGenerated += stored.length
 
                 results.push({
