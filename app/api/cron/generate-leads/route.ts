@@ -45,13 +45,14 @@ export async function GET(req: NextRequest) {
 
                 // Create notification if leads were generated
                 if (stored.length > 0) {
-                    await prisma.notifications.create({
+                    await prisma.gia_notifications.create({
                         data: {
-                            userId: trainer.id,
+                            trainerId: trainer.id,
                             type: 'daily_leads_ready',
                             title: 'New Leads Available',
                             message: `${stored.length} new lead${stored.length > 1 ? 's' : ''} ready for you today!`,
-                            read: false
+                            priority: 'medium',
+                            isRead: false
                         }
                     })
                 }
