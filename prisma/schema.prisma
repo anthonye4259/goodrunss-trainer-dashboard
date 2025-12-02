@@ -1885,6 +1885,7 @@ model users {
   user_subscriptions                                   user_subscriptions[]
   trainer_profile                                      trainer_profiles?
   gia_memories                                         GiaMemory[]
+  daily_leads                                          DailyLead[]
 }
 
 model verification_tokens {
@@ -2624,4 +2625,43 @@ model GiaMemory {
   @@index([trainerId])
   @@index([category])
   @@unique([trainerId, key])
+}
+
+// Daily Lead System - Automated lead generation
+model DailyLead {
+  id            String   @id @default(uuid())
+  trainerId     String
+  
+  // Lead Info
+  name          String?
+  email         String?
+  phone         String?
+  company       String?
+  title         String?
+  location      String?
+  
+  // Source
+  source        String   // 'reddit', 'apollo', 'hunter'
+  sourceUrl     String?  @db.Text // Link to Reddit post or LinkedIn profile
+  sourceData    Json?    // Raw API response
+  
+  // Content
+  content       String   @db.Text // Post text or lead description
+  context       String?  @db.Text // Why this is a good match
+  
+  // Metadata
+  matchScore    Int      // 0-100
+  status        String   @default("new") // 'new', 'contacted', 'converted', 'dismissed'
+  draftReply    String?  @db.Text // Pre-generated reply
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  contactedAt   DateTime?
+  
+  user          users    @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  
+  @@index([trainerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([source])
 }

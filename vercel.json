@@ -3,6 +3,10 @@
     {
       "path": "/api/reminders?action=send",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/generate-leads",
+      "schedule": "0 6 * * *"
     }
   ]
 }

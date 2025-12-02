@@ -44,6 +44,7 @@ import { EmptySessions } from "@/components/empty-states/empty-sessions"
 import { EmptyPrograms } from "@/components/empty-states/empty-programs"
 import { EmptyPayments } from "@/components/empty-states/empty-payments"
 import { DailyBriefing } from "@/components/gia/daily-briefing"
+import { DailyLeadsWidget } from "@/components/dashboard/daily-leads-widget"
 
 interface DashboardStats {
   trainer: {
@@ -234,6 +235,9 @@ export function DashboardOverview() {
 
       {/* Gia's Daily Briefing - AI-Powered Insights */}
       <DailyBriefing />
+
+      {/* Daily Leads Widget */}
+      <DailyLeadsWidget />
 
       {/* 🚀 GROWTH ENGINE SECTION (NEW) */}
       <div className="grid gap-6 md:grid-cols-2">
