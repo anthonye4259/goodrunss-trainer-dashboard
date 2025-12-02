@@ -5,6 +5,7 @@ import { streamText, CoreMessage } from 'ai'
 import { z } from 'zod'
 import { SPECIALIZATION_PROMPTS, CONTEXT_ENHANCED_PROMPT } from '@/lib/gia/expert-prompts'
 import { prisma } from '@/lib/prisma'
+import { getHotLeads } from '@/lib/gia/functions'
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
@@ -309,11 +310,9 @@ export async function POST(request: NextRequest) {
           inputSchema: z.object({}),
           execute: async () => {
             try {
-              const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/gia/match-leads`, {
-                headers: { 'Cookie': request.headers.get('cookie') || '' }
-              })
-              const data = await response.json()
-              return data
+              // Call the function directly instead of fetching API
+              // This ensures we use the real database logic with smart fallbacks
+              return await getHotLeads({}, dbUser.id)
             } catch (error: any) {
               return { error: error.message }
             }
