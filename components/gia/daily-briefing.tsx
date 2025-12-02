@@ -128,7 +128,17 @@ export function DailyBriefing() {
                         Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'}! Here's what I found:
                     </p>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        {/* New Leads */}
+                        <div className="bg-background/50 rounded-lg p-3 border border-border/50">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Zap className="h-4 w-4 text-primary" />
+                                <span className="text-xs text-muted-foreground">New Leads</span>
+                            </div>
+                            <p className="text-2xl font-bold">{leads.length}</p>
+                            <p className="text-xs text-muted-foreground">ready today</p>
+                        </div>
+
                         {/* At-Risk Clients */}
                         <div className="bg-background/50 rounded-lg p-3 border border-border/50">
                             <div className="flex items-center gap-2 mb-1">

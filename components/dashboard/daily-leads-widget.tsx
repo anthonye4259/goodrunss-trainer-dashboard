@@ -53,8 +53,10 @@ export function DailyLeadsWidget() {
                 return <MessageCircle className="h-4 w-4" />
             case 'apollo':
                 return <TrendingUp className="h-4 w-4" />
-            case 'twitter':
-                return <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+            case 'craigslist':
+                return <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" /></svg>
+            case 'synthetic':
+                return <Sparkles className="h-4 w-4" />
             default:
                 return <Mail className="h-4 w-4" />
         }
@@ -66,10 +68,33 @@ export function DailyLeadsWidget() {
                 return 'bg-orange-500/10 text-orange-500 border-orange-500/20'
             case 'apollo':
                 return 'bg-blue-500/10 text-blue-500 border-blue-500/20'
-            case 'twitter':
-                return 'bg-sky-500/10 text-sky-500 border-sky-500/20'
+            case 'craigslist':
+                return 'bg-purple-500/10 text-purple-500 border-purple-500/20'
+            case 'synthetic':
+                return 'bg-gray-500/10 text-gray-500 border-gray-500/20'
             default:
                 return 'bg-green-500/10 text-green-500 border-green-500/20'
+        }
+    }
+
+    const getMatchScoreColor = (score: number) => {
+        if (score >= 80) return 'bg-green-500/20 text-green-600 border-green-500/30'
+        if (score >= 60) return 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30'
+        return 'bg-gray-500/20 text-gray-600 border-gray-500/30'
+    }
+
+    const handleQuickAction = async (leadId: string, action: 'contacted' | 'dismissed') => {
+        try {
+            const response = await fetch('/api/daily-leads', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leadId, status: action })
+            })
+            if (!response.ok) throw new Error('Failed to update lead')
+            // Refresh leads after action
+            fetchTodayLeads()
+        } catch (error) {
+            console.error('Error updating lead:', error)
         }
     }
 
@@ -122,42 +147,67 @@ export function DailyLeadsWidget() {
                             key={lead.id}
                             className="p-4 rounded-lg border border-border/50 bg-card/30 hover:bg-card/50 transition-colors"
                         >
-                            <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1 space-y-2">
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className={getSourceColor(lead.source)}>
-                                            {getSourceIcon(lead.source)}
-                                            <span className="ml-1 capitalize">{lead.source}</span>
-                                        </Badge>
-                                        <Badge variant="secondary" className="text-xs">
-                                            {lead.matchScore}% match
-                                        </Badge>
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-sm">
-                                            {lead.name || 'Anonymous'}
-                                            {lead.company && <span className="text-muted-foreground"> • {lead.company}</span>}
-                                        </p>
-                                        {lead.title && (
-                                            <p className="text-xs text-muted-foreground">{lead.title}</p>
-                                        )}
-                                    </div>
-                                    <p className="text-sm text-foreground/80 line-clamp-2">
-                                        {lead.content}
+                            <div className="space-y-3">
+                                {/* Header with badges */}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <Badge variant="outline" className={getSourceColor(lead.source)}>
+                                        {getSourceIcon(lead.source)}
+                                        <span className="ml-1 capitalize">{lead.source}</span>
+                                    </Badge>
+                                    <Badge variant="outline" className={`text-xs font-semibold ${getMatchScoreColor(lead.matchScore)}`}>
+                                        {lead.matchScore}% match
+                                    </Badge>
+                                </div>
+
+                                {/* Lead info */}
+                                <div>
+                                    <p className="font-medium text-sm">
+                                        {lead.name || 'Anonymous'}
+                                        {lead.company && <span className="text-muted-foreground"> • {lead.company}</span>}
                                     </p>
-                                    {lead.context && (
-                                        <p className="text-xs text-muted-foreground italic">
-                                            {lead.context}
-                                        </p>
+                                    {lead.title && (
+                                        <p className="text-xs text-muted-foreground">{lead.title}</p>
                                     )}
                                 </div>
-                                {lead.sourceUrl && (
-                                    <Button variant="ghost" size="icon" asChild>
-                                        <a href={lead.sourceUrl} target="_blank" rel="noopener noreferrer">
-                                            <ExternalLink className="h-4 w-4" />
-                                        </a>
-                                    </Button>
+
+                                {/* Content */}
+                                <p className="text-sm text-foreground/80 line-clamp-2">
+                                    {lead.content}
+                                </p>
+
+                                {/* Context */}
+                                {lead.context && (
+                                    <p className="text-xs text-muted-foreground italic">
+                                        {lead.context}
+                                    </p>
                                 )}
+
+                                {/* Quick Actions */}
+                                <div className="flex items-center gap-2 pt-2">
+                                    <Button
+                                        size="sm"
+                                        variant="default"
+                                        className="flex-1"
+                                        onClick={() => handleQuickAction(lead.id, 'contacted')}
+                                    >
+                                        <Mail className="h-3 w-3 mr-1" />
+                                        Contact
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleQuickAction(lead.id, 'dismissed')}
+                                    >
+                                        Dismiss
+                                    </Button>
+                                    {lead.sourceUrl && (
+                                        <Button variant="ghost" size="sm" asChild>
+                                            <a href={lead.sourceUrl} target="_blank" rel="noopener noreferrer">
+                                                <ExternalLink className="h-3 w-3" />
+                                            </a>
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))
