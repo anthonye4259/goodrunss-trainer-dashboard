@@ -54,6 +54,10 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    if (!dbUser) {
+      return new Response('User not found', { status: 404 })
+    }
+
     // If specific client mentioned, get their context
     let clientContext = null
     if (clientId && dbUser) {
