@@ -4,14 +4,46 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, Users, Mail, Phone, MapPin, Clock, TrendingUp, CheckCircle2, Send, Loader2, MessageCircle } from 'lucide-react'
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Sparkles, Users, Mail, Phone, MapPin, Clock, TrendingUp,
+  CheckCircle2, Send, Loader2, MessageCircle, Trash2, ExternalLink,
+  MoreHorizontal, Filter
+} from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
+import { formatDistanceToNow } from "date-fns"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+interface DailyLead {
+  id: string
+  name: string | null
+  email: string | null
+  phone: string | null
+  company: string | null
+  title: string | null
+  location: string | null
+  source: string
+  sourceUrl: string | null
+  content: string
+  context: string | null
+  matchScore: number
+  status: string
+  draftReply: string | null
+  createdAt: string
+}
 
 export default function ClientLeadsPage() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
-  const [leads, setLeads] = useState<any[]>([])
+  const [leads, setLeads] = useState<DailyLead[]>([])
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([])
+  const [filter, setFilter] = useState<string>('all') // 'all', 'new', 'contacted', 'converted'
 
   // Fetch leads from backend on mount
   useEffect(() => {
@@ -21,152 +53,75 @@ export default function ClientLeadsPage() {
   const fetchLeads = async () => {
     try {
       setInitialLoading(true)
-      const response = await fetch('/api/gia/match-leads')
-      const result = await response.json()
-
-      if (result.success && result.data.matches) {
-        // Transform backend data to frontend format
-        const transformedLeads = result.data.matches.map((match: any) => ({
-          id: match.id,
-          leadId: match.clientLeadId,
-          name: match.lead?.name || 'Unknown',
-          email: match.lead?.email || '',
-          phone: match.lead?.phone || '',
-          interest: match.lead?.preferredSport || 'General Training',
-          level: match.lead?.experienceLevel || 'Not specified',
-          location: match.lead?.city ? `${match.lead.city}, ${match.lead.state}` : 'Not specified',
-          preferredTime: match.lead?.availableTimes?.join(', ') || 'Flexible',
-          status: match.status === 'accepted' ? 'converted' :
-            match.status === 'sent_to_trainer' ? 'contacted' : 'new',
-          matchScore: Math.round(match.overallScore),
-          notes: match.lead?.additionalNotes || match.matchReasons?.join('. ') || '',
-          goals: match.lead?.fitnessGoals || [],
-        }))
-        setLeads(transformedLeads)
-      } else {
-        // Use mock data if no matches found
-        setLeads(getMockLeads())
-      }
+      const response = await fetch('/api/daily-leads?limit=50')
+      if (!response.ok) throw new Error('Failed to fetch leads')
+      const data = await response.json()
+      setLeads(data.leads || [])
     } catch (error) {
       console.error('Error fetching leads:', error)
-      // Fall back to mock data
-      setLeads(getMockLeads())
+      toast({
+        title: "Failed to load leads",
+        description: "Could not fetch your daily leads",
+        variant: "destructive",
+      })
     } finally {
       setInitialLoading(false)
     }
   }
 
-  const getMockLeads = () => [
-    {
-      id: 1,
-      name: "Jessica Chen",
-      email: "jessica.c@email.com",
-      phone: "(555) 234-5678",
-      interest: "Tennis Lessons",
-      level: "Beginner",
-      location: "Downtown",
-      preferredTime: "Weekday mornings",
-      status: "new",
-      matchScore: 95,
-      notes: "Looking to start tennis for fitness. Available Mon/Wed/Fri 9-11am",
-      goals: ["weight_loss", "endurance"],
-    },
-    {
-      id: 2,
-      name: "Marcus Williams",
-      email: "m.williams@email.com",
-      phone: "(555) 345-6789",
-      interest: "Golf Swing Session",
-      level: "Intermediate",
-      location: "Westside",
-      preferredTime: "Weekend afternoons",
-      status: "new",
-      matchScore: 88,
-      notes: "Want to fix slice. Plays regularly but struggling with driver",
-      goals: ["sports_performance"],
-    },
-  ]
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedLeads(filteredLeads.map(l => l.id))
+    } else {
+      setSelectedLeads([])
+    }
+  }
 
-  const handleContact = async (leadId: number, method: string) => {
+  const handleSelectLead = (leadId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedLeads(prev => [...prev, leadId])
+    } else {
+      setSelectedLeads(prev => prev.filter(id => id !== leadId))
+    }
+  }
+
+  const handleBulkAction = async (action: 'contact' | 'dismiss' | 'contacted') => {
+    if (selectedLeads.length === 0) return
+
     setLoading(true)
-
     try {
-      const lead = leads.find(l => l.id === leadId)
-      if (!lead) throw new Error('Lead not found')
-
-      const response = await fetch('/api/gia/match-leads', {
+      const response = await fetch('/api/daily-leads/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          leadId: lead.leadId,
-          method: method.toLowerCase(),
-          message: `Hi! I'd love to help you with your ${lead.interest} goals.`
+          leadIds: selectedLeads,
+          action
         })
       })
 
-      const result = await response.json()
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to send contact')
-      }
-
-      setLeads(leads.map((l) =>
-        l.id === leadId ? { ...l, status: "contacted" } : l
-      ))
-
-      toast({
-        title: "Contact sent!",
-        description: `${method} sent to ${lead.name} successfully`,
-      })
-    } catch (error: any) {
-      toast({
-        title: "Failed to contact",
-        description: error.message || "Something went wrong",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleConvert = async (leadId: number, matchId?: string) => {
-    setLoading(true)
-
-    try {
-      const lead = leads.find(l => l.id === leadId)
-      if (!lead) throw new Error('Lead not found')
-
-      // Call backend to convert the lead
-      const response = await fetch('/api/gia/match-leads', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          leadId: lead.leadId,
-          action: 'convert',
-          message: `Welcome aboard! I'm excited to help you with your ${lead.interest} journey. Let's schedule your first session!`,
-        }),
-      })
+      if (!response.ok) throw new Error('Failed to perform bulk action')
 
       const result = await response.json()
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to convert lead')
-      }
-
-      setLeads(leads.map((l) =>
-        l.id === leadId ? { ...l, status: "converted" } : l
-      ))
+      // Optimistic update
+      setLeads(prev => prev.map(lead => {
+        if (selectedLeads.includes(lead.id)) {
+          return { ...lead, status: result.status }
+        }
+        return lead
+      }))
 
       toast({
-        title: "Client converted! 🎉",
-        description: `${lead.name} has been added to your client list`,
+        title: "Bulk action successful",
+        description: `Updated ${result.count} leads`,
       })
+
+      setSelectedLeads([])
     } catch (error) {
+      console.error('Error performing bulk action:', error)
       toast({
-        title: "Failed to convert",
-        description: error instanceof Error ? error.message : 'Something went wrong',
+        title: "Action failed",
+        description: "Could not update leads",
         variant: "destructive",
       })
     } finally {
@@ -174,18 +129,28 @@ export default function ClientLeadsPage() {
     }
   }
 
-  const statusColors = {
-    new: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    contacted: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-    converted: "bg-green-500/10 text-green-500 border-green-500/20",
+  const getSourceIcon = (source: string) => {
+    switch (source) {
+      case 'reddit': return <MessageCircle className="h-4 w-4" />
+      case 'apollo': return <TrendingUp className="h-4 w-4" />
+      case 'twitter': return <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+      default: return <Mail className="h-4 w-4" />
+    }
   }
 
-  const newLeadsCount = leads.filter((l) => l.status === "new").length
-  const contactedCount = leads.filter((l) => l.status === "contacted").length
-  const convertedCount = leads.filter((l) => l.status === "converted").length
-  const avgMatchScore = leads.length > 0
-    ? Math.round(leads.reduce((sum, l) => sum + l.matchScore, 0) / leads.length)
-    : 0
+  const getSourceColor = (source: string) => {
+    switch (source) {
+      case 'reddit': return 'bg-orange-500/10 text-orange-500 border-orange-500/20'
+      case 'apollo': return 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+      case 'twitter': return 'bg-sky-500/10 text-sky-500 border-sky-500/20'
+      default: return 'bg-green-500/10 text-green-500 border-green-500/20'
+    }
+  }
+
+  const filteredLeads = leads.filter(lead => {
+    if (filter === 'all') return lead.status !== 'dismissed'
+    return lead.status === filter
+  })
 
   if (initialLoading) {
     return (
@@ -196,261 +161,290 @@ export default function ClientLeadsPage() {
   }
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-6 p-8 max-w-[1600px] mx-auto">
       {/* Header */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-              <Sparkles className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-white">Client Leads</h1>
-              <p className="text-muted-foreground">Real potential clients matched to your expertise</p>
-            </div>
-          </div>
-          <Button onClick={() => window.location.href = '/dashboard/client-leads/social'} className="gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+            <Sparkles className="h-8 w-8 text-primary" />
+            Daily Leads
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Automated opportunities from Reddit, Twitter, and Corporate Wellness
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => fetchLeads()} disabled={loading}>
+            Refresh
+          </Button>
+          <Button onClick={() => window.location.href = '/dashboard/client-leads/social'} className="gap-2">
             <MessageCircle className="h-4 w-4" />
             Social Scanner
           </Button>
         </div>
       </div>
 
-      {/* Hero Message */}
-      <Card className="p-6 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/30">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-            <Sparkles className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-white mb-2">GIA Found Real Clients For You</h2>
-            <p className="text-muted-foreground mb-4">
-              These are actual people looking for exactly what you offer. Reach out now to convert them into long-term clients.
-            </p>
-            <div className="flex flex-wrap gap-3 text-sm">
-              <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
-                High match scores
-              </Badge>
-              <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                Pre-qualified leads
-              </Badge>
-              <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20">
-                Ready to book
-              </Badge>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Stats */}
-      <div className="grid gap-6 md:grid-cols-4">
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
-              <Users className="h-6 w-6 text-blue-500" />
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="p-4 bg-card/50 border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">New Leads</p>
-              <p className="text-2xl font-bold text-white">{newLeadsCount}</p>
+              <p className="text-sm text-muted-foreground">New Today</p>
+              <p className="text-2xl font-bold text-white">
+                {leads.filter(l => l.status === 'new' && new Date(l.createdAt).toDateString() === new Date().toDateString()).length}
+              </p>
             </div>
           </div>
         </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-yellow-500/10 rounded-lg flex items-center justify-center">
-              <Send className="h-6 w-6 text-yellow-500" />
+        <Card className="p-4 bg-card/50 border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-500/10 rounded-lg">
+              <Users className="h-5 w-5 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Total Active</p>
+              <p className="text-2xl font-bold text-white">
+                {leads.filter(l => l.status === 'new').length}
+              </p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 bg-card/50 border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-yellow-500/10 rounded-lg">
+              <Send className="h-5 w-5 text-yellow-500" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Contacted</p>
-              <p className="text-2xl font-bold text-white">{contactedCount}</p>
+              <p className="text-2xl font-bold text-white">
+                {leads.filter(l => l.status === 'contacted').length}
+              </p>
             </div>
           </div>
         </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
-              <CheckCircle2 className="h-6 w-6 text-green-500" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Converted</p>
-              <p className="text-2xl font-bold text-white">{convertedCount}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Avg Match</p>
-              <p className="text-2xl font-bold text-white">{avgMatchScore}%</p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Leads List */}
-      <div className="space-y-4">
-        {leads.map((lead) => (
-          <Card key={lead.id} className="p-6 hover:border-primary/50 transition-all">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-4 flex-1">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-lg font-semibold text-white">{lead.name}</h3>
-                    <Badge className={statusColors[lead.status as keyof typeof statusColors]}>
-                      {lead.status}
-                    </Badge>
-                    <Badge className="bg-primary/20 text-primary">
-                      {lead.matchScore}% Match
-                    </Badge>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-2 mb-3">
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      {lead.email}
-                    </p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      {lead.phone}
-                    </p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      {lead.location}
-                    </p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      {lead.preferredTime}
-                    </p>
-                  </div>
-
-                  <div className="mb-3">
-                    <p className="text-sm font-semibold text-white mb-1">
-                      Looking for: <span className="text-primary">{lead.interest}</span>
-                    </p>
-                    <p className="text-sm text-muted-foreground">Level: {lead.level}</p>
-                  </div>
-
-                  <div className="p-3 bg-muted/30 rounded-lg">
-                    <p className="text-sm text-muted-foreground italic">"{lead.notes}"</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2 min-w-[120px]">
-                {lead.status === "new" && (
-                  <>
-                    <Button
-                      size="sm"
-                      onClick={() => handleContact(lead.id, "Email")}
-                      disabled={loading}
-                      className="bg-primary hover:bg-primary/90 text-black"
-                    >
-                      <Mail className="h-4 w-4 mr-2" />
-                      Email
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleContact(lead.id, "SMS")}
-                      disabled={loading}
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      SMS
-                    </Button>
-                  </>
-                )}
-                {lead.status === "contacted" && (
-                  <Button
-                    size="sm"
-                    onClick={() => handleConvert(lead.id, lead.leadId)}
-                    disabled={loading}
-                    className="bg-green-500 hover:bg-green-600 text-white"
-                  >
-                    {loading ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                    )}
-                    Convert
-                  </Button>
-                )}
-                {lead.status === "converted" && (
-                  <Badge className="bg-green-500/10 text-green-500 border-green-500/20 justify-center">
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Client
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </Card>
-        ))}
-
-        {leads.length === 0 && (
-          <Card className="p-12 text-center">
-            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No leads yet</h3>
-            <p className="text-muted-foreground">
-              New leads will appear here as they're matched to your profile
-            </p>
-          </Card>
-        )}
-      </div>
-
-      {/* Why This Works */}
-      <Card className="p-6 bg-primary/5 border-primary/20">
-        <h3 className="text-lg font-bold text-white mb-4">Why Trainers Love This Feature</h3>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+        <Card className="p-4 bg-card/50 border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-500/10 rounded-lg">
               <CheckCircle2 className="h-5 w-5 text-green-500" />
             </div>
             <div>
-              <p className="font-semibold text-white">They stay forever</p>
-              <p className="text-sm text-muted-foreground">New clients become long-term clients</p>
+              <p className="text-sm text-muted-foreground">Converted</p>
+              <p className="text-2xl font-bold text-white">
+                {leads.filter(l => l.status === 'converted').length}
+              </p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-              <Users className="h-5 w-5 text-green-500" />
-            </div>
-            <div>
-              <p className="font-semibold text-white">They refer 10 more</p>
-              <p className="text-sm text-muted-foreground">Happy clients bring their friends</p>
-            </div>
+        </Card>
+      </div>
+
+      {/* Bulk Action Bar */}
+      {selectedLeads.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-card border border-primary/20 shadow-2xl shadow-primary/10 rounded-full px-6 py-3 flex items-center gap-4 animate-in slide-in-from-bottom-4 fade-in duration-300">
+          <span className="text-sm font-medium text-white">
+            {selectedLeads.length} selected
+          </span>
+          <div className="h-4 w-px bg-border" />
+          <Button
+            size="sm"
+            onClick={() => handleBulkAction('contacted')}
+            disabled={loading}
+            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            Mark Contacted
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => handleBulkAction('dismiss')}
+            disabled={loading}
+            className="gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            Dismiss
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setSelectedLeads([])}
+            className="text-muted-foreground hover:text-white"
+          >
+            Cancel
+          </Button>
+        </div>
+      )}
+
+      {/* Filters & List */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2">
+            <Button
+              variant={filter === 'all' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setFilter('all')}
+            >
+              All Active
+            </Button>
+            <Button
+              variant={filter === 'new' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setFilter('new')}
+            >
+              New
+            </Button>
+            <Button
+              variant={filter === 'contacted' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setFilter('contacted')}
+            >
+              Contacted
+            </Button>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-              <Sparkles className="h-5 w-5 text-green-500" />
-            </div>
-            <div>
-              <p className="font-semibold text-white">They promote you everywhere</p>
-              <p className="text-sm text-muted-foreground">Word-of-mouth marketing on autopilot</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-              <TrendingUp className="h-5 w-5 text-green-500" />
-            </div>
-            <div>
-              <p className="font-semibold text-white">Your business grows faster</p>
-              <p className="text-sm text-muted-foreground">Consistent pipeline of quality leads</p>
-            </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={selectedLeads.length === filteredLeads.length && filteredLeads.length > 0}
+              onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+            />
+            <span className="text-sm text-muted-foreground">Select All</span>
           </div>
         </div>
-      </Card>
+
+        <div className="grid gap-4">
+          {filteredLeads.length === 0 ? (
+            <Card className="p-12 text-center border-dashed border-border/50 bg-card/30">
+              <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+              <h3 className="text-xl font-semibold text-white mb-2">No leads found</h3>
+              <p className="text-muted-foreground">
+                {filter === 'all'
+                  ? "Wait for the daily cron job to run at 6 AM!"
+                  : `No leads with status '${filter}'`}
+              </p>
+            </Card>
+          ) : (
+            filteredLeads.map((lead) => (
+              <Card
+                key={lead.id}
+                className={`p-6 transition-all border-border/50 hover:border-primary/30 ${selectedLeads.includes(lead.id) ? 'bg-primary/5 border-primary/50' : 'bg-card/30'
+                  }`}
+              >
+                <div className="flex items-start gap-4">
+                  <Checkbox
+                    checked={selectedLeads.includes(lead.id)}
+                    onCheckedChange={(checked) => handleSelectLead(lead.id, checked as boolean)}
+                    className="mt-1"
+                  />
+
+                  <div className="flex-1 space-y-3">
+                    {/* Header Row */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline" className={getSourceColor(lead.source)}>
+                          {getSourceIcon(lead.source)}
+                          <span className="ml-1 capitalize">{lead.source}</span>
+                        </Badge>
+                        <Badge variant="secondary" className="bg-secondary/50">
+                          {lead.matchScore}% Match
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true })}
+                        </span>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleSelectLead(lead.id, true)}>
+                            Select
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedLeads([lead.id])
+                            handleBulkAction('contacted')
+                          }}>
+                            Mark Contacted
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => {
+                            setSelectedLeads([lead.id])
+                            handleBulkAction('dismiss')
+                          }}>
+                            Dismiss
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    {/* Content */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-1">
+                        {lead.name || 'Anonymous Lead'}
+                        {lead.company && <span className="text-muted-foreground font-normal"> • {lead.company}</span>}
+                      </h3>
+                      <p className="text-sm text-foreground/80 line-clamp-2 mb-2">
+                        {lead.content}
+                      </p>
+                      {lead.context && (
+                        <p className="text-xs text-muted-foreground italic bg-muted/30 p-2 rounded">
+                          Context: {lead.context}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Details Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      {lead.email && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Mail className="h-3 w-3" /> {lead.email}
+                        </div>
+                      )}
+                      {lead.location && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <MapPin className="h-3 w-3" /> {lead.location}
+                        </div>
+                      )}
+                      {lead.title && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Users className="h-3 w-3" /> {lead.title}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 pt-2">
+                      {lead.sourceUrl && (
+                        <Button variant="outline" size="sm" asChild className="gap-2">
+                          <a href={lead.sourceUrl} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-3 w-3" />
+                            View Source
+                          </a>
+                        </Button>
+                      )}
+                      {lead.draftReply && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            navigator.clipboard.writeText(lead.draftReply!)
+                            toast({ title: "Copied draft reply!" })
+                          }}
+                        >
+                          <Sparkles className="h-3 w-3" />
+                          Copy Gia's Draft
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   )
 }
-
-
-
-
