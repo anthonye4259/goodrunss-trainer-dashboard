@@ -627,12 +627,12 @@ async function analyzePricing(args: any, trainerId: string) {
 
     // Get trainer's current packages/services
     const packages = await prisma.packages.findMany({
-        where: { trainerId },
+        where: { trainer_id: trainerId },
         select: {
             id: true,
             name: true,
             price: true,
-            sessionsIncluded: true
+            sessions: true
         }
     })
 
@@ -747,8 +747,8 @@ async function analyzePricing(args: any, trainerId: string) {
     }
 
     if (packages.length > 0) {
-        const avgPackagePrice = packages.reduce((sum, p) => sum + p.price, 0) / packages.length
-        const avgSessionsInPackage = packages.reduce((sum, p) => sum + (p.sessionsIncluded || 1), 0) / packages.length
+        const avgPackagePrice = packages.reduce((sum, p) => sum + Number(p.price), 0) / packages.length
+        const avgSessionsInPackage = packages.reduce((sum, p) => sum + (p.sessions || 1), 0) / packages.length
         const packagePricePerSession = avgPackagePrice / avgSessionsInPackage
 
         if (packagePricePerSession < avgSessionPrice * 0.9) {
@@ -767,9 +767,9 @@ async function analyzePricing(args: any, trainerId: string) {
                 avgSessionPrice: avgSessionPrice.toFixed(2),
                 packages: packages.map(p => ({
                     name: p.name,
-                    price: p.price,
-                    sessions: p.sessionsIncluded,
-                    pricePerSession: p.sessionsIncluded ? (p.price / p.sessionsIncluded).toFixed(2) : 'N/A'
+                    price: Number(p.price),
+                    sessions: p.sessions,
+                    pricePerSession: p.sessions ? (Number(p.price) / p.sessions).toFixed(2) : 'N/A'
                 }))
             },
             businessMetrics: {
