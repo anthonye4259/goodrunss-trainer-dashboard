@@ -1,9 +1,6 @@
 // Lead Generator Orchestrator - Combines Reddit, Apollo, and Hunter
 
-import { searchReddit } from './reddit'
 import { searchApolloContacts, FITNESS_SEARCH_TEMPLATES } from './apollo'
-import { findEmail, verifyEmail, guessDomain } from './hunter'
-import { searchTwitter, buildTwitterQuery } from './twitter'
 import { prisma } from '@/lib/prisma'
 
 export interface GeneratedLead {
@@ -14,7 +11,7 @@ export interface GeneratedLead {
     company: string | null
     title: string | null
     location: string | null
-    source: 'reddit' | 'apollo' | 'hunter' | 'twitter'
+    source: 'apollo'
     sourceUrl: string | null
     sourceData: any
     content: string
@@ -36,28 +33,17 @@ export async function generateLeadsForTrainer(trainer: TrainerProfile): Promise<
     const leads: GeneratedLead[] = []
 
     try {
-        // 1. Reddit Leads (3-5 leads)
-        const redditLeads = await generateRedditLeads(trainer)
-        leads.push(...redditLeads)
-
-        // 2. Twitter Leads (2-3 leads)
-        const twitterLeads = await generateTwitterLeads(trainer)
-        leads.push(...twitterLeads)
-
-        // 3. Apollo Leads (2-3 leads)
+        // 1. Apollo Leads (Fetch more since it's the only source)
         const apolloLeads = await generateApolloLeads(trainer)
         leads.push(...apolloLeads)
 
-        // 4. Enrich with Hunter (if email missing)
-        await enrichLeadsWithHunter(leads)
-
-        // 5. Generate draft replies using Gia
+        // 2. Generate draft replies using Gia
         await generateDraftReplies(leads, trainer)
 
-        // 6. Sort by match score
+        // 3. Sort by match score
         leads.sort((a, b) => b.matchScore - a.matchScore)
 
-        // 7. Take top 10
+        // 4. Take top 10
         return leads.slice(0, 10)
     } catch (error) {
         console.error('Error generating leads for trainer:', trainer.id, error)
@@ -65,92 +51,7 @@ export async function generateLeadsForTrainer(trainer: TrainerProfile): Promise<
     }
 }
 
-async function generateRedditLeads(trainer: TrainerProfile): Promise<GeneratedLead[]> {
-    const leads: GeneratedLead[] = []
 
-    // Build search query based on specialty
-    const specialty = trainer.specialties?.[0] || 'fitness'
-    const queries = [
-        `looking for ${specialty} coach`,
-        `${specialty} trainer needed`,
-        `${specialty} help`,
-        `${specialty} form check`
-    ]
-
-    for (const query of queries.slice(0, 2)) { // Limit to 2 queries
-        try {
-            const result = await searchReddit(query, 5)
-
-            for (const post of result.posts.slice(0, 3)) { // Top 3 per query
-                const matchScore = calculateRedditMatchScore(post, trainer)
-
-                if (matchScore >= 50) { // Only include decent matches
-                    leads.push({
-                        trainerId: trainer.id,
-                        name: post.author,
-                        email: null,
-                        phone: null,
-                        company: null,
-                        title: null,
-                        location: null,
-                        source: 'reddit',
-                        sourceUrl: post.permalink,
-                        sourceData: post,
-                        content: `${post.title}\n\n${post.selftext}`,
-                        context: `Posted in r/${post.subreddit} about ${specialty}`,
-                        matchScore,
-                        draftReply: null
-                    })
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching Reddit leads:', error)
-        }
-    }
-
-    return leads
-}
-
-async function generateTwitterLeads(trainer: TrainerProfile): Promise<GeneratedLead[]> {
-    const leads: GeneratedLead[] = []
-
-    try {
-        // Build search query based on specialty
-        const specialty = trainer.specialties?.[0] || 'fitness'
-        const query = buildTwitterQuery(specialty)
-
-        const result = await searchTwitter(query, 10)
-
-        for (const tweet of result.tweets.slice(0, 3)) { // Top 3
-            const matchScore = calculateTwitterMatchScore(tweet, trainer)
-
-            if (matchScore >= 50) { // Only include decent matches
-                leads.push({
-                    trainerId: trainer.id,
-                    name: tweet.author?.name || tweet.author?.username || 'Twitter User',
-                    email: null,
-                    phone: null,
-                    company: null,
-                    title: null,
-                    location: null,
-                    source: 'twitter',
-                    sourceUrl: tweet.author?.username
-                        ? `https://twitter.com/${tweet.author.username}/status/${tweet.id}`
-                        : null,
-                    sourceData: tweet,
-                    content: tweet.text,
-                    context: `Posted on Twitter about ${specialty}`,
-                    matchScore,
-                    draftReply: null
-                })
-            }
-        }
-    } catch (error) {
-        console.error('Error fetching Twitter leads:', error)
-    }
-
-    return leads
-}
 
 async function generateApolloLeads(trainer: TrainerProfile): Promise<GeneratedLead[]> {
     const leads: GeneratedLead[] = []
@@ -160,12 +61,12 @@ async function generateApolloLeads(trainer: TrainerProfile): Promise<GeneratedLe
         const searchParams = {
             ...FITNESS_SEARCH_TEMPLATES.corporateWellness,
             organizationLocations: trainer.state ? [trainer.state] : undefined,
-            perPage: 5
+            perPage: 15 // Fetch more to filter
         }
 
         const result = await searchApolloContacts(searchParams)
 
-        for (const contact of result.contacts.slice(0, 3)) { // Top 3
+        for (const contact of result.contacts.slice(0, 10)) { // Top 10
             const matchScore = calculateApolloMatchScore(contact, trainer)
 
             if (matchScore >= 60) {
@@ -194,26 +95,7 @@ async function generateApolloLeads(trainer: TrainerProfile): Promise<GeneratedLe
     return leads
 }
 
-async function enrichLeadsWithHunter(leads: GeneratedLead[]) {
-    for (const lead of leads) {
-        if (!lead.email && lead.name && lead.company) {
-            try {
-                const [firstName, ...lastNameParts] = lead.name.split(' ')
-                const lastName = lastNameParts.join(' ')
-                const domain = guessDomain(lead.company)
 
-                const emailResult = await findEmail(firstName, lastName, domain)
-
-                if (emailResult && emailResult.email) {
-                    lead.email = emailResult.email
-                    lead.source = 'hunter' // Mark as enriched by Hunter
-                }
-            } catch (error) {
-                console.error('Error enriching lead with Hunter:', error)
-            }
-        }
-    }
-}
 
 async function generateDraftReplies(leads: GeneratedLead[], trainer: TrainerProfile) {
     // Import OpenAI and memory functions
@@ -261,30 +143,7 @@ Lead content: ${lead.content}`
     }
 }
 
-function calculateRedditMatchScore(post: any, trainer: TrainerProfile): number {
-    let score = 50 // Base score
 
-    const specialty = trainer.specialties?.[0]?.toLowerCase() || ''
-    const content = `${post.title} ${post.selftext}`.toLowerCase()
-
-    // Specialty match
-    if (content.includes(specialty)) score += 20
-
-    // Recency (within 24 hours = +10, within week = +5)
-    const ageHours = (Date.now() - post.created_utc * 1000) / (1000 * 60 * 60)
-    if (ageHours < 24) score += 10
-    else if (ageHours < 168) score += 5
-
-    // Engagement
-    if (post.score > 10) score += 5
-    if (post.num_comments < 5) score += 10 // Less competition
-
-    // Quality indicators
-    if (post.selftext.length > 100) score += 5 // Detailed post
-    if (content.includes('looking for') || content.includes('need help')) score += 10
-
-    return Math.min(100, Math.max(0, score))
-}
 
 function calculateApolloMatchScore(contact: any, trainer: TrainerProfile): number {
     let score = 60 // Base score for Apollo leads (pre-qualified)
@@ -303,31 +162,7 @@ function calculateApolloMatchScore(contact: any, trainer: TrainerProfile): numbe
     return Math.min(100, Math.max(0, score))
 }
 
-function calculateTwitterMatchScore(tweet: any, trainer: TrainerProfile): number {
-    let score = 50 // Base score
 
-    const specialty = trainer.specialties?.[0]?.toLowerCase() || ''
-    const content = tweet.text.toLowerCase()
-
-    // Specialty match
-    if (content.includes(specialty)) score += 20
-
-    // Recency (within 24 hours = +10, within 3 days = +5)
-    const ageHours = (Date.now() - new Date(tweet.created_at).getTime()) / (1000 * 60 * 60)
-    if (ageHours < 24) score += 10
-    else if (ageHours < 72) score += 5
-
-    // Engagement
-    const metrics = tweet.public_metrics
-    if (metrics.like_count > 5) score += 5
-    if (metrics.reply_count < 3) score += 10 // Less competition
-
-    // Quality indicators
-    if (content.length > 100) score += 5 // Detailed tweet
-    if (content.includes('looking for') || content.includes('need help') || content.includes('recommendations')) score += 10
-
-    return Math.min(100, Math.max(0, score))
-}
 
 export async function storeLeadsInDatabase(leads: GeneratedLead[]) {
     const stored = []
