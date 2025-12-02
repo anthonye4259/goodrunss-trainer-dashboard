@@ -1,7 +1,9 @@
-// Lead Generator Orchestrator - Combines Reddit and Apollo for consumer + B2B leads
+// Lead Generator Orchestrator - Combines Reddit, Apollo, Craigslist + Synthetic leads
 
 import { searchReddit } from './reddit'
 import { searchApolloContacts, FITNESS_SEARCH_TEMPLATES } from './apollo'
+import { searchCraigslist, buildCraigslistQuery } from './craigslist'
+import { generateSyntheticLeads } from './synthetic'
 import { prisma } from '@/lib/prisma'
 
 export interface GeneratedLead {
@@ -12,7 +14,7 @@ export interface GeneratedLead {
     company: string | null
     title: string | null
     location: string | null
-    source: 'reddit' | 'apollo'
+    source: 'reddit' | 'apollo' | 'craigslist' | 'synthetic'
     sourceUrl: string | null
     sourceData: any
     content: string
@@ -34,21 +36,29 @@ export async function generateLeadsForTrainer(trainer: TrainerProfile): Promise<
     const leads: GeneratedLead[] = []
 
     try {
-        // 1. Reddit Leads (consumer-focused, 5 leads)
+        // 1. Reddit Leads (consumer-focused, 2-3 leads)
         const redditLeads = await generateRedditLeads(trainer)
         leads.push(...redditLeads)
 
-        // 2. Apollo Leads (B2B opportunities, 5 leads)
+        // 2. Craigslist Leads (consumer-focused, 2-3 leads)
+        const craigslistLeads = await generateCraigslistLeads(trainer)
+        leads.push(...craigslistLeads)
+
+        // 3. Apollo Leads (B2B opportunities, 2-3 leads)
         const apolloLeads = await generateApolloLeads(trainer)
         leads.push(...apolloLeads)
 
-        // 3. Generate draft replies using Gia
+        // 4. Synthetic Leads (mixed, 2-3 leads for testing)
+        const syntheticLeads = await generateSyntheticLeadsForTrainer(trainer)
+        leads.push(...syntheticLeads)
+
+        // 5. Generate draft replies using Gia
         await generateDraftReplies(leads, trainer)
 
-        // 4. Sort by match score
+        // 6. Sort by match score
         leads.sort((a, b) => b.matchScore - a.matchScore)
 
-        // 5. Take top 10
+        // 7. Take top 10
         return leads.slice(0, 10)
     } catch (error) {
         console.error('Error generating leads for trainer:', trainer.id, error)
@@ -125,6 +135,92 @@ function calculateRedditMatchScore(post: any, trainer: TrainerProfile): number {
     if (content.includes('looking for') || content.includes('need help')) score += 10
 
     return Math.min(100, Math.max(0, score))
+}
+
+async function generateCraigslistLeads(trainer: TrainerProfile): Promise<GeneratedLead[]> {
+    const leads: GeneratedLead[] = []
+
+    if (!trainer.city) {
+        console.warn('Trainer city not set, skipping Craigslist')
+        return leads
+    }
+
+    try {
+        const specialty = trainer.specialties?.[0] || 'fitness'
+        const query = buildCraigslistQuery(specialty)
+
+        const result = await searchCraigslist(trainer.city, query, 5)
+
+        for (const post of result.posts.slice(0, 3)) { // Top 3
+            const matchScore = calculateCraigslistMatchScore(post, trainer)
+
+            if (matchScore >= 50) {
+                leads.push({
+                    trainerId: trainer.id,
+                    name: post.author_contact || 'Craigslist User',
+                    email: null,
+                    phone: null,
+                    company: null,
+                    title: null,
+                    location: post.location,
+                    source: 'craigslist',
+                    sourceUrl: post.url,
+                    sourceData: post,
+                    content: `${post.title}\n\n${post.description}`,
+                    context: `Posted in ${post.location} services wanted`,
+                    matchScore,
+                    draftReply: null
+                })
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching Craigslist leads:', error)
+    }
+
+    return leads
+}
+
+function calculateCraigslistMatchScore(post: any, trainer: TrainerProfile): number {
+    let score = 55 // Base score
+
+    const specialty = trainer.specialties?.[0]?.toLowerCase() || ''
+    const content = `${post.title} ${post.description}`.toLowerCase()
+
+    // Specialty match
+    if (content.includes(specialty)) score += 20
+
+    // Recency
+    const ageHours = (Date.now() - post.posted_date.getTime()) / (1000 * 60 * 60)
+    if (ageHours < 48) score += 10
+    else if (ageHours < 168) score += 5
+
+    // Quality indicators
+    if (post.description.length > 50) score += 5
+    if (content.includes('looking for') || content.includes('need') || content.includes('seeking')) score += 10
+
+    return Math.min(100, Math.max(0, score))
+}
+
+async function generateSyntheticLeadsForTrainer(trainer: TrainerProfile): Promise<GeneratedLead[]> {
+    const specialty = trainer.specialties?.[0] || 'fitness'
+    const syntheticLeads = generateSyntheticLeads(3, specialty)
+
+    return syntheticLeads.map(lead => ({
+        trainerId: trainer.id,
+        name: lead.name,
+        email: lead.email,
+        phone: lead.phone,
+        company: lead.company,
+        title: lead.title,
+        location: lead.location,
+        source: 'synthetic' as const,
+        sourceUrl: lead.sourceUrl,
+        sourceData: { synthetic: true, generated_at: new Date() },
+        content: lead.content,
+        context: lead.context,
+        matchScore: lead.matchScore,
+        draftReply: null
+    }))
 }
 
 async function generateApolloLeads(trainer: TrainerProfile): Promise<GeneratedLead[]> {
