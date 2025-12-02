@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getOrCreateUser } from "@/lib/get-or-create-user"
 import { openai } from '@ai-sdk/openai'
-import { streamText } from 'ai'
+import { streamText, CoreMessage } from 'ai'
 import { z } from 'zod'
 import { SPECIALIZATION_PROMPTS, CONTEXT_ENHANCED_PROMPT } from '@/lib/gia/expert-prompts'
 import { prisma } from '@/lib/prisma'
@@ -17,13 +17,8 @@ export async function POST(request: NextRequest) {
       return new Response('Unauthorized', { status: 401 })
     }
 
-    interface Message {
-      role: string
-      content: string
-    }
-
     const { messages, files, mode, clientId } = await request.json() as {
-      messages: Message[],
+      messages: CoreMessage[],
       files: any,
       mode: string,
       clientId: string
