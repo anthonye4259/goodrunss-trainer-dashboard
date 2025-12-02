@@ -636,33 +636,12 @@ async function analyzePricing(args: any, trainerId: string) {
         }
     })
 
-    // Get trainer's sessions to calculate average rate
-    const sessions = await prisma.sessions.findMany({
-        where: { trainerId },
-        select: {
-            price: true,
-            status: true
-        }
-    })
-
-    const completedSessions = sessions.filter(s => s.status === 'COMPLETED')
-    const avgSessionPrice = completedSessions.length > 0
-        ? completedSessions.reduce((sum, s) => sum + (s.price || 0), 0) / completedSessions.length
+    // Calculate average session price from packages
+    const avgSessionPrice = packages.length > 0
+        ? packages.reduce((sum, p) => sum + (Number(p.price) / (p.sessions || 1)), 0) / packages.length
         : 0
 
-    // Calculate utilization (sessions per week)
-    const now = new Date()
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    const recentSessions = await prisma.sessions.count({
-        where: {
-            trainerId,
-            scheduledAt: { gte: oneWeekAgo }
-        }
-    })
-
-    const utilization = (recentSessions / 40) * 100 // Assuming 40 sessions/week is full capacity
-
-    // Get client retention data
+    // Get client data for retention analysis
     const clients = await prisma.clients.findMany({
         where: { trainerId },
         select: {
@@ -713,21 +692,13 @@ async function analyzePricing(args: any, trainerId: string) {
     // Generate recommendations
     const recommendations = []
 
-    if (utilization > 80) {
-        recommendations.push({
-            priority: 'high',
-            recommendation: `Your utilization is ${utilization.toFixed(0)}%. You're near capacity - consider raising rates 10-15% for new clients.`,
-            potentialImpact: `+$${(avgSessionPrice * 0.125 * recentSessions * 4).toFixed(0)}/month`
-        })
-    }
-
     if (avgSessionPrice > 0 && marketData?.comparison) {
         const vsAverage = parseFloat(marketData.comparison.vsAverage)
         if (vsAverage < -15) {
             recommendations.push({
                 priority: 'high',
                 recommendation: `You're charging ${Math.abs(vsAverage).toFixed(0)}% below market average. Consider raising to $${marketData.estimatedMarketRate.average}/session.`,
-                potentialImpact: `+$${((marketData.estimatedMarketRate.average - avgSessionPrice) * recentSessions * 4).toFixed(0)}/month`
+                potentialImpact: `Significant revenue increase potential`
             })
         } else if (vsAverage > 20) {
             recommendations.push({
@@ -742,7 +713,7 @@ async function analyzePricing(args: any, trainerId: string) {
         recommendations.push({
             priority: 'medium',
             recommendation: `Your retention rate is ${retentionRate.toFixed(0)}%. Strong retention means clients see value - you can likely raise rates 5-10%.`,
-            potentialImpact: `+$${(avgSessionPrice * 0.075 * recentSessions * 4).toFixed(0)}/month`
+            potentialImpact: `Higher revenue per client`
         })
     }
 
@@ -773,11 +744,10 @@ async function analyzePricing(args: any, trainerId: string) {
                 }))
             },
             businessMetrics: {
-                utilization: utilization.toFixed(1) + '%',
-                weeklySessionsCount: recentSessions,
                 retentionRate: retentionRate.toFixed(1) + '%',
                 activeClients: activeClients.length,
-                totalClients: clients.length
+                totalClients: clients.length,
+                packagesOffered: packages.length
             },
             marketComparison: marketData,
             recommendations
