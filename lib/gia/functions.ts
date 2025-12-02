@@ -74,21 +74,38 @@ export async function executeToolCall(
 async function getHotLeads(args: any, trainerId: string) {
     const { minScore = 70 } = args
 
-    // In a real app, this would query the DB. For now, we use the same mock data as the API
-    // to ensure consistency across the demo.
-    const mockLeads = [
-        { id: 'lead-1', name: 'Jessica Chen', sport: 'Tennis', score: 95, notes: 'Looking for weight loss' },
-        { id: 'lead-2', name: 'Marcus Williams', sport: 'Golf', score: 88, notes: 'Needs swing correction' },
-        { id: 'lead-3', name: 'Sarah Johnson', sport: 'Pickleball', score: 82, notes: 'Beginner' },
-        { id: 'lead-4', name: 'David Kim', sport: 'Basketball', score: 75, notes: 'Advanced skills training' }
-    ]
+    // Fetch real leads from the database
+    const leads = await prisma.dailyLead.findMany({
+        where: {
+            trainerId,
+            matchScore: { gte: minScore },
+            status: 'new' // Only show new leads
+        },
+        orderBy: {
+            matchScore: 'desc'
+        },
+        take: 10
+    })
 
-    const hotLeads = mockLeads.filter(l => l.score >= minScore)
+    if (leads.length === 0) {
+        return {
+            success: true,
+            message: `No new leads found with score >= ${minScore}. Try lowering the score threshold or check back tomorrow.`,
+            leads: []
+        }
+    }
 
     return {
         success: true,
-        message: `Found ${hotLeads.length} hot leads with score >= ${minScore}`,
-        leads: hotLeads
+        message: `Found ${leads.length} hot leads with score >= ${minScore}`,
+        leads: leads.map(l => ({
+            id: l.id,
+            name: l.name,
+            sport: l.source, // Using source as sport/category context
+            score: l.matchScore,
+            notes: l.notes,
+            location: l.location
+        }))
     }
 }
 
