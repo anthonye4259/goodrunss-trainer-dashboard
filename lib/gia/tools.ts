@@ -378,5 +378,21 @@ export const GIA_TOOLS = [
                 required: ["leadId"]
             }
         }
+    },
+    {
+        type: "function",
+        function: {
+            name: "analyze_pricing",
+            description: "Analyze the trainer's current pricing and provide recommendations based on market rates, utilization, and client retention. Use this when the user asks about pricing, rates, or if they should raise prices.",
+            parameters: {
+                type: "object",
+                properties: {
+                    includeMarketComparison: {
+                        type: "boolean",
+                        description: "Whether to include market rate comparison (default: true)"
+                    }
+                }
+            }
+        }
     }
 ]

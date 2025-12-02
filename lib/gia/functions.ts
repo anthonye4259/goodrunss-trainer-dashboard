@@ -57,6 +57,9 @@ export async function executeToolCall(
             case 'generate_lead_outreach':
                 return await generateLeadOutreachTool(args, trainerId)
 
+            case 'analyze_pricing':
+                return await analyzePricing(args, trainerId)
+
             default:
                 return { error: `Unknown tool: ${toolName}` }
         }
@@ -615,6 +618,169 @@ async function getRevenueSummary(args: any, trainerId: string) {
             pendingPayments: pendingCount,
             totalPayments: payments.length,
             period: startDate && endDate ? `${startDate} to ${endDate}` : 'All time'
+        }
+    }
+}
+
+async function analyzePricing(args: any, trainerId: string) {
+    const { includeMarketComparison = true } = args
+
+    // Get trainer's current packages/services
+    const packages = await prisma.packages.findMany({
+        where: { trainerId },
+        select: {
+            id: true,
+            name: true,
+            price: true,
+            sessionsIncluded: true
+        }
+    })
+
+    // Get trainer's sessions to calculate average rate
+    const sessions = await prisma.sessions.findMany({
+        where: { trainerId },
+        select: {
+            price: true,
+            status: true
+        }
+    })
+
+    const completedSessions = sessions.filter(s => s.status === 'COMPLETED')
+    const avgSessionPrice = completedSessions.length > 0
+        ? completedSessions.reduce((sum, s) => sum + (s.price || 0), 0) / completedSessions.length
+        : 0
+
+    // Calculate utilization (sessions per week)
+    const now = new Date()
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const recentSessions = await prisma.sessions.count({
+        where: {
+            trainerId,
+            scheduledAt: { gte: oneWeekAgo }
+        }
+    })
+
+    const utilization = (recentSessions / 40) * 100 // Assuming 40 sessions/week is full capacity
+
+    // Get client retention data
+    const clients = await prisma.clients.findMany({
+        where: { trainerId },
+        select: {
+            id: true,
+            createdAt: true,
+            lastSessionDate: true
+        }
+    })
+
+    const activeClients = clients.filter(c => {
+        if (!c.lastSessionDate) return false
+        const daysSince = (Date.now() - new Date(c.lastSessionDate).getTime()) / (1000 * 60 * 60 * 24)
+        return daysSince < 30
+    })
+
+    const retentionRate = clients.length > 0 ? (activeClients.length / clients.length) * 100 : 0
+
+    // Market comparison (using Apollo data from daily leads)
+    let marketData = null
+    if (includeMarketComparison) {
+        // Get recent Apollo leads to estimate market rates
+        const dailyLeads = await prisma.dailyLead.findMany({
+            where: {
+                trainerId,
+                source: 'apollo',
+                createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+            },
+            take: 20
+        })
+
+        // Estimate market rates based on Apollo contacts (typically $80-150 for B2C professionals)
+        const estimatedMarketRate = {
+            low: 80,
+            average: 100,
+            high: 150
+        }
+
+        marketData = {
+            estimatedMarketRate,
+            comparison: avgSessionPrice > 0 ? {
+                vsLow: ((avgSessionPrice - estimatedMarketRate.low) / estimatedMarketRate.low * 100).toFixed(1),
+                vsAverage: ((avgSessionPrice - estimatedMarketRate.average) / estimatedMarketRate.average * 100).toFixed(1),
+                vsHigh: ((avgSessionPrice - estimatedMarketRate.high) / estimatedMarketRate.high * 100).toFixed(1)
+            } : null
+        }
+    }
+
+    // Generate recommendations
+    const recommendations = []
+
+    if (utilization > 80) {
+        recommendations.push({
+            priority: 'high',
+            recommendation: `Your utilization is ${utilization.toFixed(0)}%. You're near capacity - consider raising rates 10-15% for new clients.`,
+            potentialImpact: `+$${(avgSessionPrice * 0.125 * recentSessions * 4).toFixed(0)}/month`
+        })
+    }
+
+    if (avgSessionPrice > 0 && marketData?.comparison) {
+        const vsAverage = parseFloat(marketData.comparison.vsAverage)
+        if (vsAverage < -15) {
+            recommendations.push({
+                priority: 'high',
+                recommendation: `You're charging ${Math.abs(vsAverage).toFixed(0)}% below market average. Consider raising to $${marketData.estimatedMarketRate.average}/session.`,
+                potentialImpact: `+$${((marketData.estimatedMarketRate.average - avgSessionPrice) * recentSessions * 4).toFixed(0)}/month`
+            })
+        } else if (vsAverage > 20) {
+            recommendations.push({
+                priority: 'medium',
+                recommendation: `You're charging ${vsAverage.toFixed(0)}% above market average. This is great if retention is strong!`,
+                potentialImpact: 'Premium positioning'
+            })
+        }
+    }
+
+    if (retentionRate > 80) {
+        recommendations.push({
+            priority: 'medium',
+            recommendation: `Your retention rate is ${retentionRate.toFixed(0)}%. Strong retention means clients see value - you can likely raise rates 5-10%.`,
+            potentialImpact: `+$${(avgSessionPrice * 0.075 * recentSessions * 4).toFixed(0)}/month`
+        })
+    }
+
+    if (packages.length > 0) {
+        const avgPackagePrice = packages.reduce((sum, p) => sum + p.price, 0) / packages.length
+        const avgSessionsInPackage = packages.reduce((sum, p) => sum + (p.sessionsIncluded || 1), 0) / packages.length
+        const packagePricePerSession = avgPackagePrice / avgSessionsInPackage
+
+        if (packagePricePerSession < avgSessionPrice * 0.9) {
+            recommendations.push({
+                priority: 'low',
+                recommendation: 'Your package pricing offers too much discount. Consider reducing package discount to 10-15% instead of current level.',
+                potentialImpact: 'Better package economics'
+            })
+        }
+    }
+
+    return {
+        success: true,
+        analysis: {
+            currentPricing: {
+                avgSessionPrice: avgSessionPrice.toFixed(2),
+                packages: packages.map(p => ({
+                    name: p.name,
+                    price: p.price,
+                    sessions: p.sessionsIncluded,
+                    pricePerSession: p.sessionsIncluded ? (p.price / p.sessionsIncluded).toFixed(2) : 'N/A'
+                }))
+            },
+            businessMetrics: {
+                utilization: utilization.toFixed(1) + '%',
+                weeklySessionsCount: recentSessions,
+                retentionRate: retentionRate.toFixed(1) + '%',
+                activeClients: activeClients.length,
+                totalClients: clients.length
+            },
+            marketComparison: marketData,
+            recommendations
         }
     }
 }
