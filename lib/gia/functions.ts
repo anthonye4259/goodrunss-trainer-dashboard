@@ -74,7 +74,15 @@ export async function executeToolCall(
 async function getHotLeads(args: any, trainerId: string) {
     const { minScore = 70 } = args
 
-    // Fetch real leads from the database
+    // 1. Fetch trainer's specialty to ensure relevance
+    const trainer = await prisma.users.findUnique({
+        where: { id: trainerId },
+        select: { specialties: true }
+    })
+    
+    const mainSpecialty = trainer?.specialties?.[0] || 'Fitness'
+
+    // 2. Fetch real leads from the database
     const leads = await prisma.dailyLead.findMany({
         where: {
             trainerId,
@@ -87,26 +95,68 @@ async function getHotLeads(args: any, trainerId: string) {
         take: 10
     })
 
-    if (leads.length === 0) {
+    // 3. If real leads exist, return them
+    if (leads.length > 0) {
         return {
             success: true,
-            message: `No new leads found with score >= ${minScore}. Try lowering the score threshold or check back tomorrow.`,
-            leads: []
+            message: `Found ${leads.length} hot leads with score >= ${minScore}`,
+            leads: leads.map(l => ({
+                id: l.id,
+                name: l.name,
+                sport: l.source,
+                score: l.matchScore,
+                notes: l.notes,
+                location: l.location,
+                isReal: true
+            }))
         }
     }
 
+    // 4. Fallback: Generate relevant mock leads based on specialty
+    // This ensures new users always see how the system works
+    const mockLeads = generateMockLeadsForSpecialty(mainSpecialty)
+    const filteredMock = mockLeads.filter(l => l.score >= minScore)
+
     return {
         success: true,
-        message: `Found ${leads.length} hot leads with score >= ${minScore}`,
-        leads: leads.map(l => ({
-            id: l.id,
-            name: l.name,
-            sport: l.source, // Using source as sport/category context
-            score: l.matchScore,
-            notes: l.notes,
-            location: l.location
-        }))
+        message: `I didn't find any *new* real leads right now (check back tomorrow!), but here are some examples of the high-quality ${mainSpecialty} leads I can find for you:`,
+        leads: filteredMock.map(l => ({ ...l, isReal: false }))
     }
+}
+
+// Helper to generate relevant mock leads
+function generateMockLeadsForSpecialty(specialty: string) {
+    const s = specialty.toLowerCase()
+    
+    if (s.includes('yoga') || s.includes('pilates')) {
+        return [
+            { id: 'mock-1', name: 'Sarah J.', sport: specialty, score: 95, notes: 'Looking for stress relief and flexibility. Available mornings.', location: 'Downtown' },
+            { id: 'mock-2', name: 'Emma W.', sport: specialty, score: 88, notes: 'Recovering from back injury, needs gentle guidance.', location: 'Westside' },
+            { id: 'mock-3', name: 'Michael R.', sport: specialty, score: 82, notes: 'Beginner, wants to improve core strength.', location: 'North Hills' }
+        ]
+    }
+    
+    if (s.includes('tennis') || s.includes('pickleball')) {
+        return [
+            { id: 'mock-1', name: 'David C.', sport: specialty, score: 94, notes: 'Intermediate player wanting to fix backhand.', location: 'City Courts' },
+            { id: 'mock-2', name: 'Jenny L.', sport: specialty, score: 89, notes: 'League player looking for match strategy coaching.', location: 'South Bay' },
+            { id: 'mock-3', name: 'Tom H.', sport: specialty, score: 78, notes: 'Beginner, needs equipment advice and basics.', location: 'Eastside' }
+        ]
+    }
+
+    if (s.includes('golf')) {
+        return [
+            { id: 'mock-1', name: 'Robert B.', sport: 'Golf', score: 96, notes: 'High handicap, wants to break 90. Committed to 10 sessions.', location: 'Country Club' },
+            { id: 'mock-2', name: 'James K.', sport: 'Golf', score: 85, notes: 'Slice correction needed before tournament.', location: 'Public Links' }
+        ]
+    }
+
+    // Default / General Fitness / HIIT / Strength
+    return [
+        { id: 'mock-1', name: 'Alex M.', sport: specialty, score: 92, notes: 'Wants to lose 10lbs before wedding. Highly motivated.', location: 'Downtown' },
+        { id: 'mock-2', name: 'Jessica T.', sport: specialty, score: 87, notes: 'Former athlete looking to get back in shape.', location: 'Uptown' },
+        { id: 'mock-3', name: 'Chris P.', sport: specialty, score: 80, notes: 'Needs accountability and meal planning help.', location: 'Suburbs' }
+    ]
 }
 
 async function getChurnRisk(args: any, trainerId: string) {
