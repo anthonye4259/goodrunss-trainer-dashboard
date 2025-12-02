@@ -79,7 +79,7 @@ async function getHotLeads(args: any, trainerId: string) {
         where: { id: trainerId },
         select: { specialties: true }
     })
-    
+
     const mainSpecialty = trainer?.specialties?.[0] || 'Fitness'
 
     // 2. Fetch real leads from the database
@@ -105,7 +105,7 @@ async function getHotLeads(args: any, trainerId: string) {
                 name: l.name,
                 sport: l.source,
                 score: l.matchScore,
-                notes: l.notes,
+                notes: l.context || l.content,
                 location: l.location,
                 isReal: true
             }))
@@ -127,7 +127,7 @@ async function getHotLeads(args: any, trainerId: string) {
 // Helper to generate relevant mock leads
 function generateMockLeadsForSpecialty(specialty: string) {
     const s = specialty.toLowerCase()
-    
+
     if (s.includes('yoga') || s.includes('pilates')) {
         return [
             { id: 'mock-1', name: 'Sarah J.', sport: specialty, score: 95, notes: 'Looking for stress relief and flexibility. Available mornings.', location: 'Downtown' },
@@ -135,7 +135,7 @@ function generateMockLeadsForSpecialty(specialty: string) {
             { id: 'mock-3', name: 'Michael R.', sport: specialty, score: 82, notes: 'Beginner, wants to improve core strength.', location: 'North Hills' }
         ]
     }
-    
+
     if (s.includes('tennis') || s.includes('pickleball')) {
         return [
             { id: 'mock-1', name: 'David C.', sport: specialty, score: 94, notes: 'Intermediate player wanting to fix backhand.', location: 'City Courts' },
