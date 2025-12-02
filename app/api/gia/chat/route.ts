@@ -9,6 +9,18 @@ import { prisma } from '@/lib/prisma'
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
 
+// Helper to extract text from message content
+function getMessageContent(content: string | Array<any>): string {
+  if (typeof content === 'string') return content
+  if (Array.isArray(content)) {
+    return content
+      .filter(part => part.type === 'text')
+      .map(part => part.text)
+      .join(' ')
+  }
+  return ''
+}
+
 export async function POST(request: NextRequest) {
   try {
     const authUser = await getOrCreateUser()
@@ -59,7 +71,7 @@ export async function POST(request: NextRequest) {
       clientContext = dbUser.clients.find(c => c.id === clientId)
     } else if (dbUser) {
       // Try to detect client name in message
-      const lastMessage = messages[messages.length - 1]?.content.toLowerCase()
+      const lastMessage = getMessageContent(messages[messages.length - 1]?.content).toLowerCase()
       const detectedClient = dbUser.clients.find(c =>
         lastMessage && lastMessage.includes(c.name.toLowerCase())
       )
@@ -82,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     // Detect specialization from message content
     const lastUserMessage = messages[messages.length - 1]
-    const messageText = lastUserMessage.content.toLowerCase()
+    const messageText = getMessageContent(lastUserMessage.content).toLowerCase()
     let specialization: keyof typeof SPECIALIZATION_PROMPTS = 'sports' // Default to sports
 
     // Wellness keywords
@@ -139,7 +151,7 @@ export async function POST(request: NextRequest) {
 
     // Load relevant memories for this trainer
     const { getRelevantMemories, formatMemoriesForPrompt } = await import('@/lib/gia/memory')
-    const conversationContext = messages.map(m => m.content).join(' ')
+    const conversationContext = messages.map(m => getMessageContent(m.content)).join(' ')
     const relevantMemories = await getRelevantMemories(dbUser.id, conversationContext, 10)
     const memoryPrompt = formatMemoriesForPrompt(relevantMemories)
 
