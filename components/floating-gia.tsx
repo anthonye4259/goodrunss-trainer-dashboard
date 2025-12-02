@@ -167,10 +167,12 @@ export function FloatingGIA() {
       })
 
       if (!response.ok) {
-        throw new Error("Chat request failed")
+        const errorText = await response.text()
+        console.error("Chat API error:", errorText)
+        throw new Error(`Chat request failed: ${response.status}`)
       }
 
-      // Handle streaming response
+      // Handle streaming response from AI SDK
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
       let accumulatedResponse = ""
@@ -187,41 +189,35 @@ export function FloatingGIA() {
       setMessages((prev) => [...prev, assistantMessage])
 
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
+        try {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
 
-          const chunk = decoder.decode(value)
-          const lines = chunk.split('\n')
+            const chunk = decoder.decode(value, { stream: true })
 
-          for (const line of lines) {
-            if (line.startsWith('0:')) {
-              try {
-                const jsonStr = line.slice(2)
-                const data = JSON.parse(jsonStr)
-                if (data && typeof data === 'string') {
-                  accumulatedResponse += data
-                  // Update message content in real-time
-                  setMessages((prev) =>
-                    prev.map((msg) =>
-                      msg.id === assistantMessageId
-                        ? { ...msg, content: accumulatedResponse }
-                        : msg
-                    )
-                  )
-                }
-              } catch (e) {
-                // Skip invalid JSON
-              }
-            }
+            // AI SDK text stream format: each chunk is just text
+            accumulatedResponse += chunk
+
+            // Update message content in real-time
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessageId
+                  ? { ...msg, content: accumulatedResponse }
+                  : msg
+              )
+            )
           }
+        } catch (streamError) {
+          console.error("Stream reading error:", streamError)
+          throw streamError
         }
       }
     } catch (error) {
       console.error("Chat error:", error)
       toast({
         title: "Request failed",
-        description: "GIA is temporarily unavailable. Please try again.",
+        description: error instanceof Error ? error.message : "GIA is temporarily unavailable. Please try again.",
         variant: "destructive",
       })
     } finally {
