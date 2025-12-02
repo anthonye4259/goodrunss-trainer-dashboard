@@ -2,25 +2,26 @@ import { NextResponse } from "next/server"
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { prisma } from "@/lib/prisma"
 
+import { getOrCreateUser } from "@/lib/get-or-create-user"
+
 export async function GET() {
     try {
-        const { userId } = await auth()
-        const user = await currentUser()
+        const user = await getOrCreateUser()
 
-        if (!userId || !user) {
+        if (!user) {
             return new NextResponse("Unauthorized", { status: 401 })
         }
 
         // Find or create trainer profile
         let profile = await prisma.trainer_profiles.findUnique({
-            where: { userId }
+            where: { userId: user.id }
         })
 
         if (!profile) {
             // Create default profile if it doesn't exist
             profile = await prisma.trainer_profiles.create({
                 data: {
-                    userId,
+                    userId: user.id,
                     tier: "MEMBER",
                     isVerified: false
                 }
