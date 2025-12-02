@@ -111,13 +111,13 @@ export default function SignupPage() {
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 mb-4 animate-fade-in">
               <Sparkles className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-bold text-green-600 dark:text-green-400">Join 500+ Wellness Professionals Growing with AI</span>
+              <span className="text-sm font-bold text-green-600 dark:text-green-400">Join 500+ Wellness & Sports Professionals Growing with AI</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-              Start Growing Your <span className="text-primary">Wellness Business</span>
+              Start Growing Your <span className="text-primary">Wellness & Sports Business</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Join 500+ trainers & wellness instructors using AI to grow their business. Full access immediately.
+              Join 500+ wellness instructors & sports coaches using AI to grow their business. Full access immediately.
             </p>
           </div>
         </div>
