@@ -128,6 +128,12 @@ export async function POST(request: NextRequest) {
       specialization = mode as keyof typeof SPECIALIZATION_PROMPTS
     }
 
+    // Load relevant memories for this trainer
+    const { getRelevantMemories, formatMemoriesForPrompt } = await import('@/lib/gia/memory')
+    const conversationContext = messages.map(m => m.content).join(' ')
+    const relevantMemories = await getRelevantMemories(dbUser.id, conversationContext, 10)
+    const memoryPrompt = formatMemoriesForPrompt(relevantMemories)
+
     // Build context-aware system prompt with client data
     const systemPrompt = CONTEXT_ENHANCED_PROMPT(
       specialization,
@@ -143,7 +149,7 @@ export async function POST(request: NextRequest) {
         clientCount: dbUser.clients?.length || 0,
         businessGoals: [], // Add if available in DB
       } : undefined
-    )
+    ) + memoryPrompt // Inject memories into system prompt
 
     // Inject file context and client hint into the last message
     const coreMessages = messages.slice(0, -1)
@@ -384,6 +390,23 @@ export async function POST(request: NextRequest) {
               return { error: error.message }
             }
           }
+        }
+      },
+      onFinish: async (completion) => {
+        // Extract memories from the conversation in the background
+        if (dbUser) {
+          const { extractAndStoreMemories } = await import('@/lib/gia/memory-extraction')
+          // Include the AI's response in the analysis
+          const fullConversation = [
+            ...coreMessages,
+            { role: 'user', content: lastMessageContent },
+            { role: 'assistant', content: completion.text }
+          ]
+
+          // Fire and forget - don't await this to keep response fast
+          extractAndStoreMemories(dbUser.id, fullConversation).catch(err =>
+            console.error('Background memory extraction failed:', err)
+          )
         }
       }
     })

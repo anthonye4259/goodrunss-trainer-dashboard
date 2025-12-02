@@ -1884,6 +1884,7 @@ model users {
   referrals                                            referrals?
   user_subscriptions                                   user_subscriptions[]
   trainer_profile                                      trainer_profiles?
+  gia_memories                                         GiaMemory[]
 }
 
 model verification_tokens {
@@ -2602,4 +2603,25 @@ model ClassPackage {
   @@index([trainerId])
   @@index([clientId])
   @@index([expiresAt])
+}
+
+// Gia Memory System - Stores persistent memories about each trainer
+model GiaMemory {
+  id          String   @id @default(uuid())
+  trainerId   String
+  category    String   // 'preference', 'fact', 'pattern', 'style'
+  key         String   // e.g., 'communication_style', 'favorite_sport'
+  value       String   @db.Text // The actual memory content
+  confidence  Float    @default(1.0) // 0-1, how confident we are
+  source      String   // 'explicit', 'inferred', 'observed'
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastUsedAt  DateTime @default(now())
+  useCount    Int      @default(0)
+  
+  user        users    @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  
+  @@index([trainerId])
+  @@index([category])
+  @@unique([trainerId, key])
 }

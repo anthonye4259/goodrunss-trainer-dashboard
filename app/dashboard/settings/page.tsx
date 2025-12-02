@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { User, Bell, CreditCard, Shield, Save, Globe, LinkIcon, Upload, Pointer as Spinner } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useLanguage } from "@/contexts/language-context"
+import { MemorySettings } from "@/components/settings/memory-settings"
 
 export default function SettingsPage() {
   const { toast } = useToast()
@@ -171,6 +172,10 @@ export default function SettingsPage() {
           <TabsTrigger value="preferences" className="gap-2">
             <Globe className="h-4 w-4" />
             Preferences
+          </TabsTrigger>
+          <TabsTrigger value="memory" className="gap-2">
+            <Brain className="h-4 w-4" />
+            Memory
           </TabsTrigger>
         </TabsList>
 
@@ -530,6 +535,10 @@ export default function SettingsPage() {
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+        {/* Memory Tab */}
+        <TabsContent value="memory">
+          <MemorySettings />
         </TabsContent>
       </Tabs>
     </div>
