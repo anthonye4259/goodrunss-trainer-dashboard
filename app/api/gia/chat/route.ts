@@ -17,7 +17,17 @@ export async function POST(request: NextRequest) {
       return new Response('Unauthorized', { status: 401 })
     }
 
-    const { messages, files, mode, clientId } = await request.json()
+    interface Message {
+      role: string
+      content: string
+    }
+
+    const { messages, files, mode, clientId } = await request.json() as {
+      messages: Message[],
+      files: any,
+      mode: string,
+      clientId: string
+    }
 
     if (!messages || messages.length === 0) {
       return new Response('No messages provided', { status: 400 })
