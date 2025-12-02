@@ -71,7 +71,7 @@ export async function executeToolCall(
 
 // ... existing functions ...
 
-async function getHotLeads(args: any, trainerId: string) {
+export async function getHotLeads(args: any, trainerId: string) {
     const { minScore = 70 } = args
 
     // 1. Fetch trainer's specialty to ensure relevance
