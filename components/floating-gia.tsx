@@ -157,7 +157,10 @@ export function FloatingGIA() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
+          messages: [...messages, userMessage].map(m => ({
+            role: m.role,
+            content: m.content
+          })),
           files: sentFiles,
           mode: selectedMode,
         }),
@@ -167,23 +170,53 @@ export function FloatingGIA() {
         throw new Error("Chat request failed")
       }
 
-      const data = await response.json()
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let accumulatedResponse = ""
 
+      // Create placeholder message
+      const assistantMessageId = (Date.now() + 1).toString()
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: assistantMessageId,
         role: "assistant",
-        content: data.response,
+        content: "",
         timestamp: new Date(),
-        program: data.program ? {
-          title: data.program.title,
-          type: data.program.type,
-          sportCategory: data.program.sportCategory,
-          canSave: data.program.canSave,
-          data: data.program
-        } : undefined
       }
 
       setMessages((prev) => [...prev, assistantMessage])
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n')
+
+          for (const line of lines) {
+            if (line.startsWith('0:')) {
+              try {
+                const jsonStr = line.slice(2)
+                const data = JSON.parse(jsonStr)
+                if (data && typeof data === 'string') {
+                  accumulatedResponse += data
+                  // Update message content in real-time
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === assistantMessageId
+                        ? { ...msg, content: accumulatedResponse }
+                        : msg
+                    )
+                  )
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error("Chat error:", error)
       toast({
