@@ -97,6 +97,7 @@ export async function searchApolloContacts(params: ApolloSearchParams): Promise<
 
 // Predefined search templates for fitness industry
 export const FITNESS_SEARCH_TEMPLATES = {
+    // B2B Templates
     corporateWellness: {
         personTitles: [
             'HR Director',
@@ -125,5 +126,54 @@ export const FITNESS_SEARCH_TEMPLATES = {
             'Sports Performance Director'
         ],
         organizationIndustries: ['Sports', 'Education', 'Recreation']
+    },
+
+    // B2C Templates (Individual Consumers)
+    highIncomeIndividuals: {
+        personTitles: [
+            'VP',
+            'Vice President',
+            'Director',
+            'Senior Director',
+            'Founder',
+            'CEO',
+            'Managing Director',
+            'Partner'
+        ],
+        organizationIndustries: ['Technology', 'Finance', 'Consulting', 'Real Estate', 'Legal'],
+        organizationNumEmployeesRanges: ['11-50', '51-200', '201-500'] // Smaller companies = more accessible
+    },
+    techProfessionals: {
+        personTitles: [
+            'Software Engineer',
+            'Product Manager',
+            'Engineering Manager',
+            'Tech Lead',
+            'Data Scientist',
+            'UX Designer'
+        ],
+        organizationIndustries: ['Technology', 'Software', 'Internet'],
+        organizationNumEmployeesRanges: ['51-200', '201-500', '501-1000']
+    },
+    financeProfessionals: {
+        personTitles: [
+            'Investment Banker',
+            'Financial Advisor',
+            'Portfolio Manager',
+            'Analyst',
+            'Trader',
+            'Wealth Manager'
+        ],
+        organizationIndustries: ['Finance', 'Investment Banking', 'Venture Capital', 'Private Equity']
+    },
+    entrepreneurs: {
+        personTitles: [
+            'Founder',
+            'Co-Founder',
+            'CEO',
+            'Entrepreneur',
+            'Business Owner'
+        ],
+        organizationNumEmployeesRanges: ['1-10', '11-50', '51-200']
     }
 }

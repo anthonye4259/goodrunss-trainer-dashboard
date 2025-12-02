@@ -227,19 +227,34 @@ async function generateApolloLeads(trainer: TrainerProfile): Promise<GeneratedLe
     const leads: GeneratedLead[] = []
 
     try {
-        // Use corporate wellness template
+        // Randomly choose between B2B and B2C templates for variety
+        const templates = [
+            { name: 'corporateWellness', type: 'B2B' },
+            { name: 'highIncomeIndividuals', type: 'B2C' },
+            { name: 'techProfessionals', type: 'B2C' },
+            { name: 'financeProfessionals', type: 'B2C' },
+            { name: 'entrepreneurs', type: 'B2C' }
+        ]
+
+        const selectedTemplate = templates[Math.floor(Math.random() * templates.length)]
+        const templateKey = selectedTemplate.name as keyof typeof FITNESS_SEARCH_TEMPLATES
+
         const searchParams = {
-            ...FITNESS_SEARCH_TEMPLATES.corporateWellness,
+            ...FITNESS_SEARCH_TEMPLATES[templateKey],
             organizationLocations: trainer.state ? [trainer.state] : undefined,
             perPage: 10
         }
 
         const result = await searchApolloContacts(searchParams)
 
-        for (const contact of result.contacts.slice(0, 5)) { // Top 5
+        for (const contact of result.contacts.slice(0, 3)) { // Top 3
             const matchScore = calculateApolloMatchScore(contact, trainer)
 
             if (matchScore >= 60) {
+                const context = selectedTemplate.type === 'B2B'
+                    ? `Corporate wellness opportunity - ${contact.organization_name}`
+                    : `High-value individual client - ${contact.title}`
+
                 leads.push({
                     trainerId: trainer.id,
                     name: contact.name,
@@ -252,7 +267,7 @@ async function generateApolloLeads(trainer: TrainerProfile): Promise<GeneratedLe
                     sourceUrl: contact.linkedin_url,
                     sourceData: contact,
                     content: `${contact.title} at ${contact.organization_name}`,
-                    context: `Corporate wellness opportunity - ${contact.organization_name}`,
+                    context,
                     matchScore,
                     draftReply: null
                 })
