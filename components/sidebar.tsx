@@ -53,7 +53,6 @@ export function Sidebar() {
     // Business (3 items)
     { name: "Business", href: "/dashboard/business", icon: DollarSign },
     { name: "Services", href: "/dashboard/services-hub", icon: ShoppingBag },
-    { name: "Growth", href: "/dashboard/growth", icon: TrendingUp, tourId: "social-share" },
 
     // Training & Client Tools (2 items)
     { name: "Training", href: "/dashboard/training", icon: ClipboardList, tourId: "ai-features" },

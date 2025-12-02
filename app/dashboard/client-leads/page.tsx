@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, Users, Mail, Phone, MapPin, Clock, TrendingUp, CheckCircle2, Send, Loader2 } from 'lucide-react'
+import { Sparkles, Users, Mail, Phone, MapPin, Clock, TrendingUp, CheckCircle2, Send, Loader2, MessageCircle } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 
 export default function ClientLeadsPage() {
@@ -36,8 +36,8 @@ export default function ClientLeadsPage() {
           level: match.lead?.experienceLevel || 'Not specified',
           location: match.lead?.city ? `${match.lead.city}, ${match.lead.state}` : 'Not specified',
           preferredTime: match.lead?.availableTimes?.join(', ') || 'Flexible',
-          status: match.status === 'accepted' ? 'converted' : 
-                  match.status === 'sent_to_trainer' ? 'contacted' : 'new',
+          status: match.status === 'accepted' ? 'converted' :
+            match.status === 'sent_to_trainer' ? 'contacted' : 'new',
           matchScore: Math.round(match.overallScore),
           notes: match.lead?.additionalNotes || match.matchReasons?.join('. ') || '',
           goals: match.lead?.fitnessGoals || [],
@@ -89,7 +89,7 @@ export default function ClientLeadsPage() {
 
   const handleContact = async (leadId: number, method: string) => {
     setLoading(true)
-    
+
     try {
       const lead = leads.find(l => l.id === leadId)
       if (!lead) throw new Error('Lead not found')
@@ -183,7 +183,7 @@ export default function ClientLeadsPage() {
   const newLeadsCount = leads.filter((l) => l.status === "new").length
   const contactedCount = leads.filter((l) => l.status === "contacted").length
   const convertedCount = leads.filter((l) => l.status === "converted").length
-  const avgMatchScore = leads.length > 0 
+  const avgMatchScore = leads.length > 0
     ? Math.round(leads.reduce((sum, l) => sum + l.matchScore, 0) / leads.length)
     : 0
 
@@ -199,14 +199,20 @@ export default function ClientLeadsPage() {
     <div className="space-y-6 p-8">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-            <Sparkles className="h-6 w-6 text-primary" />
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+              <Sparkles className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-white">Client Leads</h1>
+              <p className="text-muted-foreground">Real potential clients matched to your expertise</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-4xl font-bold text-white">Client Leads</h1>
-            <p className="text-muted-foreground">Real potential clients matched to your expertise</p>
-          </div>
+          <Button onClick={() => window.location.href = '/dashboard/client-leads/social'} className="gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80">
+            <MessageCircle className="h-4 w-4" />
+            Social Scanner
+          </Button>
         </div>
       </div>
 
