@@ -23,6 +23,17 @@ function getMessageContent(content: string | Array<any>): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if OpenAI API key is configured
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('[GIA Chat] OPENAI_API_KEY is not configured')
+      return new Response(JSON.stringify({
+        error: 'OpenAI API key is not configured. Please add OPENAI_API_KEY to your environment variables.'
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
     const authUser = await getOrCreateUser()
 
     if (!authUser) {
@@ -436,6 +447,18 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('[GIA Chat] Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 })
+    console.error('[GIA Chat] Error stack:', error.stack)
+    console.error('[GIA Chat] Error details:', {
+      message: error.message,
+      name: error.name,
+      cause: error.cause
+    })
+    return new Response(JSON.stringify({
+      error: error.message || 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 }
