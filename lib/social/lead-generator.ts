@@ -1,5 +1,6 @@
-// Lead Generator Orchestrator - Combines Reddit, Apollo, and Hunter
+// Lead Generator Orchestrator - Combines Reddit and Apollo for consumer + B2B leads
 
+import { searchReddit } from './reddit'
 import { searchApolloContacts, FITNESS_SEARCH_TEMPLATES } from './apollo'
 import { prisma } from '@/lib/prisma'
 
@@ -11,7 +12,7 @@ export interface GeneratedLead {
     company: string | null
     title: string | null
     location: string | null
-    source: 'apollo'
+    source: 'reddit' | 'apollo'
     sourceUrl: string | null
     sourceData: any
     content: string
@@ -33,17 +34,21 @@ export async function generateLeadsForTrainer(trainer: TrainerProfile): Promise<
     const leads: GeneratedLead[] = []
 
     try {
-        // 1. Apollo Leads (Fetch more since it's the only source)
+        // 1. Reddit Leads (consumer-focused, 5 leads)
+        const redditLeads = await generateRedditLeads(trainer)
+        leads.push(...redditLeads)
+
+        // 2. Apollo Leads (B2B opportunities, 5 leads)
         const apolloLeads = await generateApolloLeads(trainer)
         leads.push(...apolloLeads)
 
-        // 2. Generate draft replies using Gia
+        // 3. Generate draft replies using Gia
         await generateDraftReplies(leads, trainer)
 
-        // 3. Sort by match score
+        // 4. Sort by match score
         leads.sort((a, b) => b.matchScore - a.matchScore)
 
-        // 4. Take top 10
+        // 5. Take top 10
         return leads.slice(0, 10)
     } catch (error) {
         console.error('Error generating leads for trainer:', trainer.id, error)
@@ -51,7 +56,76 @@ export async function generateLeadsForTrainer(trainer: TrainerProfile): Promise<
     }
 }
 
+async function generateRedditLeads(trainer: TrainerProfile): Promise<GeneratedLead[]> {
+    const leads: GeneratedLead[] = []
 
+    // Build search query based on specialty
+    const specialty = trainer.specialties?.[0] || 'fitness'
+    const queries = [
+        `looking for ${specialty} coach`,
+        `${specialty} trainer needed`,
+        `need ${specialty} help`,
+        `${specialty} recommendations`
+    ]
+
+    for (const query of queries.slice(0, 2)) { // Limit to 2 queries
+        try {
+            const result = await searchReddit(query, 5)
+
+            for (const post of result.posts.slice(0, 3)) { // Top 3 per query
+                const matchScore = calculateRedditMatchScore(post, trainer)
+
+                if (matchScore >= 50) { // Only include decent matches
+                    leads.push({
+                        trainerId: trainer.id,
+                        name: post.author,
+                        email: null,
+                        phone: null,
+                        company: null,
+                        title: null,
+                        location: null,
+                        source: 'reddit',
+                        sourceUrl: post.permalink,
+                        sourceData: post,
+                        content: `${post.title}\n\n${post.selftext}`,
+                        context: `Posted in r/${post.subreddit} about ${specialty}`,
+                        matchScore,
+                        draftReply: null
+                    })
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching Reddit leads:', error)
+        }
+    }
+
+    return leads
+}
+
+function calculateRedditMatchScore(post: any, trainer: TrainerProfile): number {
+    let score = 50 // Base score
+
+    const specialty = trainer.specialties?.[0]?.toLowerCase() || ''
+    const content = `${post.title} ${post.selftext}`.toLowerCase()
+
+    // Specialty match
+    if (content.includes(specialty)) score += 20
+
+    // Recency (within 24 hours = +10, within week = +5)
+    const ageHours = (Date.now() - post.created_utc * 1000) / (1000 * 60 * 60)
+    if (ageHours < 24) score += 10
+    else if (ageHours < 168) score += 5
+
+    // Engagement
+    if (post.score > 10) score += 5
+    if (post.num_comments < 5) score += 10 // Less competition
+
+    // Quality indicators
+    if (post.selftext.length > 100) score += 5 // Detailed post
+    if (content.includes('looking for') || content.includes('need help')) score += 10
+
+    return Math.min(100, Math.max(0, score))
+}
 
 async function generateApolloLeads(trainer: TrainerProfile): Promise<GeneratedLead[]> {
     const leads: GeneratedLead[] = []
@@ -61,12 +135,12 @@ async function generateApolloLeads(trainer: TrainerProfile): Promise<GeneratedLe
         const searchParams = {
             ...FITNESS_SEARCH_TEMPLATES.corporateWellness,
             organizationLocations: trainer.state ? [trainer.state] : undefined,
-            perPage: 15 // Fetch more to filter
+            perPage: 10
         }
 
         const result = await searchApolloContacts(searchParams)
 
-        for (const contact of result.contacts.slice(0, 10)) { // Top 10
+        for (const contact of result.contacts.slice(0, 5)) { // Top 5
             const matchScore = calculateApolloMatchScore(contact, trainer)
 
             if (matchScore >= 60) {
