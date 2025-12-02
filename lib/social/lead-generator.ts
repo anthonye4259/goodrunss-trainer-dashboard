@@ -301,7 +301,7 @@ Specialty: ${trainer.specialties?.[0] || 'Fitness'}
 
 ${memoryPrompt}
 
-Draft a ${lead.source === 'reddit' ? 'Reddit reply' : lead.source === 'twitter' ? 'Twitter reply' : 'LinkedIn/email message'} that:
+Draft a ${lead.source === 'reddit' ? 'Reddit reply' : lead.source === 'craigslist' ? 'Craigslist reply' : 'LinkedIn/email message'} that:
 - Is helpful and non-salesy
 - Offers genuine value
 - Subtly positions the trainer as an expert
