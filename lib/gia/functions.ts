@@ -98,9 +98,13 @@ export async function getHotLeads(args: any, trainerId: string) {
 
     // 3. If real leads exist, return them
     if (leads.length > 0) {
+        const formattedLeads = leads.map((l, i) =>
+            `${i + 1}. **${l.name}** (${l.matchScore}% match)\n   - Source: ${l.source}\n   - Notes: ${l.context || l.content}\n   - Location: ${l.location || 'Not specified'}`
+        ).join('\n\n')
+
         return {
             success: true,
-            message: `Found ${leads.length} hot leads with score >= ${minScore}`,
+            message: `Found ${leads.length} hot leads with score >= ${minScore}:\n\n${formattedLeads}\n\nWould you like me to draft outreach messages for any of these leads?`,
             leads: leads.map(l => ({
                 id: l.id,
                 name: l.name,
@@ -118,9 +122,14 @@ export async function getHotLeads(args: any, trainerId: string) {
     const mockLeads = generateMockLeadsForSpecialty(mainSpecialty)
     const filteredMock = mockLeads.filter(l => l.score >= minScore)
 
+    // Format leads as a readable message
+    const formattedLeads = filteredMock.map((l, i) =>
+        `${i + 1}. **${l.name}** (${l.score}% match)\n   - Sport: ${l.sport}\n   - Notes: ${l.notes}\n   - Location: ${l.location}`
+    ).join('\n\n')
+
     return {
         success: true,
-        message: `I didn't find any *new* real leads right now (check back tomorrow!), but here are some examples of the high-quality ${mainSpecialty} leads I can find for you:`,
+        message: `I didn't find any *new* real leads right now (check back tomorrow!), but here are some examples of the high-quality ${mainSpecialty} leads I can find for you:\n\n${formattedLeads}\n\nWould you like me to draft outreach messages for any of these leads?`,
         leads: filteredMock.map(l => ({ ...l, isReal: false }))
     }
 }
