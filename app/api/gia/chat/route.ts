@@ -306,15 +306,17 @@ export async function POST(request: NextRequest) {
           }
         },
         getHotLeads: {
-          description: 'Fetch the hottest leads matched for the trainer. Use this when the trainer asks for "new leads", "opportunities", or "who should I contact".',
+          description: 'Fetch hot client leads for the trainer. Use this when the trainer asks: "find leads", "get leads", "show me leads", "generate leads", "who should I contact", or any variation asking for potential clients. ALWAYS use this tool when leads are mentioned.',
           inputSchema: z.object({}),
           execute: async () => {
             try {
-              // Call the function directly instead of fetching API
-              // This ensures we use the real database logic with smart fallbacks
-              return await getHotLeads({}, dbUser.id)
+              console.log('[GIA Chat] Calling getHotLeads tool')
+              const result = await getHotLeads({}, dbUser.id)
+              console.log('[GIA Chat] getHotLeads result:', JSON.stringify(result, null, 2))
+              return result
             } catch (error: any) {
-              return { error: error.message }
+              console.error('[GIA Chat] getHotLeads error:', error)
+              return { success: false, error: error.message }
             }
           }
         },
