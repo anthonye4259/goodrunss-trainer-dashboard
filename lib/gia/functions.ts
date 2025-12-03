@@ -72,6 +72,7 @@ export async function executeToolCall(
 // ... existing functions ...
 
 export async function getHotLeads(args: any, trainerId: string) {
+    console.log('[GIA Functions] getHotLeads called', { args, trainerId })
     const { minScore = 70 } = args
 
     // 1. Fetch trainer's specialty to ensure relevance
