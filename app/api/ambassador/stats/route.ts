@@ -1,18 +1,46 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuth } from "@clerk/nextjs/server"
 import { prisma } from "@/lib/prisma"
+import { cookies } from "next/headers"
 
 export async function GET(req: NextRequest) {
     try {
         const { userId } = getAuth(req)
         const { searchParams } = new URL(req.url)
         const email = searchParams.get("email")
+        
+        // Check for ambassador session cookie (magic link auth)
+        const cookieStore = await cookies()
+        const sessionToken = cookieStore.get("ambassador_session")?.value
 
         let ambassador
 
-        // Support both authenticated users and email-based lookups
-        if (email) {
-            // Public ambassador lookup by email
+        // Priority 1: Check ambassador session cookie (magic link login)
+        if (sessionToken) {
+            const session = await prisma.ambassador_sessions.findUnique({
+                where: { sessionToken },
+                include: { 
+                    ambassador: {
+                        include: {
+                            referrals: {
+                                include: {
+                                    referredUser: true,
+                                    commissions: true
+                                }
+                            },
+                            commissions: true
+                        }
+                    }
+                }
+            })
+
+            if (session && session.expiresAt > new Date()) {
+                ambassador = session.ambassador
+            }
+        }
+        
+        // Priority 2: Email-based lookup
+        if (!ambassador && email) {
             ambassador = await prisma.ambassadors.findUnique({
                 where: { email },
                 include: {
@@ -25,8 +53,10 @@ export async function GET(req: NextRequest) {
                     commissions: true
                 }
             })
-        } else if (userId) {
-            // Authenticated user lookup
+        }
+        
+        // Priority 3: Clerk authenticated user lookup
+        if (!ambassador && userId) {
             const user = await prisma.users.findUnique({
                 where: { clerkId: userId },
                 include: {
@@ -44,12 +74,13 @@ export async function GET(req: NextRequest) {
                 }
             })
 
-            if (!user) {
-                return NextResponse.json({ error: "User not found" }, { status: 404 })
+            if (user) {
+                ambassador = user.ambassador
             }
-
-            ambassador = user.ambassador
-        } else {
+        }
+        
+        // No authentication method succeeded
+        if (!ambassador && !sessionToken && !email && !userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
