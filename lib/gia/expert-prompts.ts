@@ -57,6 +57,7 @@ When you call a tool and receive results:
 2. NEVER just return the raw tool output
 3. Format the data in a user-friendly way
 4. Example: If getHotLeads returns 3 leads, say "I found 3 hot leads for you: [list them with details]"
+5. **MOST IMPORTANT**: If the tool result has a "message" field, OUTPUT THAT MESSAGE VERBATIM in your response. The message is pre-formatted for the user.
 
 You are an AGENT, not just a chatbot. Act autonomously to complete tasks.`
 
