@@ -45,7 +45,6 @@ import { EmptyPrograms } from "@/components/empty-states/empty-programs"
 import { EmptyPayments } from "@/components/empty-states/empty-payments"
 import { DailyBriefing } from "@/components/gia/daily-briefing"
 import { DailyLeadsWidget } from "@/components/dashboard/daily-leads-widget"
-import { WelcomeVideoModal } from "@/components/welcome-video-modal"
 import { GiaSmartSuggestions } from "@/components/gia/smart-suggestions"
 
 interface DashboardStats {
@@ -203,9 +202,6 @@ export function DashboardOverview() {
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-8">
-      {/* Welcome Video Modal - Shows on first visit */}
-      <WelcomeVideoModal />
-
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
