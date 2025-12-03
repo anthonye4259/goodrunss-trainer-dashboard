@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import crypto from "crypto"
+import { cookies } from "next/headers"
 
 export async function POST(req: NextRequest) {
     try {
@@ -46,9 +47,19 @@ export async function POST(req: NextRequest) {
             }
         })
 
+        // Set HttpOnly cookie
+        const cookieStore = await cookies()
+        cookieStore.set("ambassador_session", sessionToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 30 * 24 * 60 * 60 // 30 days
+        })
+
         return NextResponse.json({
             success: true,
-            sessionToken,
+            // sessionToken, // No longer needed in response body as it's in cookie
             ambassador: {
                 id: magicLink.ambassador.id,
                 email: magicLink.ambassador.email,

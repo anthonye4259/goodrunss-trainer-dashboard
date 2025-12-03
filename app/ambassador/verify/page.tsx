@@ -33,8 +33,7 @@ function VerifyContent() {
             const data = await res.json()
 
             if (res.ok) {
-                // Set session cookie
-                document.cookie = `ambassador_session=${data.sessionToken}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`
+                // Cookie is now set by the server (HttpOnly)
 
                 setStatus("success")
                 setMessage("Login successful! Redirecting...")
