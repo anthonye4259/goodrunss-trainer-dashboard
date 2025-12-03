@@ -161,6 +161,33 @@ export async function POST(request: NextRequest) {
       specialization = mode as keyof typeof SPECIALIZATION_PROMPTS
     }
 
+    // Check if this is a leads-related query and execute directly
+    const isLeadsQuery = messageText.includes('lead') || 
+                         messageText.includes('find client') || 
+                         messageText.includes('potential client') ||
+                         messageText.includes('prospect') ||
+                         messageText.includes('who should i contact')
+    
+    if (isLeadsQuery) {
+      console.log('[GIA Chat] Detected leads query, executing getHotLeads directly')
+      const leadsResult = await getHotLeads({}, dbUser.id)
+      console.log('[GIA Chat] Leads result:', leadsResult)
+      
+      if (leadsResult.success && leadsResult.message) {
+        // Return the leads directly
+        const encoder = new TextEncoder()
+        const stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode(leadsResult.message))
+            controller.close()
+          }
+        })
+        return new Response(stream, {
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+        })
+      }
+    }
+
     // Load relevant memories for this trainer
     const { getRelevantMemories, formatMemoriesForPrompt } = await import('@/lib/gia/memory')
     const conversationContext = messages.map(m => getMessageContent(m.content)).join(' ')
