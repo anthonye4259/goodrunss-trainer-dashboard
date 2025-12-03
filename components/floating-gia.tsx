@@ -166,7 +166,7 @@ export function FloatingGIA() {
                 ref={scrollAreaRef}
               >
                 <div className="space-y-4">
-                  {messages.map((message) => (
+                  {messages.map((message: any) => (
                     <div
                       key={message.id}
                       className={cn(
