@@ -190,44 +190,23 @@ export function FloatingGIA() {
 
       if (reader) {
         try {
-          let buffer = ''
-
           while (true) {
             const { done, value } = await reader.read()
             if (done) break
 
             const chunk = decoder.decode(value, { stream: true })
-            buffer += chunk
 
-            // AI SDK data stream format: newline-delimited JSON
-            const lines = buffer.split('\n')
-            buffer = lines.pop() || '' // Keep incomplete line in buffer
+            // AI SDK text stream format: each chunk is just text
+            accumulatedResponse += chunk
 
-            for (const line of lines) {
-              if (!line.trim()) continue
-
-              try {
-                // Data stream format: "0:{json}" for text chunks
-                if (line.startsWith('0:')) {
-                  const textChunk = JSON.parse(line.slice(2))
-                  if (typeof textChunk === 'string') {
-                    accumulatedResponse += textChunk
-
-                    // Update message content in real-time
-                    setMessages((prev) =>
-                      prev.map((msg) =>
-                        msg.id === assistantMessageId
-                          ? { ...msg, content: accumulatedResponse }
-                          : msg
-                      )
-                    )
-                  }
-                }
-                // Ignore other stream types (tool calls, etc.) for now
-              } catch (e) {
-                console.error('Failed to parse stream line:', line, e)
-              }
-            }
+            // Update message content in real-time
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessageId
+                  ? { ...msg, content: accumulatedResponse }
+                  : msg
+              )
+            )
           }
         } catch (streamError) {
           console.error("Stream reading error:", streamError)

@@ -444,9 +444,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Use toDataStreamResponse instead of toTextStreamResponse
-    // This properly handles tool calls and ensures the model generates a final response
-    return result.toDataStreamResponse()
+    return result.toTextStreamResponse()
 
   } catch (error: any) {
     console.error('[GIA Chat] Error:', error)
