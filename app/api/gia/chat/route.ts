@@ -427,13 +427,47 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    console.log('[GIA Chat] Result:', {
+      hasText: !!result.text,
+      textLength: result.text?.length,
+      toolCalls: result.toolCalls?.length || 0,
+      toolResults: result.toolResults?.length || 0
+    })
+
+    // Build response text - use text if available, otherwise format tool results
+    let responseText = result.text || ''
+
+    // If we have tool results but no text, format the tool results as the response
+    if (!responseText && result.toolResults && result.toolResults.length > 0) {
+      console.log('[GIA Chat] No text response, formatting tool results')
+      const toolMessages = result.toolResults.map((tr: any) => {
+        if (tr.result?.message) {
+          return tr.result.message
+        }
+        if (tr.result?.success && tr.result?.leads) {
+          // Format leads response
+          const leads = tr.result.leads
+          return `Found ${leads.length} leads:\n\n${leads.map((l: any, i: number) => 
+            `${i + 1}. **${l.name}** (${l.score}% match)\n   - ${l.notes || l.sport}\n   - Location: ${l.location || 'Not specified'}`
+          ).join('\n\n')}`
+        }
+        return JSON.stringify(tr.result, null, 2)
+      })
+      responseText = toolMessages.join('\n\n')
+    }
+
+    // If still no response, provide a fallback
+    if (!responseText) {
+      responseText = "I processed your request but couldn't generate a detailed response. Please try rephrasing your question."
+    }
+
     // Extract memories in the background after response
-    if (dbUser && result.text) {
+    if (dbUser && responseText) {
       const { extractAndStoreMemories } = await import('@/lib/gia/memory-extraction')
       const fullConversation = [
         ...coreMessages,
         { role: 'user', content: lastMessageContent },
-        { role: 'assistant', content: result.text }
+        { role: 'assistant', content: responseText }
       ]
       extractAndStoreMemories(dbUser.id, fullConversation).catch(err =>
         console.error('Background memory extraction failed:', err)
@@ -444,8 +478,7 @@ export async function POST(request: NextRequest) {
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       start(controller) {
-        // Send the full text response
-        controller.enqueue(encoder.encode(result.text))
+        controller.enqueue(encoder.encode(responseText))
         controller.close()
       }
     })
