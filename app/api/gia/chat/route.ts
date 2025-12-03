@@ -425,7 +425,6 @@ export async function POST(request: NextRequest) {
           }
         }
       },
-      maxSteps: 5, // Allow multiple tool calls
     })
 
     // Extract memories in the background after response
