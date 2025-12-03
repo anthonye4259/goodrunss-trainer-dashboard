@@ -44,7 +44,7 @@ export function FloatingGIA() {
         variant: "destructive",
       })
     },
-  })
+  }) as any
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
