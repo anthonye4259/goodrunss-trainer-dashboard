@@ -7,9 +7,36 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { User, Save, Loader2, CheckCircle, Calendar, CheckCircle2, Unlink } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { User, Save, Loader2, CheckCircle, Calendar, CheckCircle2, Unlink, X, Target } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useSearchParams } from "next/navigation"
+
+const specialtyOptions = [
+  { value: "basketball", label: "Basketball Coach", emoji: "🏀" },
+  { value: "pickleball", label: "Pickleball Instructor", emoji: "🏓" },
+  { value: "tennis", label: "Tennis Instructor", emoji: "🎾" },
+  { value: "volleyball", label: "Volleyball Coach", emoji: "🏐" },
+  { value: "yoga", label: "Yoga Instructor", emoji: "🧘‍♀️" },
+  { value: "pilates", label: "Pilates Instructor", emoji: "🤸‍♀️" },
+  { value: "barre", label: "Barre Instructor", emoji: "💃" },
+  { value: "strength", label: "Strength & Conditioning", emoji: "💪" },
+  { value: "hiit", label: "HIIT Trainer", emoji: "⚡" },
+  { value: "crossfit", label: "CrossFit Coach", emoji: "🏋️‍♀️" },
+  { value: "running", label: "Running Coach", emoji: "🏃‍♀️" },
+  { value: "cycling", label: "Cycling Coach", emoji: "🚴‍♀️" },
+  { value: "swimming", label: "Swimming Coach", emoji: "🏊‍♀️" },
+  { value: "martial-arts", label: "Martial Arts Instructor", emoji: "🥋" },
+  { value: "boxing", label: "Boxing Coach", emoji: "🥊" },
+  { value: "dance", label: "Dance Instructor", emoji: "💃" },
+  { value: "soccer", label: "Soccer Coach", emoji: "⚽" },
+  { value: "golf", label: "Golf Instructor", emoji: "⛳" },
+  { value: "nutrition", label: "Nutrition Coach", emoji: "🥗" },
+  { value: "wellness", label: "Wellness Coach", emoji: "🌿" },
+  { value: "performance", label: "Sports Performance", emoji: "🎯" },
+  { value: "general", label: "General Training", emoji: "💪" },
+]
 
 function SettingsContent() {
   const { toast } = useToast()
@@ -30,6 +57,7 @@ function SettingsContent() {
     state: "",
     country: "US",
     timezone: "America/New_York",
+    specialties: [] as string[],
   })
 
   // Load settings on mount
@@ -90,6 +118,7 @@ function SettingsContent() {
         state: data.settings.state || "",
         country: data.settings.country || "US",
         timezone: data.settings.timezone || "America/New_York",
+        specialties: data.settings.specialties || [],
       })
     } catch (err: any) {
       console.error("Load settings error:", err)
@@ -333,6 +362,100 @@ function SettingsContent() {
               <>
                 <Save className="h-4 w-4" />
                 Save Profile
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Training Specialties */}
+      <Card className="glass border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-primary" />
+            Training Specialties
+          </CardTitle>
+          <CardDescription>
+            Select the sports and activities you teach. This helps us find relevant leads for you.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Current Specialties */}
+          {profile.specialties.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {profile.specialties.map((spec) => {
+                const option = specialtyOptions.find(o => o.value === spec)
+                return (
+                  <Badge 
+                    key={spec} 
+                    variant="secondary" 
+                    className="text-sm py-1.5 px-3 gap-2"
+                  >
+                    <span>{option?.emoji}</span>
+                    <span>{option?.label || spec}</span>
+                    <button
+                      onClick={() => setProfile({
+                        ...profile,
+                        specialties: profile.specialties.filter(s => s !== spec)
+                      })}
+                      className="ml-1 hover:text-destructive"
+                      disabled={isSaving}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Add Specialty */}
+          <div className="flex gap-2">
+            <Select
+              onValueChange={(value) => {
+                if (!profile.specialties.includes(value)) {
+                  setProfile({
+                    ...profile,
+                    specialties: [...profile.specialties, value]
+                  })
+                }
+              }}
+              disabled={isSaving}
+            >
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Add a specialty..." />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                {specialtyOptions
+                  .filter(opt => !profile.specialties.includes(opt.value))
+                  .map((spec) => (
+                    <SelectItem key={spec.value} value={spec.value}>
+                      <span className="flex items-center gap-2">
+                        <span>{spec.emoji}</span>
+                        <span>{spec.label}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {profile.specialties.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-lg">
+              No specialties selected. Add at least one to get personalized leads!
+            </p>
+          )}
+
+          <Button onClick={handleSaveProfile} disabled={isSaving} className="gap-2 w-full">
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save Specialties
               </>
             )}
           </Button>
