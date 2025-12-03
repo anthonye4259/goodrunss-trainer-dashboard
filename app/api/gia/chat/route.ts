@@ -196,6 +196,7 @@ export async function POST(request: NextRequest) {
         { role: 'user', content: lastMessageContent }
       ],
       temperature: 0.7,
+      maxSteps: 5, // Enable multi-step tool execution
       tools: {
         sendSMS: {
           description: 'Send SMS messages to clients via Twilio. Can send to specific clients, all clients, or custom phone numbers. Use this when the trainer asks to send messages, reminders, or bulk communications.',
