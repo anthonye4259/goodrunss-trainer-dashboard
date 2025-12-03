@@ -33,8 +33,8 @@ export async function GET(request: NextRequest) {
         certifications: user.certifications || [],
         hourlyRate: user.hourlyRate || null,
         google_access_token: user.google_access_token || null,
-        primaryGoal: user.primaryGoal || null,
-        secondaryGoal: user.secondaryGoal || null,
+        primaryGoal: user.primary_goal || null,
+        secondaryGoal: user.secondary_goal || null,
       },
     })
   } catch (error: any) {
