@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { useChat } from '@ai-sdk/react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -19,45 +18,23 @@ import {
 import { cn } from "@/lib/utils"
 import { GIAModeSelector, type GIAMode } from "@/components/gia-mode-selector"
 
+type Message = {
+  id: string
+  role: "user" | "assistant"
+  content: string
+  timestamp: Date
+}
+
 export function FloatingGIA() {
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [selectedMode, setSelectedMode] = useState<GIAMode>('wellness')
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
-
-  // Use the AI SDK's useChat hook - handles tool calls automatically
-  // With the latest SDK, this should support input, handleInputChange, handleSubmit
-  const { messages, append, isLoading, error } = useChat({
-    api: '/api/gia/chat',
-    body: {
-      mode: selectedMode,
-    },
-    maxSteps: 5, // Enable multi-step on the client side too if supported, though server config matters most
-    onError: (error: any) => {
-      console.error('Chat error:', error)
-      toast({
-        title: "Request failed",
-        description: error.message || "GIA is temporarily unavailable. Please try again.",
-        variant: "destructive",
-      })
-    },
-  } as any) as any
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || isLoading) return
-
-    const userMessage = input.trim()
-    setInput("")
-
-    await append({
-      role: 'user',
-      content: userMessage,
-    })
-  }
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -74,11 +51,105 @@ export function FloatingGIA() {
     const handleOpenGIA = (event: CustomEvent) => {
       setIsOpen(true)
       setIsMinimized(false)
+      if (event.detail?.prompt) {
+        setInput(event.detail.prompt)
+      }
     }
 
     window.addEventListener('openGIA', handleOpenGIA as EventListener)
     return () => window.removeEventListener('openGIA', handleOpenGIA as EventListener)
   }, [])
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input.trim(),
+      timestamp: new Date(),
+    }
+
+    const allMessages = [...messages, userMessage]
+    setMessages(allMessages)
+    setInput("")
+    setIsLoading(true)
+
+    // Add placeholder for assistant response
+    const assistantId = (Date.now() + 1).toString()
+    setMessages(prev => [...prev, {
+      id: assistantId,
+      role: "assistant",
+      content: "",
+      timestamp: new Date(),
+    }])
+
+    try {
+      const response = await fetch("/api/gia/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: allMessages.map(m => ({
+            role: m.role,
+            content: m.content
+          })),
+          mode: selectedMode,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Request failed with status ${response.status}`)
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error("No response body")
+      }
+
+      const decoder = new TextDecoder()
+      let fullContent = ""
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        fullContent += chunk
+
+        // Update the assistant message with streamed content
+        setMessages(prev => prev.map(m => 
+          m.id === assistantId 
+            ? { ...m, content: fullContent }
+            : m
+        ))
+      }
+
+      // If no content was received, show error
+      if (!fullContent.trim()) {
+        setMessages(prev => prev.map(m => 
+          m.id === assistantId 
+            ? { ...m, content: "I apologize, but I couldn't generate a response. Please try again." }
+            : m
+        ))
+      }
+
+    } catch (error: any) {
+      console.error("Chat error:", error)
+      
+      // Remove the placeholder message on error
+      setMessages(prev => prev.filter(m => m.id !== assistantId))
+      
+      toast({
+        title: "Request failed",
+        description: error.message || "GIA is temporarily unavailable. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <>
@@ -166,7 +237,14 @@ export function FloatingGIA() {
                 ref={scrollAreaRef}
               >
                 <div className="space-y-4">
-                  {messages.map((message: any) => (
+                  {messages.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Sparkles className="h-8 w-8 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm">Hi! I'm GIA, your AI assistant.</p>
+                      <p className="text-xs mt-1">Ask me anything about training, programming, or business.</p>
+                    </div>
+                  )}
+                  {messages.map((message) => (
                     <div
                       key={message.id}
                       className={cn(
@@ -190,7 +268,9 @@ export function FloatingGIA() {
                         )}
                       >
                         <div className="space-y-1 whitespace-pre-wrap">
-                          {message.content}
+                          {message.content || (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          )}
                         </div>
                       </div>
                       {message.role === "user" && (
@@ -202,24 +282,12 @@ export function FloatingGIA() {
                       )}
                     </div>
                   ))}
-                  {isLoading && (
-                    <div className="flex gap-2 justify-start">
-                      <Avatar className="h-7 w-7 bg-primary/10">
-                        <AvatarFallback>
-                          <Sparkles className="h-3 w-3 text-primary" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="bg-secondary rounded-lg p-3">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      </div>
-                    </div>
-                  )}
                 </div>
               </ScrollArea>
 
               {/* Input */}
               <CardContent className="p-3 border-t border-border/40">
-                <form onSubmit={handleSubmit} className="flex items-end gap-2">
+                <div className="flex items-end gap-2">
                   <Textarea
                     placeholder="Ask GIA..."
                     value={input}
@@ -227,7 +295,7 @@ export function FloatingGIA() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault()
-                        handleSubmit(e)
+                        handleSend()
                       }
                     }}
                     rows={1}
@@ -235,14 +303,14 @@ export function FloatingGIA() {
                     disabled={isLoading}
                   />
                   <Button
-                    type="submit"
+                    onClick={handleSend}
                     disabled={isLoading || !input.trim()}
                     size="icon"
                     className="h-8 w-8 flex-shrink-0 bg-primary hover:bg-primary/90"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
-                </form>
+                </div>
               </CardContent>
             </>
           )}
