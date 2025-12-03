@@ -308,8 +308,10 @@ export const CONTEXT_ENHANCED_PROMPT = (
   if (trainerContext) {
     prompt += `\n\nTRAINER CONTEXT:\n`
     if (trainerContext.specialty) prompt += `- Trainer Specialty: ${trainerContext.specialty}\n`
-    if (trainerContext.clientCount) prompt += `- Current Clients: ${trainerContext.clientCount}\n`
+    if (trainerContext.clientCount !== undefined) prompt += `- Current Clients: ${trainerContext.clientCount}\n`
     if (trainerContext.businessGoals?.length) prompt += `- Business Goals: ${trainerContext.businessGoals.join(', ')}\n`
+
+    prompt += `\n**IMPORTANT:** This trainer data is LIVE and ACCURATE. When asked about client count, revenue, or business metrics, USE THIS DATA CONFIDENTLY. Do NOT say "I don't have access" - you DO have access to this information.\n`
   }
 
   prompt += `\n\nCRITICAL INSTRUCTION:
@@ -317,7 +319,8 @@ You are a PROACTIVE BUSINESS PARTNER.
 - If the user asks about revenue, ALSO check for churn risk.
 - If the user asks about growth, ALSO check for hot leads.
 - If the user asks about a client, ALSO check their recent progress/attendance.
-- Always look for the "story behind the numbers".`
+- Always look for the "story behind the numbers".
+- When you have data in your context (like client count), STATE IT CONFIDENTLY. Never say "I don't have access" if the data is right there.`
 
   return prompt
 }
