@@ -25,10 +25,11 @@ export function FloatingGIA() {
     const [isMinimized, setIsMinimized] = useState(false)
     const [isFullscreen, setIsFullscreen] = useState(false)
     const [selectedMode, setSelectedMode] = useState<GIAMode>('wellness')
+    const [input, setInput] = useState("")
     const scrollAreaRef = useRef<HTMLDivElement>(null)
 
     // Use the AI SDK's useChat hook - handles tool calls automatically
-    const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
+    const { messages, append, isLoading, error } = useChat({
         api: '/api/gia/chat',
         body: {
             mode: selectedMode,
@@ -42,6 +43,19 @@ export function FloatingGIA() {
             })
         },
     })
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!input.trim() || isLoading) return
+
+        const userMessage = input.trim()
+        setInput("")
+
+        await append({
+            role: 'user',
+            content: userMessage,
+        })
+    }
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
@@ -207,7 +221,7 @@ export function FloatingGIA() {
                                     <Textarea
                                         placeholder="Ask GIA..."
                                         value={input}
-                                        onChange={handleInputChange}
+                                        onChange={(e) => setInput(e.target.value)}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter" && !e.shiftKey) {
                                                 e.preventDefault()
