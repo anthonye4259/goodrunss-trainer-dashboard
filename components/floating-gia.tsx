@@ -36,7 +36,7 @@ export function FloatingGIA() {
       mode: selectedMode,
     },
     maxSteps: 5, // Enable multi-step on the client side too if supported, though server config matters most
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Chat error:', error)
       toast({
         title: "Request failed",
