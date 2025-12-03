@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getOrCreateUser } from "@/lib/get-or-create-user"
 import { openai } from '@ai-sdk/openai'
-import { streamText, CoreMessage } from 'ai'
+import { generateText, streamText, CoreMessage } from 'ai'
 import { z } from 'zod'
 import { SPECIALIZATION_PROMPTS, CONTEXT_ENHANCED_PROMPT } from '@/lib/gia/expert-prompts'
 import { prisma } from '@/lib/prisma'
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
     const coreMessages = messages.slice(0, -1)
     const lastMessageContent = `${lastUserMessage.content}${fileContext}${clientContextHint}`
 
-    const result = streamText({
+    const result = await generateText({
       model: openai('gpt-4o'), // Upgraded to GPT-4o for "Legora" level intelligence
       system: systemPrompt,
       messages: [
@@ -425,26 +425,37 @@ export async function POST(request: NextRequest) {
           }
         }
       },
-      onFinish: async (completion) => {
-        // Extract memories from the conversation in the background
-        if (dbUser) {
-          const { extractAndStoreMemories } = await import('@/lib/gia/memory-extraction')
-          // Include the AI's response in the analysis
-          const fullConversation = [
-            ...coreMessages,
-            { role: 'user', content: lastMessageContent },
-            { role: 'assistant', content: completion.text }
-          ]
+      maxSteps: 5, // Allow multiple tool calls
+    })
 
-          // Fire and forget - don't await this to keep response fast
-          extractAndStoreMemories(dbUser.id, fullConversation).catch(err =>
-            console.error('Background memory extraction failed:', err)
-          )
-        }
+    // Extract memories in the background after response
+    if (dbUser && result.text) {
+      const { extractAndStoreMemories } = await import('@/lib/gia/memory-extraction')
+      const fullConversation = [
+        ...coreMessages,
+        { role: 'user', content: lastMessageContent },
+        { role: 'assistant', content: result.text }
+      ]
+      extractAndStoreMemories(dbUser.id, fullConversation).catch(err =>
+        console.error('Background memory extraction failed:', err)
+      )
+    }
+
+    // Return the text response as a stream for compatibility with frontend
+    const encoder = new TextEncoder()
+    const stream = new ReadableStream({
+      start(controller) {
+        // Send the full text response
+        controller.enqueue(encoder.encode(result.text))
+        controller.close()
       }
     })
 
-    return result.toTextStreamResponse()
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+      }
+    })
 
   } catch (error: any) {
     console.error('[GIA Chat] Error:', error)
