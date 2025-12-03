@@ -46,6 +46,7 @@ import { EmptyPayments } from "@/components/empty-states/empty-payments"
 import { DailyBriefing } from "@/components/gia/daily-briefing"
 import { DailyLeadsWidget } from "@/components/dashboard/daily-leads-widget"
 import { GiaSmartSuggestions } from "@/components/gia/smart-suggestions"
+import { ExploreBanner } from "@/components/explore-banner"
 
 interface DashboardStats {
   trainer: {
@@ -233,6 +234,9 @@ export function DashboardOverview() {
           </Button>
         </div>
       </div>
+
+      {/* Explore Banner - Hint about all the features */}
+      <ExploreBanner />
 
       {/* Gia's Daily Briefing - AI-Powered Insights */}
       <DailyBriefing />
