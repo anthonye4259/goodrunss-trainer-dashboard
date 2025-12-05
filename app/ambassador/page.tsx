@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Copy, DollarSign, Users, TrendingUp, Check, ExternalLink, Globe, CreditCard, History, MessageCircle, Link as LinkIcon } from "lucide-react"
+import { Copy, DollarSign, Users, TrendingUp, Check, ExternalLink, Globe, CreditCard, History, MessageCircle, Link as LinkIcon, BookOpen } from "lucide-react"
 import { translations, currencies } from "@/lib/translations"
 
 interface AmbassadorStats {
@@ -231,6 +231,14 @@ export default function AmbassadorDashboard() {
                                 <SelectItem value="AED">🇦🇪 AED</SelectItem>
                             </SelectContent>
                         </Select>
+
+                        <Button
+                            onClick={() => window.location.href = "/ambassador/library"}
+                            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold"
+                        >
+                            <BookOpen className="h-4 w-4 mr-2" />
+                            Library
+                        </Button>
 
                         <Button
                             onClick={handleLogout}

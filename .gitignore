@@ -45,3 +45,5 @@ prisma/*.db-journal
 # Sentry
 .sentryclirc
 
+public/ambassador-resources/*.mp4
+public/ambassador-resources/*.png
