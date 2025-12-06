@@ -47,3 +47,4 @@ prisma/*.db-journal
 
 public/ambassador-resources/*.mp4
 public/ambassador-resources/*.png
+ambassador-resource-urls.json

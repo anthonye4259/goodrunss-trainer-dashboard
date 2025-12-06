@@ -14,14 +14,14 @@ export default function AmbassadorLibrary() {
             title: "Ambassador Email Template",
             description: "Professional email template for ambassador outreach",
             type: "image",
-            file: "/ambassador-resources/AMBASSADOR EMAIL.png",
-            preview: "/ambassador-resources/AMBASSADOR EMAIL.png"
+            file: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/AMBASSADOR%20EMAIL.png",
+            preview: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/AMBASSADOR%20EMAIL.png"
         },
         {
             title: "Cold Outreach Email Templates",
             description: "Collection of proven cold outreach email templates",
             type: "document",
-            file: "/ambassador-resources/Cold Outreach Email Templates.docx"
+            file: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/Cold%20Outreach%20Email%20Templates.docx"
         }
     ]
 
@@ -30,47 +30,47 @@ export default function AmbassadorLibrary() {
             title: "Built for Trainers Video",
             description: "Promotional video showcasing trainer features",
             type: "video",
-            file: "/ambassador-resources/BUILT FOR TRAINERS video.mp4",
-            thumbnail: "/ambassador-resources/Post Template.png"
+            file: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/BUILT%20FOR%20TRAINERS%20video.mp4",
+            thumbnail: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/Post%20Template.png"
         },
         {
             title: "Story Template 3",
             description: "Engaging story format for social media",
             type: "video",
-            file: "/ambassador-resources/STORY TEMPLATE 3.mp4"
+            file: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/STORY%20TEMPLATE%203.mp4"
         },
         {
             title: "Story Template 4",
             description: "Alternative story format for variety",
             type: "video",
-            file: "/ambassador-resources/STORY TEMPLATE 4.mp4"
+            file: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/STORY%20TEMPLATE%204.mp4"
         },
         {
             title: "Story Template 5",
             description: "Premium story template",
             type: "video",
-            file: "/ambassador-resources/template 5.mp4"
+            file: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/template%205.mp4"
         },
         {
             title: "Post Template",
             description: "Static post template for Instagram/Facebook",
             type: "image",
-            file: "/ambassador-resources/Post Template.png",
-            preview: "/ambassador-resources/Post Template.png"
+            file: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/Post%20Template.png",
+            preview: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/Post%20Template.png"
         },
         {
             title: "Template 1",
             description: "Social media post template design 1",
             type: "image",
-            file: "/ambassador-resources/TEMPLATE 1.png",
-            preview: "/ambassador-resources/TEMPLATE 1.png"
+            file: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/TEMPLATE%201.png",
+            preview: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/TEMPLATE%201.png"
         },
         {
             title: "Template 2",
             description: "Social media post template design 2",
             type: "image",
-            file: "/ambassador-resources/TEMPLATE 2.png",
-            preview: "/ambassador-resources/TEMPLATE 2.png"
+            file: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/TEMPLATE%202.png",
+            preview: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/TEMPLATE%202.png"
         }
     ]
 
@@ -79,7 +79,7 @@ export default function AmbassadorLibrary() {
             title: "Promo Video Scripts",
             description: "Ready-to-use scripts for promotional videos",
             type: "document",
-            file: "/ambassador-resources/PROMO VIDEO SCRIPTS_.docx"
+            file: "https://0h0uigepmljwim5y.public.blob.vercel-storage.com/ambassador-resources/PROMO%20VIDEO%20SCRIPTS_.docx"
         }
     ]
 
