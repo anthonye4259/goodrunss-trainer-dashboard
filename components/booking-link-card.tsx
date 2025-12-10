@@ -5,14 +5,17 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Copy, ExternalLink, Check, Link2, Share2, QrCode } from "lucide-react"
+import { Copy, ExternalLink, Check, Link2, Share2, QrCode, Code2 } from "lucide-react"
 import { useUser } from "@clerk/nextjs"
 import { BookingQRCode } from "@/components/booking-qr-code"
 
 export function BookingLinkCard() {
   const { user } = useUser()
   const [copied, setCopied] = useState(false)
+  const [embedCopied, setEmbedCopied] = useState(false)
   const [bookingLink, setBookingLink] = useState<string>("")
+  const [trainerId, setTrainerId] = useState<string>("")
+  const [primaryColor, setPrimaryColor] = useState("22c55e")
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -24,6 +27,7 @@ export function BookingLinkCard() {
           const data = await res.json()
           const id = data.profile?.id
           if (id) {
+            setTrainerId(id)
             const link = `${window.location.origin}/book/${id}`
             setBookingLink(link)
             setLoading(false)
@@ -36,6 +40,7 @@ export function BookingLinkCard() {
 
       // Fallback: use Clerk user ID
       if (user?.id) {
+        setTrainerId(user.id)
         const link = `${window.location.origin}/book/${user.id}`
         setBookingLink(link)
       }
@@ -90,7 +95,7 @@ export function BookingLinkCard() {
       </div>
 
       <Tabs defaultValue="link" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
+        <TabsList className="grid w-full grid-cols-3 mb-4">
           <TabsTrigger value="link" className="gap-2">
             <Link2 className="h-4 w-4" />
             Link
@@ -98,6 +103,10 @@ export function BookingLinkCard() {
           <TabsTrigger value="qrcode" className="gap-2">
             <QrCode className="h-4 w-4" />
             QR Code
+          </TabsTrigger>
+          <TabsTrigger value="embed" className="gap-2">
+            <Code2 className="h-4 w-4" />
+            Embed
           </TabsTrigger>
         </TabsList>
 
@@ -151,7 +160,7 @@ export function BookingLinkCard() {
 
         <TabsContent value="qrcode" className="space-y-4">
           <BookingQRCode bookingUrl={displayLink} trainerName={trainerName} />
-          
+
           <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-lg p-4">
             <div className="flex gap-3">
               <div className="text-3xl">📱</div>
@@ -162,6 +171,72 @@ export function BookingLinkCard() {
                   <li>• Post at your gym or studio</li>
                   <li>• Share on social media stories</li>
                   <li>• Display at events & competitions</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="embed" className="space-y-4">
+          <div className="bg-gray-900/50 rounded-lg p-4 border border-green-500/20">
+            <p className="text-green-300 font-semibold mb-3">📋 Iframe Embed Code</p>
+            <p className="text-xs text-gray-400 mb-2">Paste this into your website HTML</p>
+            <div className="relative">
+              <textarea
+                readOnly
+                rows={3}
+                className="w-full font-mono text-xs bg-gray-800 border-gray-700 text-white p-3 rounded-md resize-none"
+                value={`<iframe src="${window.location.origin}/embed/${trainerId}?primary=${primaryColor}" style="width:100%;min-height:600px;border:none;border-radius:8px;" allow="payment" title="Book an appointment"></iframe>`}
+              />
+              <Button
+                size="sm"
+                className="absolute top-2 right-2 bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  navigator.clipboard.writeText(`<iframe src="${window.location.origin}/embed/${trainerId}?primary=${primaryColor}" style="width:100%;min-height:600px;border:none;border-radius:8px;" allow="payment" title="Book an appointment"></iframe>`)
+                  setEmbedCopied(true)
+                  setTimeout(() => setEmbedCopied(false), 2000)
+                }}
+              >
+                {embedCopied ? <><Check className="h-3 w-3 mr-1" /> Copied</> : <><Copy className="h-3 w-3 mr-1" /> Copy</>}
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-gray-900/50 rounded-lg p-4 border border-green-500/20">
+            <p className="text-green-300 font-semibold mb-3">⚡ JavaScript Embed (Recommended)</p>
+            <p className="text-xs text-gray-400 mb-2">Auto-resizes and works with most website builders</p>
+            <div className="relative">
+              <textarea
+                readOnly
+                rows={3}
+                className="w-full font-mono text-xs bg-gray-800 border-gray-700 text-white p-3 rounded-md resize-none"
+                value={`<script src="${window.location.origin}/embed.js" data-trainer-id="${trainerId}" data-primary="${primaryColor}"></script>
+<div id="goodrunss-booking"></div>`}
+              />
+              <Button
+                size="sm"
+                className="absolute top-2 right-2 bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  navigator.clipboard.writeText(`<script src="${window.location.origin}/embed.js" data-trainer-id="${trainerId}" data-primary="${primaryColor}"></script>\n<div id="goodrunss-booking"></div>`)
+                  setEmbedCopied(true)
+                  setTimeout(() => setEmbedCopied(false), 2000)
+                }}
+              >
+                {embedCopied ? <><Check className="h-3 w-3 mr-1" /> Copied</> : <><Copy className="h-3 w-3 mr-1" /> Copy</>}
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-lg p-4">
+            <div className="flex gap-3">
+              <div className="text-3xl">🌐</div>
+              <div>
+                <p className="text-green-300 font-semibold mb-1">Works With:</p>
+                <ul className="text-sm text-gray-300 space-y-1">
+                  <li>• Squarespace, Wix, WordPress</li>
+                  <li>• Any website with HTML access</li>
+                  <li>• Your clients see your business name</li>
+                  <li>• No "Powered by" branding</li>
                 </ul>
               </div>
             </div>
