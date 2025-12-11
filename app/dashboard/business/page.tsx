@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { DollarSign, BarChart3, FileText } from "lucide-react"
+import { DollarSign, BarChart3, FileText, Megaphone, Share2 } from "lucide-react"
 import Link from "next/link"
 
 const businessTools = [
@@ -28,6 +28,22 @@ const businessTools = [
     href: "/dashboard/reports",
     color: "text-purple-500",
     bg: "bg-purple-500/10",
+  },
+  {
+    title: "Marketing",
+    description: "Promote your services and reach new clients",
+    icon: Megaphone,
+    href: "/dashboard/marketing",
+    color: "text-orange-500",
+    bg: "bg-orange-500/10",
+  },
+  {
+    title: "Social",
+    description: "Manage your social media presence",
+    icon: Share2,
+    href: "/dashboard/social",
+    color: "text-pink-500",
+    bg: "bg-pink-500/10",
   },
 ]
 

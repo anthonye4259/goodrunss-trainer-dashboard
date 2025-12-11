@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ClipboardList, Library, Layers, FileText, Video } from "lucide-react"
+import { ClipboardList, Library, Layers, FileText, Video, Calendar, BookOpen, Sparkles, Trophy } from "lucide-react"
 import Link from "next/link"
 
 const trainingTools = [
@@ -44,6 +44,38 @@ const trainingTools = [
     href: "/dashboard/video-library",
     color: "text-pink-500",
     bg: "bg-pink-500/10",
+  },
+  {
+    title: "Session Planner",
+    description: "Plan and organize training sessions",
+    icon: Calendar,
+    href: "/dashboard/session-planner",
+    color: "text-cyan-500",
+    bg: "bg-cyan-500/10",
+  },
+  {
+    title: "Resources",
+    description: "Training resources and materials",
+    icon: BookOpen,
+    href: "/dashboard/resources",
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
+  },
+  {
+    title: "AI Persona",
+    description: "Customize your AI training assistant",
+    icon: Sparkles,
+    href: "/dashboard/ai-persona",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
+  },
+  {
+    title: "Leaderboard",
+    description: "Track client performance rankings",
+    icon: Trophy,
+    href: "/dashboard/leaderboard",
+    color: "text-yellow-500",
+    bg: "bg-yellow-500/10",
   },
 ]
 

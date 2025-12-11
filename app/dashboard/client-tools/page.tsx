@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle2, Clock, TrendingDown, AlertTriangle, Bell, UserCheck } from "lucide-react"
+import { CheckCircle2, Clock, TrendingDown, AlertTriangle, Bell, UserCheck, Gift, Target, Sparkles } from "lucide-react"
 import Link from "next/link"
 
 const clientTools = [
@@ -52,6 +52,30 @@ const clientTools = [
     href: "/dashboard/group-classes",
     color: "text-pink-500",
     bg: "bg-pink-500/10",
+  },
+  {
+    title: "Referrals",
+    description: "Track and manage client referrals",
+    icon: Gift,
+    href: "/dashboard/referrals",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+  },
+  {
+    title: "Client Leads",
+    description: "Track potential new clients",
+    icon: Target,
+    href: "/dashboard/client-leads",
+    color: "text-red-500",
+    bg: "bg-red-500/10",
+  },
+  {
+    title: "Auto CRM",
+    description: "AI-powered client data extraction",
+    icon: Sparkles,
+    href: "/dashboard/auto-crm",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
   },
 ]
 
