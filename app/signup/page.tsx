@@ -79,7 +79,7 @@ export default function SignupPage() {
     } catch (error: any) {
       console.error("Signup error:", error)
       // Show the actual error message instead of generic one
-      setError(error.message || "Failed to start trial. Please try again.")
+      setError(error.message || "Failed to create subscription. Please try again.")
       setIsLoading(false)
     }
   }

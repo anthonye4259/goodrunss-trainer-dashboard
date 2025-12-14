@@ -22,14 +22,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Log incoming request
-    console.log('[TRIAL SIGNUP] Request received')
+    console.log('[SIGNUP] Request received')
 
     const { email, name, businessName, password, planId, referralCode } = await request.json()
 
-    console.log('[TRIAL SIGNUP] Parsed data:', { email, name: name?.substring(0, 10) + '...', planId, hasPassword: !!password, hasReferral: !!referralCode })
+    console.log('[SIGNUP] Parsed data:', { email, name: name?.substring(0, 10) + '...', planId, hasPassword: !!password, hasReferral: !!referralCode })
 
     if (!email || !planId) {
-      console.error('[TRIAL SIGNUP] Missing required fields')
+      console.error('[SIGNUP] Missing required fields')
       return NextResponse.json(
         { error: 'Email and plan ID are required' },
         { status: 400 }
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Check Stripe key
     if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('[TRIAL SIGNUP] STRIPE_SECRET_KEY not configured')
+      console.error('[SIGNUP] STRIPE_SECRET_KEY not configured')
       return NextResponse.json(
         { error: 'Payment system not configured. Please contact support.' },
         { status: 500 }
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     // Ensure APP_URL has https:// scheme
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://goodrunss-trainer-dashboard.vercel.app'
     const baseUrl = appUrl.startsWith('http') ? appUrl : `https://${appUrl}`
-    console.log('[TRIAL SIGNUP] Base URL:', baseUrl)
+    console.log('[SIGNUP] Base URL:', baseUrl)
 
     // Map plan IDs to Stripe Price IDs
     const planPriceMapping: Record<string, { priceId: string; amount: number }> = {
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Create Checkout Session with trial
+    // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
       customer: customer.id,
       payment_method_types: ['card'],
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
       ],
       mode: 'subscription',
 
-      // No trial - charge immediately
+      // Charge immediately
       subscription_data: {
         metadata: {
           planId: planId,
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    console.log('[TRIAL SIGNUP] ✅ Stripe session created:', session.id)
+    console.log('[SIGNUP] ✅ Stripe session created:', session.id)
 
     return NextResponse.json({
       success: true,
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
       url: session.url,
     })
   } catch (error: any) {
-    console.error('[TRIAL SIGNUP] ❌ Error:', {
+    console.error('[SIGNUP] ❌ Error:', {
       message: error.message,
       type: error.type,
       code: error.code,
