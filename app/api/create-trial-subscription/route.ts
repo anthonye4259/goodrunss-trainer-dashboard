@@ -52,13 +52,17 @@ export async function POST(request: NextRequest) {
 
     // Map plan IDs to Stripe Price IDs
     const planPriceMapping: Record<string, { priceId: string; amount: number }> = {
-      '6-month': {
-        priceId: process.env.STRIPE_PRICE_6_MONTH || 'price_6month',
-        amount: 75,
+      '1-month': {
+        priceId: process.env.STRIPE_PRICE_1_MONTH || 'price_1month',
+        amount: 15,
       },
       '3-month': {
         priceId: process.env.STRIPE_PRICE_3_MONTH || 'price_3month',
         amount: 40,
+      },
+      '6-month': {
+        priceId: process.env.STRIPE_PRICE_6_MONTH || 'price_6month',
+        amount: 75,
       },
       '1-year': {
         priceId: process.env.STRIPE_PRICE_1_YEAR || 'price_1year',
