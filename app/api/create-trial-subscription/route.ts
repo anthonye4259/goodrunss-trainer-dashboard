@@ -98,9 +98,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Checkout Session
+    // Don't restrict payment_method_types - let Stripe show all enabled methods
+    // (Apple Pay, Google Pay, Link, Cards, etc. based on Dashboard settings)
     const session = await stripe.checkout.sessions.create({
       customer: customer.id,
-      payment_method_types: ['card'],
+      // payment_method_types removed - Stripe will show all enabled methods automatically
       line_items: [
         {
           price: plan.priceId,
