@@ -62,7 +62,7 @@ export default function SubscriptionPage() {
       const data = await response.json()
       if (data.success) {
         fetchSubscription()
-        alert("Subscription canceled successfully. You'll have access until the end of your billing period.")
+        alert("Subscription canceled successfully. You'll have access until the end of your trial period.")
       } else {
         alert(data.error || "Failed to cancel subscription")
       }
@@ -102,15 +102,20 @@ export default function SubscriptionPage() {
             <p className="text-muted-foreground mb-6">
               You don't have an active subscription yet.
             </p>
-            <Button onClick={() => window.location.href = '/signup'}>Subscribe Now</Button>
+            <Button>Start Free Trial</Button>
           </Card>
         </div>
       </div>
     )
   }
 
-  // Check subscription status
-  const isActive = subscription.status === "active"
+  const isTrialing = subscription.status === "trialing"
+  const daysLeft = subscription.trialEnd
+    ? Math.ceil(
+      (new Date(subscription.trialEnd).getTime() - new Date().getTime()) /
+      (1000 * 60 * 60 * 24)
+    )
+    : 0
 
   return (
     <div className="flex-1 overflow-y-auto p-8">
@@ -126,19 +131,19 @@ export default function SubscriptionPage() {
             <div className="space-y-4 flex-1">
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  {isActive ? (
-                    <CheckCircle className="h-6 w-6 text-primary" />
+                  {isTrialing ? (
+                    <Clock className="h-6 w-6 text-primary" />
                   ) : (
-                    <Clock className="h-6 w-6 text-muted-foreground" />
+                    <CheckCircle className="h-6 w-6 text-primary" />
                   )}
                 </div>
                 <div>
                   <h3 className="text-xl font-bold">{subscription.planName}</h3>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge
-                      variant={subscription.status === "active" ? "default" : "secondary"}
+                      variant={subscription.status === "active" || subscription.status === "trialing" ? "default" : "secondary"}
                     >
-                      {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                      {subscription.status === "trialing" ? "Free Trial" : subscription.status}
                     </Badge>
                     {subscription.cancelAtPeriodEnd && (
                       <Badge variant="outline" className="border-red-500/30 text-red-400">

@@ -58,7 +58,7 @@ export function ComparisonTable() {
                         {/* Pricing */}
                         <tr className="bg-card/50 font-bold">
                             <td className="px-6 py-4">Monthly Cost</td>
-                            <td className="px-6 py-4 text-xl text-primary">$15</td>
+                            <td className="px-6 py-4 text-xl text-primary">$29</td>
                             <td className="px-6 py-4 text-muted-foreground">$49 - $99</td>
                             <td className="px-6 py-4 text-muted-foreground">Free (but painful)</td>
                         </tr>
