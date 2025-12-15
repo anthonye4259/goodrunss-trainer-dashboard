@@ -58,7 +58,41 @@ export default function WelcomePage() {
               </Link>
             </div>
 
-            <p className="text-sm text-muted-foreground">Early Access • Limited Availability • Exclusive Beta</p>
+            <p className="text-sm text-muted-foreground">Early Access • Limited Availability</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile App Coming Soon Section */}
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-card to-accent/10 border border-primary/20 p-8 md:p-12">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="space-y-6 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 bg-primary/20 text-primary px-4 py-2 rounded-full text-sm font-bold">
+                📱 Coming January
+              </div>
+              <h2 className="text-4xl font-bold">
+                Train From <span className="gradient-text">Anywhere</span>
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                The GoodRunss mobile app is almost here. Manage your entire business from your phone—between sessions, at the gym, wherever you are.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                ✨ Founding members get early access to the app
+              </p>
+            </div>
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-3xl blur-2xl"></div>
+                <Image
+                  src="/mobile-app-mockup.png"
+                  alt="GoodRunss Mobile App"
+                  width={300}
+                  height={600}
+                  className="relative z-10 drop-shadow-2xl"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -70,9 +104,9 @@ export default function WelcomePage() {
             <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
               <Users className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="text-2xl font-bold">Client Management</h3>
+            <h3 className="text-2xl font-bold">Smart Client Retention</h3>
             <p className="text-muted-foreground">
-              Track client progress, manage sessions, and keep all your training data organized in one place.
+              AI detects when clients are about to cancel and automatically re-engages them—protecting your revenue before you lose it.
             </p>
           </Card>
 
@@ -80,9 +114,9 @@ export default function WelcomePage() {
             <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
               <TrendingUp className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="text-2xl font-bold">Business Analytics</h3>
+            <h3 className="text-2xl font-bold">Automated Lead Generation</h3>
             <p className="text-muted-foreground">
-              Get actionable insights into revenue, client engagement, and business growth with AI-powered analytics.
+              AI finds new clients and contacts them for you. Your pipeline fills with qualified leads while you focus on training.
             </p>
           </Card>
 
@@ -90,9 +124,9 @@ export default function WelcomePage() {
             <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="text-2xl font-bold">AI Marketing Suite</h3>
+            <h3 className="text-2xl font-bold">Marketing That Runs Itself</h3>
             <p className="text-muted-foreground">
-              Create stunning marketing materials with GIA, your AI assistant, and post directly to social media.
+              GIA creates and posts your content automatically. Your socials stay active without you lifting a finger.
             </p>
           </Card>
         </div>
