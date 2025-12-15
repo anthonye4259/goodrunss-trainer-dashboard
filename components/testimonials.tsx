@@ -6,23 +6,23 @@ import { Card, CardContent } from "@/components/ui/card"
 const testimonials = [
     {
         name: "Sarah K.",
-        role: "Personal Trainer",
+        role: "Pilates Instructor",
         location: "Los Angeles, CA",
-        quote: "GoodRunss saved me 10+ hours every week on admin work. The AI assistant is like having a personal business manager.",
+        quote: "GIA handles all my client communication and booking. I just show up and teach—everything else is done for me.",
         rating: 5,
     },
     {
         name: "Marcus T.",
-        role: "Strength Coach",
+        role: "Pickleball Coach",
         location: "Austin, TX",
-        quote: "The auto CRM parser is incredible. I uploaded my old spreadsheets and it extracted everything perfectly. Game changer.",
+        quote: "Clients book directly through GoodRunss and get automatic reminders. My no-show rate dropped to almost zero.",
         rating: 5,
     },
     {
         name: "Jennifer L.",
-        role: "Running Coach",
+        role: "Basketball Trainer",
         location: "Seattle, WA",
-        quote: "I've tried every trainer platform. GoodRunss is the only one with real AI that actually helps me grow my business.",
+        quote: "GIA writes my social posts and follows up with leads. I've never had this many clients without trying.",
         rating: 5,
     },
 ]
