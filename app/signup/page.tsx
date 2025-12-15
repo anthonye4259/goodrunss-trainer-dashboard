@@ -130,13 +130,18 @@ export default function SignupPage() {
             {/* Single Plan - $29/month */}
             <section className="space-y-4">
               <div className="text-center space-y-2 mb-6">
-                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
+                <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-600 px-4 py-2 rounded-full text-sm font-bold border border-amber-500/20">
                   <Sparkles className="h-4 w-4" />
-                  Simple Pricing
+                  🎉 Early Access Pricing
                 </div>
               </div>
 
-              <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5 overflow-hidden">
+              <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5 overflow-hidden relative">
+                {/* Founding Member Badge */}
+                <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500 to-amber-400 text-white text-xs font-bold px-4 py-1 rounded-bl-lg">
+                  FOUNDING MEMBER
+                </div>
+
                 <CardContent className="p-8 text-center space-y-4">
                   <h3 className="text-2xl font-bold">GoodRunss Pro</h3>
                   <div>
@@ -150,6 +155,7 @@ export default function SignupPage() {
                     <div className="flex items-center gap-2"><Target className="h-4 w-4 text-primary" />Client Matching</div>
                     <div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />Auto CRM</div>
                   </div>
+                  <p className="text-xs text-muted-foreground pt-2">✨ Founding members get early access to new features</p>
                 </CardContent>
               </Card>
             </section>
