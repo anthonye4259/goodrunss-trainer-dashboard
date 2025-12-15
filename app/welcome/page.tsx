@@ -38,7 +38,7 @@ export default function WelcomePage() {
                 The AI System That Runs Your Business <span className="gradient-text">for Sports Trainers & Wellness Instructors</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                Automated client booking and scheduler. More retention. Growing revenue. Marketing on autopilot—all through AI automation.
+                Automated client booking and scheduling. More retention. Growing revenue. Marketing on autopilot, all through AI automation.
               </p>
             </div>
 
