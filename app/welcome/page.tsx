@@ -35,11 +35,10 @@ export default function WelcomePage() {
 
             <div className="space-y-4">
               <h1 className="text-6xl font-bold tracking-tight">
-                The AI-Powered Dashboard for <span className="gradient-text">Rec Sports & Wellness Trainers</span>
+                The AI System That Runs Your Business <span className="gradient-text">for Sports Trainers & Wellness Instructors</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                Manage clients, track progress, create marketing materials, and grow your training business—all in one
-                place.
+                Less cancellations. More retention. Growing revenue. Marketing on autopilot—all through AI automation.
               </p>
             </div>
 
@@ -59,7 +58,7 @@ export default function WelcomePage() {
               </Link>
             </div>
 
-            <p className="text-sm text-muted-foreground">Early Access • Limited Availability • Exclusive Beta</p>
+            <p className="text-sm text-muted-foreground">Early Access • Limited Availability</p>
           </div>
         </div>
       </div>
@@ -104,9 +103,9 @@ export default function WelcomePage() {
             <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
               <Users className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="text-2xl font-bold">Client Management</h3>
+            <h3 className="text-2xl font-bold">Smart Client Retention</h3>
             <p className="text-muted-foreground">
-              Track client progress, manage sessions, and keep all your training data organized in one place.
+              AI detects when clients are about to cancel and automatically re-engages them—protecting your revenue before you lose it.
             </p>
           </Card>
 
@@ -114,9 +113,9 @@ export default function WelcomePage() {
             <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
               <TrendingUp className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="text-2xl font-bold">Business Analytics</h3>
+            <h3 className="text-2xl font-bold">Automated Lead Generation</h3>
             <p className="text-muted-foreground">
-              Get actionable insights into revenue, client engagement, and business growth with AI-powered analytics.
+              AI finds new clients and contacts them for you. Your pipeline fills with qualified leads while you focus on training.
             </p>
           </Card>
 
@@ -124,9 +123,9 @@ export default function WelcomePage() {
             <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="text-2xl font-bold">AI Marketing Suite</h3>
+            <h3 className="text-2xl font-bold">Marketing That Runs Itself</h3>
             <p className="text-muted-foreground">
-              Create stunning marketing materials with GIA, your AI assistant, and post directly to social media.
+              GIA creates and posts your content automatically. Your socials stay active without you lifting a finger.
             </p>
           </Card>
         </div>
