@@ -151,9 +151,9 @@ export default function SignupPage() {
                   <p className="text-muted-foreground">Everything you need to grow your training business</p>
                   <div className="grid grid-cols-2 gap-3 text-left text-sm pt-4">
                     <div className="flex items-center gap-2"><Zap className="h-4 w-4 text-primary" />Unlimited Clients</div>
-                    <div className="flex items-center gap-2"><Brain className="h-4 w-4 text-primary" />AI Session Planner</div>
-                    <div className="flex items-center gap-2"><Target className="h-4 w-4 text-primary" />Client Matching</div>
-                    <div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />Auto CRM</div>
+                    <div className="flex items-center gap-2"><Brain className="h-4 w-4 text-primary" />GIA AI Assistant</div>
+                    <div className="flex items-center gap-2"><Target className="h-4 w-4 text-primary" />Automated Booking</div>
+                    <div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />Auto Marketing</div>
                   </div>
                   <p className="text-xs text-muted-foreground pt-2">✨ Founding members get early access to new features</p>
                 </CardContent>
@@ -326,10 +326,7 @@ export default function SignupPage() {
           </div>
         </div>
 
-        {/* Comparison Table Section */}
-        <div className="mt-20">
-          <ComparisonTable />
-        </div>
+
 
         {/* Testimonials Section */}
         <div className="mt-20 mb-12">
