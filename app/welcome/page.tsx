@@ -35,11 +35,10 @@ export default function WelcomePage() {
 
             <div className="space-y-4">
               <h1 className="text-6xl font-bold tracking-tight">
-                The AI-Powered Dashboard for <span className="gradient-text">Rec Sports & Wellness Trainers</span>
+                The AI System That Runs Your Business <span className="gradient-text">for Sports Trainers & Wellness Instructors</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                Manage clients, track progress, create marketing materials, and grow your training business—all in one
-                place.
+                Automated client booking and scheduler. More retention. Growing revenue. Marketing on autopilot—all through AI automation.
               </p>
             </div>
 
