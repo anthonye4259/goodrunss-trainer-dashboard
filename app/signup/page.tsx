@@ -14,7 +14,8 @@ import { ComparisonTable } from "@/components/comparison-table"
 import { ExitIntentPopup } from "@/components/exit-intent-popup"
 
 export default function SignupPage() {
-  const [selectedPlan, setSelectedPlan] = useState<string>("3-month")
+  // Single plan - $29/month
+  const selectedPlan = "monthly"
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -126,72 +127,38 @@ export default function SignupPage() {
           {/* LEFT COLUMN: Plan Selection & Account */}
           <div className="lg:col-span-2 space-y-8">
 
-            {/* Step 1: Choose Plan */}
+            {/* Single Plan - $29/month */}
             <section className="space-y-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold">1</div>
-                <h2 className="text-xl font-bold">Choose Your Plan</h2>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-4">
-                {/* 6 Month Plan */}
-                <div
-                  onClick={() => setSelectedPlan("6-month")}
-                  className={`cursor-pointer relative p-4 rounded-xl border-2 transition-all duration-200 ${selectedPlan === "6-month"
-                    ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                    : "border-border bg-card hover:border-primary/50"
-                    }`}
-                >
-                  <div className="text-center space-y-2">
-                    <h3 className="font-bold">6 Months</h3>
-                    <div className="text-2xl font-bold text-primary">$75</div>
-                    <div className="text-xs text-muted-foreground">$12.50/mo</div>
-                    <div className="text-xs font-medium text-green-500">Save 17%</div>
-                  </div>
-                </div>
-
-                {/* 3 Month Plan */}
-                <div
-                  onClick={() => setSelectedPlan("3-month")}
-                  className={`cursor-pointer relative p-4 rounded-xl border-2 transition-all duration-200 ${selectedPlan === "3-month"
-                    ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                    : "border-border bg-card hover:border-primary/50"
-                    }`}
-                >
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    MOST POPULAR
-                  </div>
-                  <div className="text-center space-y-2">
-                    <h3 className="font-bold">3 Months</h3>
-                    <div className="text-2xl font-bold text-primary">$40</div>
-                    <div className="text-xs text-muted-foreground">$13.33/mo</div>
-                    <div className="text-xs font-medium text-green-500">Save 11%</div>
-                  </div>
-                </div>
-
-                {/* 1 Month Plan */}
-                <div
-                  onClick={() => setSelectedPlan("1-month")}
-                  className={`cursor-pointer relative p-4 rounded-xl border-2 transition-all duration-200 ${selectedPlan === "1-month"
-                    ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                    : "border-border bg-card hover:border-primary/50"
-                    }`}
-                >
-                  <div className="text-center space-y-2">
-                    <h3 className="font-bold">Monthly</h3>
-                    <div className="text-2xl font-bold text-primary">$15</div>
-                    <div className="text-xs text-muted-foreground">$15.00/mo</div>
-                    <div className="text-xs font-medium text-muted-foreground">Flexible</div>
-                  </div>
+              <div className="text-center space-y-2 mb-6">
+                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
+                  <Sparkles className="h-4 w-4" />
+                  Simple Pricing
                 </div>
               </div>
+
+              <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5 overflow-hidden">
+                <CardContent className="p-8 text-center space-y-4">
+                  <h3 className="text-2xl font-bold">GoodRunss Pro</h3>
+                  <div>
+                    <span className="text-5xl font-bold text-primary">$29</span>
+                    <span className="text-muted-foreground">/month</span>
+                  </div>
+                  <p className="text-muted-foreground">Everything you need to grow your training business</p>
+                  <div className="grid grid-cols-2 gap-3 text-left text-sm pt-4">
+                    <div className="flex items-center gap-2"><Zap className="h-4 w-4 text-primary" />Unlimited Clients</div>
+                    <div className="flex items-center gap-2"><Brain className="h-4 w-4 text-primary" />AI Session Planner</div>
+                    <div className="flex items-center gap-2"><Target className="h-4 w-4 text-primary" />Client Matching</div>
+                    <div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />Auto CRM</div>
+                  </div>
+                </CardContent>
+              </Card>
             </section>
 
-            {/* Step 2: Create Account */}
+            {/* Create Account */}
             <section className="space-y-4">
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold">2</div>
-                <h2 className="text-xl font-bold">Create Account</h2>
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold">✓</div>
+                <h2 className="text-xl font-bold">Create Your Account</h2>
               </div>
 
               <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
