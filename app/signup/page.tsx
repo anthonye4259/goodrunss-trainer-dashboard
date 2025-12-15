@@ -15,7 +15,6 @@ import { ExitIntentPopup } from "@/components/exit-intent-popup"
 
 export default function SignupPage() {
   const [selectedPlan, setSelectedPlan] = useState<string>("3-month")
-  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -43,7 +42,7 @@ export default function SignupPage() {
     setError('')
 
     // Validate inputs
-    if (!name || !email || !password) {
+    if (!email || !password) {
       setError("Please fill in all required fields")
       setIsLoading(false)
       return
@@ -62,7 +61,7 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
-          name,
+          name: '', // Name will be collected by Stripe at checkout
           password, // Send securely to webhook via Stripe metadata
           planId: selectedPlan,
           referralCode, // Track ambassador referrals
@@ -205,32 +204,18 @@ export default function SignupPage() {
                       </div>
                     )}
 
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input
-                          id="name"
-                          placeholder="John Doe"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          required
-                          disabled={isLoading}
-                          className="bg-background/50"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="you@example.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                          disabled={isLoading}
-                          className="bg-background/50"
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="bg-background/50"
+                      />
                     </div>
 
                     <div className="space-y-2">
