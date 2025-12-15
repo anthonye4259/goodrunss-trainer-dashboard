@@ -310,6 +310,17 @@ export default function SignupPage() {
                 <div className="pt-4 border-t border-primary/10">
                   <TrustBadges />
                 </div>
+
+                {/* Mobile App Coming Soon */}
+                <div className="pt-4 border-t border-primary/10">
+                  <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl p-4 text-center space-y-2">
+                    <div className="inline-flex items-center gap-2 bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold">
+                      📱 Coming January
+                    </div>
+                    <p className="text-sm font-bold">Mobile App</p>
+                    <p className="text-xs text-muted-foreground">Run your business from anywhere</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

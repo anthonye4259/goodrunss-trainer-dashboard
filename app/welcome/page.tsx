@@ -21,9 +21,9 @@ export default function WelcomePage() {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent to-primary rounded-3xl blur-2xl opacity-50"></div>
                 <div className="relative h-24 w-24 rounded-3xl bg-white flex items-center justify-center shadow-2xl p-3">
-                  <Image 
-                    src="/goodrunss-logo-green.svg" 
-                    alt="GoodRunss" 
+                  <Image
+                    src="/goodrunss-logo-green.svg"
+                    alt="GoodRunss"
                     width={96}
                     height={96}
                     className="object-contain w-full h-full"
@@ -64,6 +64,39 @@ export default function WelcomePage() {
         </div>
       </div>
 
+      {/* Mobile App Coming Soon Section */}
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-card to-accent/10 border border-primary/20 p-8 md:p-12">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="space-y-6 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 bg-primary/20 text-primary px-4 py-2 rounded-full text-sm font-bold">
+                📱 Coming January
+              </div>
+              <h2 className="text-4xl font-bold">
+                Train From <span className="gradient-text">Anywhere</span>
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                The GoodRunss mobile app is almost here. Manage your entire business from your phone—between sessions, at the gym, wherever you are.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                ✨ Founding members get early access to the app
+              </p>
+            </div>
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-3xl blur-2xl"></div>
+                <Image
+                  src="/mobile-app-mockup.png"
+                  alt="GoodRunss Mobile App"
+                  width={300}
+                  height={600}
+                  className="relative z-10 drop-shadow-2xl"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Features Section */}
       <div className="max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-3 gap-8">
