@@ -50,19 +50,11 @@ export async function POST(request: NextRequest) {
     const baseUrl = appUrl.startsWith('http') ? appUrl : `https://${appUrl}`
     console.log('[TRIAL SIGNUP] Base URL:', baseUrl)
 
-    // Map plan IDs to Stripe Price IDs
+    // Single plan - $29/month
     const planPriceMapping: Record<string, { priceId: string; amount: number }> = {
-      '6-month': {
-        priceId: process.env.STRIPE_PRICE_6_MONTH || 'price_6month',
-        amount: 75,
-      },
-      '3-month': {
-        priceId: process.env.STRIPE_PRICE_3_MONTH || 'price_3month',
-        amount: 40,
-      },
-      '1-year': {
-        priceId: process.env.STRIPE_PRICE_1_YEAR || 'price_1year',
-        amount: 100,
+      'monthly': {
+        priceId: 'price_1SeTst06I3eFkRUmTAIEYIWR', // $29/month
+        amount: 29,
       },
     }
 
