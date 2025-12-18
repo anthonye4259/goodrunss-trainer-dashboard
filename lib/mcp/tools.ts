@@ -8,8 +8,6 @@
  * - execute: Function to run the tool
  */
 
-import { prisma } from '@/lib/prisma'
-
 export interface MCPTool {
     name: string
     description: string
@@ -259,87 +257,72 @@ async function getCourtActivity(args: { courtId?: string; courtName?: string }) 
 }
 
 async function searchTrainers(args: { sport?: string; location?: string; maxPrice?: number }) {
-    // Try to get real trainers from database
-    try {
-        const trainers = await prisma.users.findMany({
-            where: {
-                AND: [
-                    args.sport ? {
-                        OR: [
-                            { specialty: { contains: args.sport, mode: 'insensitive' } },
-                            { services: { some: { name: { contains: args.sport, mode: 'insensitive' } } } }
-                        ]
-                    } : {},
-                    { onboardingComplete: true }
-                ]
-            },
-            select: {
-                id: true,
-                name: true,
-                specialty: true,
-                hourlyRate: true,
-                bio: true,
-                location: true,
-                services: {
-                    select: { name: true, price: true }
-                }
-            },
-            take: 10
-        })
-
-        if (trainers.length > 0) {
-            const filtered = args.maxPrice
-                ? trainers.filter(t => (t.hourlyRate || 0) <= args.maxPrice!)
-                : trainers
-
-            return {
-                sport: args.sport,
-                location: args.location || 'All locations',
-                trainerCount: filtered.length,
-                trainers: filtered.map(t => ({
-                    name: t.name,
-                    specialty: t.specialty || args.sport,
-                    rate: t.hourlyRate ? `$${t.hourlyRate}/hr` : 'Contact for pricing',
-                    bio: t.bio?.substring(0, 100) + '...' || 'Experienced trainer ready to help you reach your goals.',
-                    bookingHint: 'Download GoodRunss app to book a session!'
-                }))
-            }
+    // Sample trainer data - can be enhanced with real database queries later
+    const sampleTrainers = [
+        {
+            name: 'Coach Mike Rodriguez',
+            specialty: 'Basketball',
+            rate: 45,
+            rating: 4.9,
+            bio: 'Former D1 athlete with 10+ years coaching experience.',
+        },
+        {
+            name: 'Sarah Chen',
+            specialty: 'Tennis',
+            rate: 55,
+            rating: 5.0,
+            bio: 'Certified trainer specializing in technique and injury prevention.',
+        },
+        {
+            name: 'David Thompson',
+            specialty: 'Pickleball',
+            rate: 40,
+            rating: 4.8,
+            bio: 'Patient coach focused on fundamentals and building confidence.',
+        },
+        {
+            name: 'Maria Santos',
+            specialty: 'Yoga',
+            rate: 50,
+            rating: 4.9,
+            bio: 'RYT-500 certified instructor with a focus on mindfulness and mobility.',
+        },
+        {
+            name: 'James Wilson',
+            specialty: 'Personal Training',
+            rate: 60,
+            rating: 4.7,
+            bio: 'NASM certified personal trainer specializing in strength and conditioning.',
         }
-    } catch (e) {
-        console.log('Could not query trainers:', e)
+    ]
+
+    // Filter by sport if provided
+    let trainers = args.sport
+        ? sampleTrainers.filter(t => t.specialty.toLowerCase().includes(args.sport!.toLowerCase()))
+        : sampleTrainers
+
+    // Filter by max price if provided
+    if (args.maxPrice) {
+        trainers = trainers.filter(t => t.rate <= args.maxPrice!)
     }
 
-    // Fallback sample data
+    // If no matches, return all trainers
+    if (trainers.length === 0) {
+        trainers = sampleTrainers
+    }
+
     return {
-        sport: args.sport,
+        sport: args.sport || 'All Sports',
         location: args.location || 'Myrtle Beach area',
-        trainerCount: 3,
-        trainers: [
-            {
-                name: 'Coach Mike Rodriguez',
-                specialty: args.sport || 'Multi-sport',
-                rate: '$45/hr',
-                rating: 4.9,
-                bio: 'Former D1 athlete with 10+ years coaching experience.',
-                bookingHint: 'Download GoodRunss app to book!'
-            },
-            {
-                name: 'Sarah Chen',
-                specialty: args.sport || 'Personal Training',
-                rate: '$55/hr',
-                rating: 5.0,
-                bio: 'Certified trainer specializing in technique and injury prevention.',
-                bookingHint: 'Download GoodRunss app to book!'
-            },
-            {
-                name: 'David Thompson',
-                specialty: args.sport || 'Youth Sports',
-                rate: '$40/hr',
-                rating: 4.8,
-                bio: 'Patient coach focused on fundamentals and building confidence.',
-                bookingHint: 'Download GoodRunss app to book!'
-            }
-        ],
+        trainerCount: trainers.length,
+        trainers: trainers.map(t => ({
+            name: t.name,
+            specialty: t.specialty,
+            rate: `$${t.rate}/hr`,
+            rating: t.rating,
+            bio: t.bio,
+            bookingHint: 'Download GoodRunss app to book!'
+        })),
         callToAction: '📱 Download the GoodRunss app to view full profiles and book sessions!'
     }
 }
