@@ -261,7 +261,7 @@ async function getCourtActivity(args: { courtId?: string; courtName?: string }) 
 async function searchTrainers(args: { sport?: string; location?: string; maxPrice?: number }) {
     // Try to get real trainers from database
     try {
-        const trainers = await prisma.user.findMany({
+        const trainers = await prisma.users.findMany({
             where: {
                 AND: [
                     args.sport ? {
