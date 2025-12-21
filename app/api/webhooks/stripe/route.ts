@@ -1,6 +1,8 @@
 /**
  * Stripe Webhook - Handle payment completion and user creation
  * PRODUCTION-READY with idempotency, error recovery, and proper logging
+ * 
+ * CROSS-PLATFORM: Syncs subscriptions to Firebase for mobile app access
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -8,6 +10,8 @@ import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { clerkClient } from '@clerk/nextjs/server'
 import { prisma } from "@/lib/prisma"
+import { initializeApp, getApps, cert } from 'firebase-admin/app'
+import { getFirestore } from 'firebase-admin/firestore'
 
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -15,6 +19,22 @@ const stripe = process.env.STRIPE_SECRET_KEY
   })
   : null
 
+// Initialize Firebase Admin (for cross-platform subscription sync)
+let firebaseAdmin: ReturnType<typeof getFirestore> | null = null
+try {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+    if (getApps().length === 0) {
+      initializeApp({
+        credential: cert(serviceAccount),
+      })
+    }
+    firebaseAdmin = getFirestore()
+    console.log('[WEBHOOK] Firebase Admin initialized')
+  }
+} catch (error) {
+  console.warn('[WEBHOOK] Firebase Admin not configured:', error)
+}
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
@@ -31,6 +51,41 @@ setInterval(() => {
     }
   }
 }, 60 * 60 * 1000) // Every hour
+
+/**
+ * Sync subscription to Firebase for mobile app access
+ * This enables cross-platform subscription lookup by email
+ */
+async function syncSubscriptionToFirebase(
+  email: string,
+  subscription: {
+    tier: 'free' | 'pro'
+    status: 'active' | 'expired' | 'canceled' | 'trial'
+    planId?: string
+    stripeSubscriptionId?: string
+    stripeCustomerId?: string
+    startDate?: string
+    endDate?: string
+  }
+): Promise<void> {
+  if (!firebaseAdmin) {
+    console.log('[WEBHOOK] Firebase sync skipped - not configured')
+    return
+  }
+
+  try {
+    const docRef = firebaseAdmin.collection('subscriptions').doc(email.toLowerCase())
+    await docRef.set({
+      ...subscription,
+      email: email.toLowerCase(),
+      updatedAt: new Date().toISOString(),
+      source: 'web_dashboard',
+    }, { merge: true })
+    console.log(`[WEBHOOK] ✅ Synced subscription to Firebase for ${email}`)
+  } catch (error) {
+    console.error(`[WEBHOOK] Firebase sync failed for ${email}:`, error)
+  }
+}
 
 export async function POST(request: NextRequest) {
   if (!stripe) {
@@ -351,6 +406,17 @@ export async function POST(request: NextRequest) {
 
           console.log(`[WEBHOOK] Subscription created for ${dbUserId}`)
 
+          // Sync to Firebase for mobile app cross-platform access
+          await syncSubscriptionToFirebase(customerEmail, {
+            tier: 'pro',
+            status: 'active',
+            planId: plan,
+            stripeSubscriptionId: session.subscription as string,
+            stripeCustomerId: customerId,
+            startDate: now.toISOString(),
+            endDate: endDate.toISOString(),
+          })
+
           // Step 4: Send welcome email (non-blocking)
           if (process.env.RESEND_API_KEY) {
             fetch('https://api.resend.com/emails', {
@@ -535,6 +601,18 @@ export async function POST(request: NextRequest) {
 
         processedEvents.set(eventId, Date.now())
         console.log(`[WEBHOOK] Created subscription for user ${user.id}`)
+
+        // Sync to Firebase for mobile app
+        await syncSubscriptionToFirebase(customerEmail, {
+          tier: 'pro',
+          status: subscription.status as 'active' | 'expired' | 'canceled' | 'trial',
+          planId: planId,
+          stripeSubscriptionId: subscription.id,
+          stripeCustomerId: subscription.customer as string,
+          startDate: new Date((subscription as any).current_period_start * 1000).toISOString(),
+          endDate: new Date((subscription as any).current_period_end * 1000).toISOString(),
+        })
+
         return NextResponse.json({ success: true })
       }
 
